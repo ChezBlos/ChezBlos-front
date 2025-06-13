@@ -1,6 +1,6 @@
 # Chez Blos - Frontend
 
-Interface utilisateur moderne pour le système de gestion de restaurant Chez Blos.
+Interface utilisateur moderne pour le système de gestion du restaurant Chez Blos.
 
 ## 🚀 Fonctionnalités
 
@@ -8,14 +8,13 @@ Interface utilisateur moderne pour le système de gestion de restaurant Chez Blo
 - **Interface responsive** : Design adaptatif pour tous les appareils
 - **Gestion des rôles** : Admin, Serveur, Cuisine avec permissions spécifiques
 - **Dashboard personnalisé** : Interface adaptée selon le rôle utilisateur
-- **Notifications temps réel** : Système de toasts pour les notifications
 - **Routage protégé** : Accès sécurisé aux pages selon les autorisations
 
 ## 🚀 Installation et démarrage
 
 ### Prérequis
 
-- Node.js 18+
+- Node.js
 - npm ou yarn
 
 ### Installation
@@ -52,23 +51,5 @@ npm run build
 - **Admin** : Email + mot de passe
 - **Personnel** : Code d'accès unique (format: 2 lettres nom + 2 lettres prénom + 4 chiffres)
 
-## 🔗 Intégration avec le backend
-
-### Configuration API
-
-Le frontend communique avec l'API backend via Axios :
-
-- **Base URL** : `http://localhost:3000/api`
-- **Authentification** : Bearer Token JWT
-
-### Endpoints utilisés
-
-- `POST /auth/login` - Connexion
-- `GET /auth/me` - Profil utilisateur
-- `GET /commandes` - Liste des commandes
-- `GET /menu` - Menu du restaurant
-- `GET /stats` - Statistiques
-
----
 
 **Chez Blos** - Système de gestion de restaurant moderne et intuitif.

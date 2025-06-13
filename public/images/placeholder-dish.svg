@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+  <rect width="300" height="200" fill="#f3f4f6"/>
+  <g transform="translate(150,100)">
+    <!-- Assiette -->
+    <circle cx="0" cy="0" r="50" fill="#e5e7eb" stroke="#d1d5db" stroke-width="2"/>
+    <!-- Cuillère et fourchette croisées -->
+    <g stroke="#9ca3af" stroke-width="2" fill="none">
+      <!-- Fourchette -->
+      <line x1="-25" y1="-25" x2="25" y2="25"/>
+      <line x1="-30" y1="-30" x2="-28" y2="-28"/>
+      <line x1="-27" y1="-33" x2="-25" y2="-31"/>
+      <line x1="-24" y1="-36" x2="-22" y2="-34"/>
+      <!-- Cuillère -->
+      <line x1="25" y1="-25" x2="-25" y2="25"/>
+      <ellipse cx="28" cy="-28" rx="3" ry="5" transform="rotate(45 28 -28)"/>
+    </g>
+  </g>
+  <text x="150" y="170" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="12">Image non disponible</text>
+</svg>

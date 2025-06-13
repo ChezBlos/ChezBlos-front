@@ -1,0 +1,325 @@
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .all-\[unset\] {
+    all: unset;
+  }
+}
+
+:root {
+  --brand-5: rgba(238, 242, 255, 1);
+  --brand-60: rgba(79, 70, 229, 1);
+  --destructive-5: rgba(255, 241, 242, 1);
+  --destructive-50: rgba(244, 63, 94, 1);
+  --gray-30: rgba(203, 213, 225, 1);
+  --gray-5: rgba(248, 250, 252, 1);
+  --gray-60: rgba(71, 85, 105, 1);
+  --gray-80: rgba(30, 41, 59, 1);
+  --gray0-white: rgba(255, 255, 255, 1);
+
+  /* GRAY Colors */
+  --gray-0: #ffffff;
+  --gray-10: #f1f5f9;
+  --gray-20: #e2e8f0;
+  --gray-40: #e2e8f0;
+  --gray-50: #64748b;
+  --gray-70: #334155;
+  --gray-90: #0f172a;
+  --gray-100: #000000;
+
+  /* BRAND Colors */
+  --brand-primary-50: #fef1e8;
+  --brand-primary-100: #fdd4b7;
+  --brand-primary-200: #fcbf94;
+  --brand-primary-300: #fba163;
+  --brand-primary-400: #fa8f45;
+  --brand-primary-500: #f97316;
+  --brand-primary-600: #e36914;
+  --brand-primary-700: #b15210;
+  --brand-primary-800: #893f0c;
+  --brand-primary-900: #693009;
+
+  /* TEXT Colors */
+  --text-50: #e8e8e8;
+  --text-100: #b7b7b7;
+  --text-200: #959595;
+  --text-300: #646464;
+  --text-400: #464646;
+  --text-500: #181818;
+  --text-600: #161616;
+  --text-700: #111111;
+  --text-800: #0d0d0d;
+  --text-900: #0a0a0a;
+
+  /* DESTRUCTIVE Colors */
+  --destructive-10: #ffe4e6;
+  --destructive-20: #fecdd3;
+  --destructive-30: #fda4af;
+  --destructive-40: #fb7185;
+  --destructive-60: #e11d48;
+  --destructive-70: #be123c;
+  --destructive-80: #9f1239;
+  --destructive-90: #881337;
+
+  /* WARNING Colors */
+  --warning-10: #fef3c7;
+  --warning-20: #fde68a;
+  --warning-30: #fcd34d;
+  --warning-40: #fbbf24;
+  --warning-60: #d97706;
+  --warning-70: #b45309;
+  --warning-80: #92400e;
+  --warning-90: #78350f;
+
+  /* SUCCESS Colors */
+  --success-10: #f0fdf4;
+  --success-20: #bbf7d0;
+  --success-30: #86efac;
+  --success-40: #4ade80;
+  --success-60: #16a34a;
+  --success-70: #166534;
+  --success-80: #14532d;
+  --success-90: #14532d;
+
+  /* Typography */
+  --gilroy-font: "Gilroy", Helvetica, sans-serif;
+  --heading-h4-bold-font-family: "Gilroy", Helvetica;
+  --heading-h4-bold-font-size: 36px;
+  --heading-h4-bold-font-style: normal;
+  --heading-h4-bold-font-weight: 700;
+  --heading-h4-bold-letter-spacing: 0px;
+  --heading-h4-bold-line-height: 120.00000762939453%;
+  --heading-h5-bold-font-family: "Gilroy", Helvetica;
+  --heading-h5-bold-font-size: 30px;
+  --heading-h5-bold-font-style: normal;
+  --heading-h5-bold-font-weight: 700;
+  --heading-h5-bold-letter-spacing: 0px;
+  --heading-h5-bold-line-height: 120.00000762939453%;
+  --paragraph-sm-font-family: "Plus Jakarta Sans", Helvetica;
+  --paragraph-sm-font-size: 14px;
+  --paragraph-sm-font-style: normal;
+  --paragraph-sm-font-weight: 400;
+  --paragraph-sm-letter-spacing: 0px;
+  --paragraph-sm-line-height: 160%;
+  --shadow-lg: 0px 4px 6px -2px rgba(16, 24, 40, 0.03),
+    0px 12px 16px -4px rgba(16, 24, 40, 0.08);
+  --success-5: rgba(240, 253, 244, 1);
+  --success-50: rgba(34, 197, 94, 1);
+  --text-sm-bold-font-family: "Plus Jakarta Sans", Helvetica;
+  --text-sm-bold-font-size: 14px;
+  --text-sm-bold-font-style: normal;
+  --text-sm-bold-font-weight: 700;
+  --text-sm-bold-letter-spacing: -0.0840000033378601px;
+  --text-sm-bold-line-height: 20px;
+  --text-sm-medium-font-family: "Plus Jakarta Sans", Helvetica;
+  --text-sm-medium-font-size: 14px;
+  --text-sm-medium-font-style: normal;
+  --text-sm-medium-font-weight: 500;
+  --text-sm-medium-letter-spacing: -0.0840000033378601px;
+  --text-sm-medium-line-height: 20px;
+  --text-small-normal-font-family: "Inter", Helvetica;
+  --text-small-normal-font-size: 14px;
+  --text-small-normal-font-style: normal;
+  --text-small-normal-font-weight: 400;
+  --text-small-normal-letter-spacing: 0px;
+  --text-small-normal-line-height: 130%;
+  --text-xs-semibold-font-family: "Plus Jakarta Sans", Helvetica;
+  --text-xs-semibold-font-size: 12px;
+  --text-xs-semibold-font-style: normal;
+  --text-xs-semibold-font-weight: 600;
+  --text-xs-semibold-letter-spacing: -0.06px;
+  --text-xs-semibold-line-height: 16px;
+  --title-t1-bold-font-family: "Gilroy", Helvetica;
+  --title-t1-bold-font-size: 24px;
+  --title-t1-bold-font-style: normal;
+  --title-t1-bold-font-weight: 700;
+  --title-t1-bold-letter-spacing: 0px;
+  --title-t1-bold-line-height: 130%;
+  --title-t3-semibold-font-family: "Gilroy", Helvetica;
+  --title-t3-semibold-font-size: 18px;
+  --title-t3-semibold-font-style: normal;
+  --title-t3-semibold-font-weight: 400;
+  --title-t3-semibold-letter-spacing: 0px;
+  --title-t3-semibold-line-height: 130%;
+  --title-t4-bold-font-family: "Gilroy", Helvetica;
+  --title-t4-bold-font-size: 16px;
+  --title-t4-bold-font-style: normal;
+  --title-t4-bold-font-weight: 700;
+  --title-t4-bold-letter-spacing: 0px;
+  --title-t4-bold-line-height: 130%;
+  --title-t4-semibold-font-family: "Gilroy", Helvetica;
+  --title-t4-semibold-font-size: 16px;
+  --title-t4-semibold-font-style: normal;
+  --title-t4-semibold-font-weight: 400;
+  --title-t4-semibold-letter-spacing: 0px;
+  --title-t4-semibold-line-height: 130%;
+  --title-t5-bold-font-family: "Gilroy", Helvetica;
+  --title-t5-bold-font-size: 14px;
+  --title-t5-bold-font-style: normal;
+  --title-t5-bold-font-weight: 700;
+  --title-t5-bold-letter-spacing: 0.14000000000000004px;
+  --title-t5-bold-line-height: 130%;
+  --title-t5-medium-font-family: "Gilroy", Helvetica;
+  --title-t5-medium-font-size: 14px;
+  --title-t5-medium-font-style: normal;
+  --title-t5-medium-font-weight: 500;
+  --title-t5-medium-letter-spacing: 0.14000000000000004px;
+  --title-t5-medium-line-height: 130%;
+  --title-t6-semibold-font-family: "Gilroy", Helvetica;
+  --title-t6-semibold-font-size: 12px;
+  --title-t6-semibold-font-style: normal;
+  --title-t6-semibold-font-weight: 400;
+  --title-t6-semibold-letter-spacing: 0.12px;
+  --title-t6-semibold-line-height: 130%;
+  --warning-5: rgba(255, 251, 235, 1);
+  --warning-50: rgba(245, 158, 11, 1);
+  --white: rgba(255, 255, 255, 1);
+
+  /* Display styles */
+  --display-lg-extrabold-font-family: "Gilroy", Helvetica;
+  --display-lg-extrabold-font-size: 180px;
+  --display-lg-extrabold-font-style: normal;
+  --display-lg-extrabold-font-weight: 1000;
+  --display-lg-extrabold-letter-spacing: -3%;
+  --display-lg-extrabold-line-height: 120%;
+
+  --display-lg-bold-font-family: "Gilroy", Helvetica;
+  --display-lg-bold-font-size: 180px;
+  --display-lg-bold-font-style: normal;
+  --display-lg-bold-font-weight: 700;
+  --display-lg-bold-letter-spacing: -3%;
+  --display-lg-bold-line-height: 120%;
+
+  --display-lg-semibold-font-family: "Gilroy", Helvetica;
+  --display-lg-semibold-font-size: 180px;
+  --display-lg-semibold-font-style: normal;
+  --display-lg-semibold-font-weight: 600;
+  --display-lg-semibold-letter-spacing: -3%;
+  --display-lg-semibold-line-height: 120%;
+
+  --display-md-extrabold-font-family: "Gilroy", Helvetica;
+  --display-md-extrabold-font-size: 128px;
+  --display-md-extrabold-font-style: normal;
+  --display-md-extrabold-font-weight: 1000;
+  --display-md-extrabold-letter-spacing: -3%;
+  --display-md-extrabold-line-height: 120%;
+
+  --display-md-bold-font-family: "Gilroy", Helvetica;
+  --display-md-bold-font-size: 128px;
+  --display-md-bold-font-style: normal;
+  --display-md-bold-font-weight: 700;
+  --display-md-bold-letter-spacing: -3%;
+  --display-md-bold-line-height: 120%;
+
+  --display-md-semibold-font-family: "Gilroy", Helvetica;
+  --display-md-semibold-font-size: 128px;
+  --display-md-semibold-font-style: normal;
+  --display-md-semibold-font-weight: 600;
+  --display-md-semibold-letter-spacing: -3%;
+  --display-md-semibold-line-height: 120%;
+
+  --display-sm-extrabold-font-family: "Gilroy", Helvetica;
+  --display-sm-extrabold-font-size: 96px;
+  --display-sm-extrabold-font-style: normal;
+  --display-sm-extrabold-font-weight: 1000;
+  --display-sm-extrabold-letter-spacing: -2%;
+  --display-sm-extrabold-line-height: 120%;
+
+  --display-sm-bold-font-family: "Gilroy", Helvetica;
+  --display-sm-bold-font-size: 96px;
+  --display-sm-bold-font-style: normal;
+  --display-sm-bold-font-weight: 700;
+  --display-sm-bold-letter-spacing: -2%;
+  --display-sm-bold-line-height: 120%;
+
+  --display-sm-semibold-font-family: "Gilroy", Helvetica;
+  --display-sm-semibold-font-size: 96px;
+  --display-sm-semibold-font-style: normal;
+  --display-sm-semibold-font-weight: 600;
+  --display-sm-semibold-letter-spacing: -2%;
+  --display-sm-semibold-line-height: 120%;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: transparent;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: transparent;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}

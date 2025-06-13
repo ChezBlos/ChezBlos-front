@@ -1,0 +1,413 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* Gilroy Font Faces */
+/* Ultra Light (100) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-UltraLight.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-UltraLightItalic.woff2") format("woff2");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Thin (200) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Thin.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-ThinItalic.woff2") format("woff2");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Light (300) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-LightItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Regular (400) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-RegularItalic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Medium (500) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Semibold (600) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Semibold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-SemiboldItalic.woff2") format("woff2");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bold (700) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Extrabold (800) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Extrabold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-ExtraboldItalic.woff2") format("woff2");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Heavy/Black (900) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Heavy.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-HeavyItalic.woff2") format("woff2");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Black (950) */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-Black.woff2") format("woff2");
+  font-weight: 950;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("/fonts/Gilroy-BlackItalic.woff2") format("woff2");
+  font-weight: 950;
+  font-style: italic;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Gilroy Font Variables */
+    --gilroy-font: "Gilroy", "Inter", system-ui, sans-serif;
+
+    /* Font Family Variables for different text styles */
+    --heading-h4-bold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --heading-h5-bold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --paragraph-sm-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --text-sm-bold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --text-sm-medium-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --text-small-normal-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --text-xs-semibold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --title-t1-bold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --title-t3-semibold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --title-t4-bold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --title-t4-semibold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --title-t5-bold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --title-t5-medium-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --title-t6-semibold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --display-lg-extrabold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+    --display-lg-bold-font-family: "Gilroy", "Inter", system-ui, sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--gilroy-font);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Styles personnalisés pour les composants */
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+
+  .card-shadow {
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600;
+  }
+
+  /* Gilroy Typography Classes */
+  .font-gilroy-light {
+    font-family: var(--gilroy-font);
+    font-weight: 300;
+  }
+
+  .font-gilroy-regular {
+    font-family: var(--gilroy-font);
+    font-weight: 400;
+  }
+
+  .font-gilroy-medium {
+    font-family: var(--gilroy-font);
+    font-weight: 500;
+  }
+
+  .font-gilroy-bold {
+    font-family: var(--gilroy-font);
+    font-weight: 700;
+  }
+
+  .font-gilroy-heavy {
+    font-family: var(--gilroy-font);
+    font-weight: 900;
+  }
+
+  /* Typography Utility Classes */
+  .heading-lg {
+    @apply font-gilroy-heavy text-4xl md:text-5xl;
+  }
+
+  .heading-md {
+    @apply font-gilroy-bold text-2xl md:text-3xl;
+  }
+
+  .heading-sm {
+    @apply font-gilroy-bold text-xl md:text-2xl;
+  }
+
+  .body-lg {
+    @apply font-gilroy-medium text-lg;
+  }
+
+  .body-md {
+    @apply font-gilroy-regular text-base;
+  }
+
+  .body-sm {
+    @apply font-gilroy-regular text-sm;
+  }
+
+  .caption {
+    @apply font-gilroy-medium text-xs;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area support for mobile devices */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Animations personnalisées */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Styles pour les toasts/notifications */
+.toast-success {
+  @apply bg-green-500 text-white;
+}
+
+.toast-error {
+  @apply bg-red-500 text-white;
+}
+
+.toast-warning {
+  @apply bg-yellow-500 text-white;
+}
+
+.toast-info {
+  @apply bg-blue-500 text-white;
+}
+
+/* Animation pour le bottom sheet mobile */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-in;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.3s ease-in;
+}

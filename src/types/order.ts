@@ -21,7 +21,13 @@ export interface CreateOrderRequest {
   items: OrderItem[];
   numeroTable?: number;
   notes?: string;
-  modePaiement?: "ESPECES" | "CARTE" | "CHEQUE" | "MOBILE_MONEY" | "VIREMENT";
+  modePaiement?:
+    | "ESPECES"
+    | "CARTE_BANCAIRE"
+    | "WAVE"
+    | "MTN_MONEY"
+    | "ORANGE_MONEY"
+    | "MOOV_MONEY";
 }
 
 export interface Order {
@@ -37,6 +43,7 @@ export interface Order {
     _id: string;
     nom: string;
     prenom: string;
+    photoProfil?: string;
   };
   dateCreation: string;
   dateModification?: string;

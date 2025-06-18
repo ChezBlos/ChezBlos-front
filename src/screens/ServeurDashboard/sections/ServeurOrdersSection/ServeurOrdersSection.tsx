@@ -1,6 +1,7 @@
-import { SearchIcon, PlusIcon } from "lucide-react";
+import { SearchIcon, PlusIcon, RefreshCw } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { Badge } from "../../../../components/ui/badge";
+import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
 import { Button } from "../../../../components/ui/button";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
@@ -11,6 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../../../components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../../components/ui/dialog";
 import { Input } from "../../../../components/ui/input";
 import {
   Table,
@@ -32,10 +39,19 @@ import {
 import { useOrders, useOrderStats } from "../../../../hooks/useOrderAPI";
 import { Order } from "../../../../types/order";
 import { OrderService } from "../../../../services/orderService";
+import { ProfileService } from "../../../../services/profileService";
 import NewOrderModal from "./NewOrderModal";
 import { OrderDetailsModal } from "./OrderDetailsModal";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { Eye, X, PencilSimple, PaperPlaneTilt } from "phosphor-react";
+import {
+  Eye,
+  X,
+  PencilSimple,
+  PaperPlaneTilt,
+  CreditCard,
+  Money,
+  User,
+} from "phosphor-react";
 
 export const ServeurOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -48,11 +64,17 @@ export const ServeurOrdersSection = (): JSX.Element => {
   const [orderToEdit, setOrderToEdit] = useState<Order | null>(null); // State pour le bottom sheet mobile
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedOrderForActions, setSelectedOrderForActions] =
-    useState<Order | null>(null);
-
-  // États pour le bottom sheet de création de commande mobile
+    useState<Order | null>(null); // États pour le bottom sheet de création de commande mobile
   const [isNewOrderBottomSheetOpen, setIsNewOrderBottomSheetOpen] =
     useState(false);
+
+  // État pour le rafraîchissement
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  // États pour la gestion du mode de paiement
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [orderToPay, setOrderToPay] = useState<Order | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<string>("");
 
   // Récupération de l'utilisateur connecté
   const { user } = useAuth();
@@ -140,17 +162,18 @@ export const ServeurOrdersSection = (): JSX.Element => {
   const getToday = (): Date => {
     return new Date();
   };
-
   // Summary cards data with real stats and improved dates
   const summaryCards = [
     {
       title: "Total commandes hier",
+      mobileTitle: "Hier",
       value: statsLoading ? "..." : stats?.hier?.toString() || "0",
       subtitle: formatDate(getYesterday()),
       subtitleColor: "text-orange-500",
     },
     {
       title: "Total commandes d'aujourd'hui",
+      mobileTitle: "Aujourd'hui",
       value: statsLoading ? "..." : stats?.aujourdhui?.toString() || "0",
       subtitle: formatDate(getToday()),
       subtitleColor: "text-orange-500",
@@ -192,12 +215,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
       active: selectedStatus === "EN_ATTENTE",
     },
     {
-      id: "ANNULE",
-      label: "Annulé",
-      count: null,
-      active: selectedStatus === "ANNULE",
-    },
-    {
       id: "EN_COURS",
       label: "En cours",
       count: statsLoading ? null : stats?.enCours || 0,
@@ -209,65 +226,179 @@ export const ServeurOrdersSection = (): JSX.Element => {
       count: statsLoading ? null : stats?.enPreparation || 0,
       active: selectedStatus === "EN_PREPARATION",
     },
+    {
+      id: "ANNULE",
+      label: "Annulé",
+      count: null,
+      active: selectedStatus === "ANNULE",
+    },
   ];
+  // Fonction pour obtenir l'icône de paiement (composant React)
+  const getPaymentIcon = (modePaiement: string) => {
+    const iconProps = {
+      size: 20,
+      strokeweigh: "1.5",
+      color: "#F97316" as const,
+    };
 
-  // Fonction pour formater le statut d'une commande
-  const getStatusBadge = (statut: string) => {
-    switch (statut) {
-      case "EN_ATTENTE":
-      case "en-attente":
-        return { label: "En attente", color: "bg-warning-5 text-warning-50" };
-      case "EN_PREPARATION":
-      case "en-cours":
-        return { label: "En préparation", color: "bg-brand-5 text-brand-60" };
-      case "PRETE":
-      case "prete":
-        return { label: "Prête", color: "bg-blue-5 text-blue-50" };
-      case "TERMINE":
-      case "terminee":
-        return { label: "Terminé", color: "bg-success-5 text-success-50" };
-      case "ANNULE":
-      case "annule":
-        return {
-          label: "Annulé",
-          color: "bg-destructive-5 text-destructive-50",
-        };
+    switch (modePaiement?.toLowerCase()) {
+      case "especes":
+        return (
+          <>
+            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0">
+              <Money {...iconProps} />
+            </div>
+          </>
+        );
+
+      case "carte_bancaire":
+      case "carte":
+        return (
+          <>
+            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-centerrounded-full flex-shrink-0">
+              <CreditCard {...iconProps} />
+            </div>
+          </>
+        );
+      case "wave":
+        return (
+          <img
+            src="/img/wave.jpg"
+            alt="Wave"
+            className="w-10 h-10 rounded-full object-cover"
+          />
+        );
+      case "mtn_money":
+        return (
+          <img
+            src="/img/mtn_money.jpg"
+            alt="MTN Money"
+            className="w-10 h-10 rounded-full object-cover"
+          />
+        );
+      case "orange_money":
+        return (
+          <img
+            src="/img/orange_money.jpg"
+            alt="Orange Money"
+            className="w-10 h-10 rounded-full object-cover"
+          />
+        );
+      case "moov_money":
+        return (
+          <img
+            src="/img/moov_money.jpg"
+            alt="Moov Money"
+            className="w-10 h-10 rounded-full object-cover"
+          />
+        );
       default:
-        return { label: statut, color: "bg-gray-5 text-gray-50" };
+        return (
+          <>
+            <div className="flex w-10 h-10 items-center justify-center px-2 py-2 bg-orange-100 rounded-full flex-shrink-0">
+              <Money {...iconProps} />
+            </div>
+          </>
+        );
     }
   };
 
-  // Fonction pour obtenir l'icône de paiement
-  const getPaymentIcon = (modePaiement: string) => {
-    switch (modePaiement?.toLowerCase()) {
-      case "especes":
-      case "cash":
-        return "/moneywavy.svg";
-      case "carte":
-      case "carte_bancaire":
-        return "/creditcard.svg";
-      case "wave":
-        return "/image-8.svg";
-      case "orange_money":
-        return "/image-14.png";
+  // Fonction pour formater les noms des modes de paiement
+  const formatPaymentMethodName = (
+    modePaiement: string | undefined
+  ): string => {
+    if (!modePaiement) return "Non défini";
+
+    switch (modePaiement.toUpperCase()) {
+      case "ESPECES":
+        return "Espèces";
+      case "CARTE_BANCAIRE":
+        return "Carte bancaire";
+      case "WAVE":
+        return "Wave";
+      case "MTN_MONEY":
+        return "MTN Money";
+      case "ORANGE_MONEY":
+        return "Orange Money";
+      case "MOOV_MONEY":
+        return "Moov Money";
       default:
-        return "/moneywavy.svg";
+        return modePaiement;
     }
   };
 
   // Fonction pour formater le prix
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
+  }; // Fonction pour rendre les images empilées
+  const renderStackedImages = (
+    items: any[],
+    maxImages: number = 3,
+    isMobile: boolean = false
+  ) => {
+    const imagesToShow = items.slice(0, maxImages);
+    const size = isMobile ? "w-12 h-12" : "w-10 h-10";
+    const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
+    const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
+
+    return (
+      <div className={`relative ${size} flex-shrink-0`}>
+        {imagesToShow.map((item, index) => {
+          const imageUrl =
+            item.menuItem &&
+            typeof item.menuItem === "object" &&
+            item.menuItem.image
+              ? `${"http://localhost:3000"}${item.menuItem.image}`
+              : "/img/plat_petit.png";
+
+          // Classes pour le décalage et la transparence
+          const positionClasses = [
+            "translate-x-0 translate-y-0 opacity-100 z-30", // Premier élément
+            `${translateClass} translate-y-0.5 opacity-70 z-20`, // Deuxième élément
+            `${translateClass2} translate-y-1 opacity-40 z-10`, // Troisième élément
+          ];
+
+          return (
+            <div
+              key={index}
+              className={`absolute ${size} rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden border-2 border-white shadow-sm ${
+                positionClasses[index] || ""
+              }`}
+            >
+              <img
+                src={imageUrl}
+                alt={item.nom || "Plat"}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/img/plat_petit.png";
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   // Gestionnaire de changement d'onglet
   const handleTabChange = (value: string) => {
     setSelectedStatus(value);
   };
-
   // Gestionnaire de recherche
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  // Gestionnaire de rafraîchissement
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([refetch(), refetchStats()]);
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Mise à jour des données quand les filtres changent
@@ -305,6 +436,34 @@ export const ServeurOrdersSection = (): JSX.Element => {
     setOrderToEdit(order);
     setIsEditOrderModalOpen(true);
     setActiveDropdown(null); // Fermer le dropdown
+  }; // Fonction pour gérer le paiement
+  const handlePayment = (order: Order) => {
+    setOrderToPay(order);
+    setSelectedPaymentMethod(order.modePaiement || ""); // Initialiser avec le mode actuel
+    setIsPaymentModalOpen(true);
+    setActiveDropdown(null); // Fermer le dropdown
+  }; // Fonction pour traiter le paiement
+  const handleProcessPayment = async () => {
+    if (!orderToPay || !selectedPaymentMethod) return;
+
+    try {
+      await OrderService.updateOrder(orderToPay._id, {
+        modePaiement: selectedPaymentMethod as
+          | "ESPECES"
+          | "CARTE_BANCAIRE"
+          | "WAVE"
+          | "MTN_MONEY"
+          | "ORANGE_MONEY"
+          | "MOOV_MONEY",
+      });
+      setIsPaymentModalOpen(false);
+      setOrderToPay(null);
+      setSelectedPaymentMethod("");
+      refetch(); // Actualiser la liste
+      refetchStats(); // Actualiser les statistiques
+    } catch (error) {
+      console.error("Erreur lors du traitement du paiement:", error);
+    }
   }; // Fonction pour ouvrir le bottom sheet mobile
   const handleMobileCardClick = (order: Order) => {
     setSelectedOrderForActions(order);
@@ -339,7 +498,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     {card.value}
                   </span>
                   {card.currency && (
-                    <span className="font-bold text-base sm:text-lg md:text-2xl text-gray-400 flex-shrink-0">
+                    <span className="font-bold text-xl sm:text-2xl md:text-3xl text-gray-400 flex-shrink-0">
                       {card.currency}
                     </span>
                   )}
@@ -361,12 +520,13 @@ export const ServeurOrdersSection = (): JSX.Element => {
         <Card className="rounded-t-2xl border-b-0 rounded-b-none shadow-none md:shadow md:rounded-3xl overflow-hidden w-full">
           {/* Header and SearchIcon - Responsive */}
           <div className="flex flex-col border-b bg-white border-slate-200">
+            {" "}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-3 md:px-4 lg:px-6 pt-4 pb-3 gap-3 lg:gap-4">
               <h2 className="font-bold text-lg md:text-xl lg:text-2xl text-gray-900 flex-shrink-0">
                 Liste des commandes
               </h2>
-              <div className="w-full lg:w-80 lg:flex-shrink-0">
-                <div className="relative">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 lg:w-80">
                   <Input
                     className="pl-4 pr-10 py-2.5 md:py-3 h-10 md:h-12 rounded-[123px] border border-[#eff1f3] text-sm md:text-base w-full"
                     placeholder="Rechercher une commande"
@@ -375,6 +535,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   />
                   <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
                 </div>
+                <Button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full border-[#eff1f3] hover:bg-gray-20 flex-shrink-0"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 md:h-5 md:w-5 text-gray-600 ${
+                      isRefreshing ? "animate-spin" : ""
+                    }`}
+                  />
+                </Button>
               </div>
             </div>
             {/* Status Tabs - Horizontally Scrollable */}
@@ -412,10 +585,13 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 <TableRow>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
                     Commande
-                  </TableHead>
+                  </TableHead>{" "}
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
                     ID de commande
-                  </TableHead>{" "}
+                  </TableHead>
+                  <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
+                    Serveur
+                  </TableHead>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
                     Type de paiement
                   </TableHead>
@@ -431,9 +607,10 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {" "}
                 {ordersLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-40 text-center">
+                    <TableCell colSpan={7} className="h-40 text-center">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <SpinnerMedium />
                         <div className="text-gray-500 text-sm">
@@ -444,7 +621,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </TableRow>
                 ) : ordersError ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-40 text-center">
+                    <TableCell colSpan={7} className="h-40 text-center">
                       <div className="flex items-center justify-center">
                         <div className="text-red-500 text-sm">
                           Erreur: {ordersError}
@@ -454,7 +631,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </TableRow>
                 ) : filteredOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-80 text-center">
+                    <TableCell colSpan={7} className="h-80 text-center">
                       <div className="flex flex-col items-center justify-center gap-4 py-8">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                           <PlusIcon className="w-8 h-8 text-gray-400" />
@@ -496,30 +673,36 @@ export const ServeurOrdersSection = (): JSX.Element => {
                         {/* Dish Column */}
                         <div className="flex items-center gap-3 min-w-0">
                           {" "}
-                          <div className="w-10 h-10 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                            {order.items[0]?.menuItem &&
-                            typeof order.items[0].menuItem === "object" &&
-                            order.items[0].menuItem.image ? (
-                              <img
-                                src={`${"http://localhost:3000"}${
-                                  order.items[0].menuItem.image
-                                }`}
-                                alt={order.items[0]?.nom || "Plat"}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  // Fallback vers l'image par défaut si l'image du produit n'existe pas
-                                  (e.target as HTMLImageElement).src =
-                                    "/img/plat_petit.png";
-                                }}
-                              />
-                            ) : (
-                              <img
-                                src="/img/plat_petit.png"
-                                alt="Plat"
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                          </div>
+                          {/* Images empilées pour commandes multiples */}
+                          {order.items.length > 1 ? (
+                            <div className="w-14 h-10 flex-shrink-0">
+                              {renderStackedImages(order.items)}
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                              {order.items[0]?.menuItem &&
+                              typeof order.items[0].menuItem === "object" &&
+                              order.items[0].menuItem.image ? (
+                                <img
+                                  src={`${"http://localhost:3000"}${
+                                    order.items[0].menuItem.image
+                                  }`}
+                                  alt={order.items[0]?.nom || "Plat"}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src =
+                                      "/img/plat_petit.png";
+                                  }}
+                                />
+                              ) : (
+                                <img
+                                  src="/img/plat_petit.png"
+                                  alt="Plat"
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                          )}
                           <div className="flex flex-col min-w-0 overflow-hidden">
                             <div className="font-semibold text-base text-gray-900 truncate">
                               {order.items[0]?.nom || "Commande"}
@@ -540,22 +723,61 @@ export const ServeurOrdersSection = (): JSX.Element => {
                           <div className="font-medium text-sm text-gray-500">
                             {order._id.slice(-6).toUpperCase()}
                           </div>
-                        </div>
+                        </div>{" "}
                       </TableCell>{" "}
+                      {/* Serveur Column */}
                       <TableCell className="px-4 py-3">
+                        {" "}
+                        <div className="flex items-center gap-3">
+                          {/* Photo de profil du serveur */}
+                          <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            {order.serveur?.photoProfil ? (
+                              <img
+                                src={ProfileService.getProfilePictureUrl(
+                                  order.serveur.photoProfil
+                                )}
+                                alt={order.serveur?.prenom || "Serveur"}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                  // Remplacer par l'icône User de Phosphor
+                                  const iconElement =
+                                    document.createElement("div");
+                                  iconElement.innerHTML =
+                                    '<div class="w-5 h-5 text-gray-600"><svg fill="currentColor" viewBox="0 0 256 256"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg></div>';
+                                  target.parentElement!.appendChild(
+                                    iconElement.firstChild!
+                                  );
+                                }}
+                              />
+                            ) : (
+                              <User size={20} className="text-gray-600" />
+                            )}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <div className="font-semibold text-base text-gray-900">
+                              {order.serveur
+                                ? user &&
+                                  (user.id === order.serveur._id ||
+                                    user._id === order.serveur._id)
+                                  ? "Moi"
+                                  : order.serveur.prenom
+                                : "Non défini"}
+                            </div>
+                            <div className="font-medium text-sm text-gray-500">
+                              Serveur
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {" "}
                         {/* Payment Type Column */}
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="flex w-10 h-10 items-center justify-center px-2 py-2 bg-orange-100 rounded-full flex-shrink-0">
-                            <img
-                              className="w-5 h-5"
-                              alt="Payment icon"
-                              src={getPaymentIcon(
-                                order.modePaiement || "especes"
-                              )}
-                            />
-                          </div>
+                          {getPaymentIcon(order.modePaiement || "especes")}
                           <div className="font-semibold text-base text-gray-900 truncate">
-                            {order.modePaiement || "Non défini"}
+                            {formatPaymentMethodName(order.modePaiement)}
                           </div>
                         </div>
                       </TableCell>
@@ -567,16 +789,10 @@ export const ServeurOrdersSection = (): JSX.Element => {
                           </span>
                           <span className="text-gray-400">XOF</span>
                         </div>
-                      </TableCell>
+                      </TableCell>{" "}
                       {/* Status Column */}
                       <TableCell className="px-4 py-3">
-                        <Badge
-                          className={`${
-                            getStatusBadge(order.statut).color
-                          } px-3 py-1 rounded-full font-semibold text-xs whitespace-nowrap`}
-                        >
-                          {getStatusBadge(order.statut).label}
-                        </Badge>
+                        <OrderStatusBadge statut={order.statut} />
                       </TableCell>
                       {/* Action Column */}
                       <TableCell className="px-4 py-3">
@@ -633,7 +849,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                 </>
-                              )}
+                              )}{" "}
                               <DropdownMenuItem
                                 className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
                                 onClick={() => handleViewOrderDetails(order)}
@@ -642,7 +858,22 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 <span className="text-gray-700">
                                   Voir détails
                                 </span>
-                              </DropdownMenuItem>
+                              </DropdownMenuItem>{" "}
+                              {/* Option Paiement pour toutes les commandes sauf annulées */}
+                              {order.statut !== "ANNULE" && (
+                                <>
+                                  <DropdownMenuSeparator className="h-px bg-gray-200" />
+                                  <DropdownMenuItem
+                                    className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
+                                    onClick={() => handlePayment(order)}
+                                  >
+                                    <CreditCard size={20} />
+                                    <span className="text-gray-700">
+                                      Paiement
+                                    </span>
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                               {(order.statut === "EN_ATTENTE" ||
                                 order.statut === "EN_PREPARATION") && (
                                 <>
@@ -726,32 +957,38 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   >
                     <CardContent className="p-3 md:p-4">
                       <div className="flex items-start justify-between gap-3">
-                        {/* Left side: Product info */}
+                        {/* Left side: Product info */}{" "}
                         <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                          {/* Product image */}{" "}
-                          <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                            {order.items[0]?.menuItem &&
-                            typeof order.items[0].menuItem === "object" &&
-                            order.items[0].menuItem.image ? (
-                              <img
-                                src={`${"http://localhost:3000"}${
-                                  order.items[0].menuItem.image
-                                }`}
-                                alt={order.items[0]?.nom || "Plat"}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src =
-                                    "/img/plat_petit.png";
-                                }}
-                              />
-                            ) : (
-                              <img
-                                src="/img/plat_petit.png"
-                                alt="Plat"
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                          </div>
+                          {/* Product image */}
+                          {order.items.length > 1 ? (
+                            <div className="w-16 h-12 flex-shrink-0">
+                              {renderStackedImages(order.items, 3, true)}
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                              {order.items[0]?.menuItem &&
+                              typeof order.items[0].menuItem === "object" &&
+                              order.items[0].menuItem.image ? (
+                                <img
+                                  src={`${"http://localhost:3000"}${
+                                    order.items[0].menuItem.image
+                                  }`}
+                                  alt={order.items[0]?.nom || "Plat"}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src =
+                                      "/img/plat_petit.png";
+                                  }}
+                                />
+                              ) : (
+                                <img
+                                  src="/img/plat_petit.png"
+                                  alt="Plat"
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                          )}{" "}
                           {/* Product info */}
                           <div className="flex flex-col gap-1 overflow-hidden flex-1">
                             <div className="font-semibold text-base text-gray-900 truncate">
@@ -761,7 +998,48 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               <div className="font-medium text-sm text-gray-500">
                                 +{order.items.length - 1} autres
                               </div>
-                            )}
+                            )}{" "}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="font-medium text-sm text-orange-600">
+                                Serveur:
+                              </span>{" "}
+                              {/* Photo de profil du serveur */}
+                              <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                {order.serveur?.photoProfil ? (
+                                  <img
+                                    src={ProfileService.getProfilePictureUrl(
+                                      order.serveur.photoProfil
+                                    )}
+                                    alt={order.serveur?.prenom || "Serveur"}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      target.style.display = "none";
+                                      // Remplacer par l'icône User de Phosphor
+                                      const iconElement =
+                                        document.createElement("div");
+                                      iconElement.innerHTML =
+                                        '<div class="w-3 h-3 text-gray-600"><svg fill="currentColor" viewBox="0 0 256 256"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg></div>';
+                                      target.parentElement!.appendChild(
+                                        iconElement.firstChild!
+                                      );
+                                    }}
+                                  />
+                                ) : (
+                                  <User size={12} className="text-gray-600" />
+                                )}
+                              </div>
+                              <span className="font-medium text-sm text-orange-600">
+                                {order.serveur
+                                  ? user &&
+                                    (user.id === order.serveur._id ||
+                                      user._id === order.serveur._id)
+                                    ? "Moi"
+                                    : order.serveur.prenom
+                                  : "Non défini"}
+                              </span>
+                            </div>
                             {/* <div className="flex items-center gap-2 mt-1">
                             <span className="font-semibold text-sm text-gray-900">
                               #{order.numeroCommande}
@@ -772,17 +1050,10 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             </span>
                           </div> */}
                           </div>
-                        </div>
-
+                        </div>{" "}
                         {/* Right side: Status badge only */}
                         <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                          <Badge
-                            className={`${
-                              getStatusBadge(order.statut).color
-                            } px-2 py-1 rounded-full font-semibold text-xs whitespace-nowrap`}
-                          >
-                            {getStatusBadge(order.statut).label}
-                          </Badge>
+                          <OrderStatusBadge statut={order.statut} />
                           <span className="font-semibold text-sm text-gray-900 truncate">
                             {formatPrice(order.montantTotal)} XOF
                           </span>
@@ -803,32 +1074,38 @@ export const ServeurOrdersSection = (): JSX.Element => {
       >
         {selectedOrderForActions && (
           <>
-            {/* Order Info Header */}
+            {/* Order Info Header */}{" "}
             <div className="flex items-center gap-3 mb-6">
-              {" "}
-              <div className="w-14 h-14 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                {selectedOrderForActions.items[0]?.menuItem &&
-                typeof selectedOrderForActions.items[0].menuItem === "object" &&
-                selectedOrderForActions.items[0].menuItem.image ? (
-                  <img
-                    src={`${"http://localhost:3000"}${
-                      selectedOrderForActions.items[0].menuItem.image
-                    }`}
-                    alt={selectedOrderForActions.items[0]?.nom || "Plat"}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "/img/plat_petit.png";
-                    }}
-                  />
-                ) : (
-                  <img
-                    src="/img/plat_petit.png"
-                    alt="Plat"
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
+              {selectedOrderForActions.items.length > 1 ? (
+                <div className="w-20 h-14 flex-shrink-0">
+                  {renderStackedImages(selectedOrderForActions.items, 3, true)}
+                </div>
+              ) : (
+                <div className="w-14 h-14 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                  {selectedOrderForActions.items[0]?.menuItem &&
+                  typeof selectedOrderForActions.items[0].menuItem ===
+                    "object" &&
+                  selectedOrderForActions.items[0].menuItem.image ? (
+                    <img
+                      src={`${"http://localhost:3000"}${
+                        selectedOrderForActions.items[0].menuItem.image
+                      }`}
+                      alt={selectedOrderForActions.items[0]?.nom || "Plat"}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "/img/plat_petit.png";
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src="/img/plat_petit.png"
+                      alt="Plat"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+              )}
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900">
                   {selectedOrderForActions.items[0]?.nom || "Commande"}
@@ -838,17 +1115,10 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {formatPrice(selectedOrderForActions.montantTotal)} XOF
-                </p>
+                </p>{" "}
               </div>
-              <Badge
-                className={`${
-                  getStatusBadge(selectedOrderForActions.statut).color
-                } px-3 py-1 rounded-full font-semibold text-xs whitespace-nowrap`}
-              >
-                {getStatusBadge(selectedOrderForActions.statut).label}
-              </Badge>
+              <OrderStatusBadge statut={selectedOrderForActions.statut} />
             </div>
-
             {/* Action Buttons */}
             <div className="space-y-3">
               {/* Voir détails - toujours disponible */}
@@ -862,7 +1132,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 description="Consulter les informations complètes"
                 variant="default"
               />
-
               {/* Actions conditionnelles selon le statut */}
               {selectedOrderForActions.statut === "EN_ATTENTE" && (
                 <>
@@ -888,8 +1157,20 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     variant="primary"
                   />
                 </>
+              )}{" "}
+              {/* Paiement - disponible pour toutes les commandes sauf annulées */}
+              {selectedOrderForActions.statut !== "ANNULE" && (
+                <BottomSheetAction
+                  onClick={() => {
+                    handlePayment(selectedOrderForActions);
+                    handleCloseBottomSheet();
+                  }}
+                  icon={<CreditCard size={24} />}
+                  title="Paiement"
+                  description="Choisir le mode de paiement"
+                  variant="primary"
+                />
               )}
-
               {/* Annuler - disponible pour EN_ATTENTE et EN_PREPARATION */}
               {(selectedOrderForActions.statut === "EN_ATTENTE" ||
                 selectedOrderForActions.statut === "EN_PREPARATION") && (
@@ -940,6 +1221,259 @@ export const ServeurOrdersSection = (): JSX.Element => {
         }}
         order={selectedOrder}
       />{" "}
+      {/* Modal pour le mode de paiement */}
+      <Dialog
+        open={isPaymentModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsPaymentModalOpen(false);
+            setOrderToPay(null);
+            setSelectedPaymentMethod("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl p-0">
+          <div className="px-8 py-6">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="text-2xl font-bold text-gray-900">
+                Moyen de paiement
+              </DialogTitle>
+            </DialogHeader>
+
+            {/* Grid des options de paiement */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              {/* Carte bancaire */}
+              <div
+                onClick={() => setSelectedPaymentMethod("CARTE_BANCAIRE")}
+                className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  selectedPaymentMethod === "CARTE_BANCAIRE"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <CreditCard
+                      size={24}
+                      weight="regular"
+                      className="text-orange-600"
+                    />
+                  </div>
+                  <span className="font-medium text-gray-900">
+                    Carte de crédit
+                  </span>
+                </div>
+                {selectedPaymentMethod === "CARTE_BANCAIRE" && (
+                  <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Orange Money */}
+              <div
+                onClick={() => setSelectedPaymentMethod("ORANGE_MONEY")}
+                className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  selectedPaymentMethod === "ORANGE_MONEY"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/img/orange_money.jpg"
+                      alt="Orange Money"
+                      className="w-12 h-12 object-cover"
+                    />
+                  </div>
+                  <span className="font-medium text-gray-900">
+                    Orange money
+                  </span>
+                </div>
+                {selectedPaymentMethod === "ORANGE_MONEY" && (
+                  <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* MTN Money */}
+              <div
+                onClick={() => setSelectedPaymentMethod("MTN_MONEY")}
+                className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  selectedPaymentMethod === "MTN_MONEY"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/img/mtn_money.jpg"
+                      alt="MTN Money"
+                      className="w-12 h-12 object-cover"
+                    />
+                  </div>
+                  <span className="font-medium text-gray-900">MTN money</span>
+                </div>
+                {selectedPaymentMethod === "MTN_MONEY" && (
+                  <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Moov Money */}
+              <div
+                onClick={() => setSelectedPaymentMethod("MOOV_MONEY")}
+                className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  selectedPaymentMethod === "MOOV_MONEY"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/img/moov_money.jpg"
+                      alt="Moov Money"
+                      className="w-12 h-12 object-cover"
+                    />
+                  </div>
+                  <span className="font-medium text-gray-900">Moov money</span>
+                </div>
+                {selectedPaymentMethod === "MOOV_MONEY" && (
+                  <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Wave */}
+              <div
+                onClick={() => setSelectedPaymentMethod("WAVE")}
+                className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  selectedPaymentMethod === "WAVE"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                    <img
+                      src="/img/wave.jpg"
+                      alt="Wave"
+                      className="w-12 h-12 object-cover"
+                    />
+                  </div>
+                  <span className="font-medium text-gray-900">Wave</span>
+                </div>
+                {selectedPaymentMethod === "WAVE" && (
+                  <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Espèces */}
+              <div
+                onClick={() => setSelectedPaymentMethod("ESPECES")}
+                className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  selectedPaymentMethod === "ESPECES"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <Money
+                      size={24}
+                      weight="regular"
+                      className="text-orange-600"
+                    />
+                  </div>
+                  <span className="font-medium text-gray-900">Espèces</span>
+                </div>
+                {selectedPaymentMethod === "ESPECES" && (
+                  <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bouton Valider */}
+            <Button
+              onClick={handleProcessPayment}
+              disabled={!selectedPaymentMethod}
+              className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium text-base rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Valider
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Barre mobile fixe pour nouvelle commande */}
       <MobileNewOrderBar
         onClick={() => setIsNewOrderBottomSheetOpen(true)}

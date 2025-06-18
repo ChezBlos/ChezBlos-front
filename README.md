@@ -51,5 +51,4 @@ npm run build
 - **Admin** : Email + mot de passe
 - **Personnel** : Code d'accès unique (format: 2 lettres nom + 2 lettres prénom + 4 chiffres)
 
-
 **Chez Blos** - Système de gestion de restaurant moderne et intuitif.

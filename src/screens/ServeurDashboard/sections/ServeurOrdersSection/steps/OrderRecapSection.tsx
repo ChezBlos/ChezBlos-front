@@ -14,23 +14,12 @@ export const OrderRecapSection = (): JSX.Element => {
     setOrderNotes,
     tableNumber,
     setTableNumber,
-    paymentMethod,
-    setPaymentMethod,
     updateItemNotes,
   } = useOrder();
   const { previousTab, nextTab, canGoPrevious } = useTab();
-
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
   };
-
-  const paymentMethods = [
-    { value: "ESPECES", label: "Espèces" },
-    { value: "CARTE", label: "Carte bancaire" },
-    { value: "CHEQUE", label: "Chèque" },
-    { value: "MOBILE_MONEY", label: "Mobile Money" },
-    { value: "VIREMENT", label: "Virement" },
-  ];
 
   return (
     <div className="flex flex-col w-full h-full bg-white">
@@ -128,31 +117,8 @@ export const OrderRecapSection = (): JSX.Element => {
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
                   className="min-h-[80px] resize-none"
-                />
+                />{" "}
               </div>{" "}
-              {/* Mode de paiement */}
-              <div className="flex flex-col gap-2">
-                <Label
-                  htmlFor="payment-mode"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Mode de paiement
-                </Label>{" "}
-                <select
-                  id="payment-mode"
-                  aria-label="Mode de paiement"
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                >
-                  <option value="">Sélectionnez un mode de paiement</option>
-                  {paymentMethods.map((method) => (
-                    <option key={method.value} value={method.value}>
-                      {method.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
           )}
         </ScrollArea>

@@ -18,7 +18,6 @@ interface OrderContextType {
   orderItems: OrderItem[];
   orderNotes: string;
   tableNumber: string;
-  paymentMethod: string;
   loading: boolean;
   error: string | null;
   isEditMode: boolean;
@@ -29,7 +28,6 @@ interface OrderContextType {
   updateItemNotes: (id: string, notes: string) => void;
   setOrderNotes: (notes: string) => void;
   setTableNumber: (table: string) => void;
-  setPaymentMethod: (method: string) => void;
   clearOrder: () => void;
   getTotalAmount: () => number;
   getTotalItems: () => number;
@@ -52,7 +50,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderNotes, setOrderNotes] = useState("");
   const [tableNumber, setTableNumber] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null); // Initialiser les données quand on est en mode édition
   useEffect(() => {
@@ -85,11 +82,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
           notes: item.notes || "",
         };
       });
-
       setOrderItems(convertedItems);
       setOrderNotes(orderToEdit.notes || "");
       setTableNumber(orderToEdit.numeroTable?.toString() || "");
-      setPaymentMethod(orderToEdit.modePaiement || "");
     }
   }, [isEditMode, orderToEdit]);
 
@@ -152,7 +147,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     setOrderItems([]);
     setOrderNotes("");
     setTableNumber("");
-    setPaymentMethod("");
     setError(null);
   };
 
@@ -184,13 +178,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         })),
         numeroTable: tableNumber ? parseInt(tableNumber) : undefined,
         notes: orderNotes || undefined,
-        modePaiement:
-          (paymentMethod as
-            | "ESPECES"
-            | "CARTE"
-            | "CHEQUE"
-            | "MOBILE_MONEY"
-            | "VIREMENT") || undefined,
+        modePaiement: "ESPECES", // Mode de paiement par défaut
       };
       let result: Order;
 
@@ -225,7 +213,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         orderItems,
         orderNotes,
         tableNumber,
-        paymentMethod,
         loading,
         error,
         isEditMode,
@@ -236,7 +223,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         updateItemNotes,
         setOrderNotes,
         setTableNumber,
-        setPaymentMethod,
         clearOrder,
         getTotalAmount,
         getTotalItems,

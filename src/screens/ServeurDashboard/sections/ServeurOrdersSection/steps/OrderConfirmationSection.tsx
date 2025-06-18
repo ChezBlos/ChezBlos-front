@@ -216,7 +216,7 @@ export const OrderConfirmationSection = ({
           </div>
         </div>{" "}
         {/* Footer avec bouton Terminer */}
-        <div className="flex flex-col w-full items-start justify-center gap-5 pt-6 pr-8 pb-8 pl-8 border-t border-gray-200 flex-shrink-0 mt-auto bg-white">
+        <div className="flex flex-col w-full items-start justify-center gap-5 pt-6 pr-6 pb-6 pl-6 border-t border-gray-200 flex-shrink-0 mt-auto bg-white">
           <div className="flex items-center justify-between w-full">
             {/* Progress Dots */}
             <div className="flex flex-col items-start gap-2.5 flex-1">
@@ -254,7 +254,7 @@ export const OrderConfirmationSection = ({
   }
   // État par défaut : afficher le résumé de commande avec bouton de confirmation
   return (
-    <div className="flex flex-col w-full h-full bg-white min-h-[600px]">
+    <div className="flex flex-col w-full h-full bg-white">
       {/* Content Area - Scrollable */}
       <div className="flex-1 flex flex-col items-center justify-center gap-5 px-8 py-8 overflow-y-auto">
         {/* Order Icon */}
@@ -281,7 +281,7 @@ export const OrderConfirmationSection = ({
         {/* Order Summary Card */}
         <div className="w-full bg-gray-10 rounded-2xl p-6">
           <div className="flex flex-col gap-4">
-            {/* Number of items */}
+            {/* Number of items
             <div className="flex gap-2 items-center">
               <span className="text-sm font-medium text-gray-600">
                 Nombre de plats :
@@ -290,23 +290,9 @@ export const OrderConfirmationSection = ({
                 {totalItems.toString().padStart(2, "0")}{" "}
                 {totalItems > 1 ? "plats" : "plat"}
               </span>
-            </div>
-            {/* Total */}
-            <div className="flex gap-2 items-center">
-              <span className="text-sm font-medium text-gray-900">
-                Coût total :
-              </span>
-              <div className="flex items-center gap-1">
-                <span className="text-base font-semibold text-gray-900">
-                  {formatPrice(totalAmount)}
-                </span>
-                <span className="text-base font-semibold text-gray-400">
-                  XOF
-                </span>
-              </div>
-            </div>{" "}
+            </div> */}
             {/* Items list */}
-            <div className="border-t pt-4">
+            <div className="border-b pb-4">
               <span className="text-sm font-medium text-gray-600 mb-3 block">
                 Articles commandés :
               </span>
@@ -324,6 +310,20 @@ export const OrderConfirmationSection = ({
                     </span>
                   </div>
                 ))}
+              </div>
+            </div>
+            {/* Total */}
+            <div className="flex gap-2 items-center">
+              <span className="text-sm font-medium text-gray-900">
+                Coût total :
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-semibold text-gray-900">
+                  {formatPrice(totalAmount)}
+                </span>
+                <span className="text-base font-semibold text-gray-400">
+                  XOF
+                </span>
               </div>
             </div>
           </div>

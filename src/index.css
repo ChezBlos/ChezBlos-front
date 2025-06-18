@@ -1,5 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
+/* React Image Crop Styles */
+@import url("https://unpkg.com/react-image-crop@11.0.5/dist/ReactCrop.css");
+
 /* Gilroy Font Faces */
 /* Ultra Light (100) */
 @font-face {

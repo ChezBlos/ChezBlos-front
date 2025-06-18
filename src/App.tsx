@@ -11,6 +11,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./screens/Login";
 import { AdminDashboard } from "./screens/AdminDashboard";
 import { ServeurDashboard } from "./screens/ServeurDashboard";
+import { CuisinierDashboard } from "./screens/CuisinierDashboard";
 import { NotFound, Unauthorized } from "./screens/ErrorPages";
 
 const App: React.FC = () => {
@@ -55,14 +56,17 @@ const App: React.FC = () => {
                     </Routes>
                   </ProtectedRoute>
                 }
-              />
+              />{" "}
               {/* Routes protégées pour cuisine */}
               <Route
                 path="/cuisine/*"
                 element={
-                  <ProtectedRoute requiredRoles={["cuisine"]}>
+                  <ProtectedRoute requiredRoles={["cuisinier"]}>
                     <Routes>
-                      <Route path="dashboard" element={<ServeurDashboard />} />
+                      <Route
+                        path="dashboard"
+                        element={<CuisinierDashboard />}
+                      />
                       <Route
                         path=""
                         element={<Navigate to="dashboard" replace />}

@@ -1,5 +1,5 @@
-import { PlusIcon, LogOutIcon, MenuIcon } from "lucide-react";
-import { User, ListBullets, Users, Camera } from "@phosphor-icons/react";
+import { LogOutIcon, MenuIcon } from "lucide-react";
+import { User, ListBullets, Package, Camera } from "@phosphor-icons/react";
 import React, { useState } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { Button } from "../../../../components/ui/button";
@@ -13,23 +13,21 @@ import {
 } from "../../../../components/ui/dropdown-menu";
 import { ChangeProfilePictureModal } from "../../../../components/modals/ChangeProfilePictureModal";
 import { ProfileService } from "../../../../services/profileService";
-import NewOrderModal from "../ServeurOrdersSection/NewOrderModal";
 
-interface ServeurHeaderSectionProps {
+interface CuisinierHeaderSectionProps {
   onOrdersRefresh?: () => void;
   onStatsRefresh?: () => void;
-  selectedSection?: "commandes" | "historique";
-  onSectionSelect?: (section: "commandes" | "historique") => void;
+  selectedSection?: "commandes" | "stock";
+  onSectionSelect?: (section: "commandes" | "stock") => void;
 }
 
-export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
+export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
   onOrdersRefresh,
   onStatsRefresh,
   selectedSection,
   onSectionSelect,
 }) => {
   const { user, logout } = useAuth();
-  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [isChangePictureModalOpen, setIsChangePictureModalOpen] =
     useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -45,12 +43,23 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
     hour: "2-digit",
     minute: "2-digit",
   });
+
   const handleLogout = () => {
     logout();
   };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      if (onOrdersRefresh) await onOrdersRefresh();
+      if (onStatsRefresh) await onStatsRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <header className="flex flex-col w-full items-start">
-      {" "}
       {/* Mobile Header - visible only on mobile/tablet */}
       <div className="lg:hidden w-full bg-white">
         {/* Top part: Logo + Avatar + Menu burger */}
@@ -80,15 +89,11 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
-                {" "}
                 <div className="px-3 py-2">
                   <p className="text-sm font-medium">
                     {user?.prenom} {user?.nom}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {user?.role === "SERVEUR" ? "Serveur" : "Cuisinier"}
-                    {user?.isCaissier && " • Caissier"}
-                  </p>
+                  <p className="text-xs text-muted-foreground">Cuisinier</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -101,96 +106,62 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="text-red-600"
+                  className="flex items-center gap-2 text-red-600"
                 >
-                  <LogOutIcon className="w-4 h-4 mr-2" />
-                  Déconnexion
+                  <LogOutIcon size={16} />
+                  Se déconnecter
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* Menu burger */}
+            {/* Mobile Menu Burger */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-10 h-10 rounded-lg hover:bg-gray-10"
+                  className="h-10 w-10 rounded-full"
                 >
-                  <MenuIcon className="w-6 h-6" />
+                  <MenuIcon className="h-5 w-5 text-gray-600" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuItem
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
-                    selectedSection === "commandes"
-                      ? "bg-orange-50 text-orange-600"
-                      : ""
-                  }`}
                   onClick={() => onSectionSelect?.("commandes")}
-                >
-                  <ListBullets size={20} />
-                  <span>Commandes</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
-                    selectedSection === "historique"
-                      ? "bg-orange-50 text-orange-600"
-                      : ""
+                  className={`flex items-center gap-2 ${
+                    selectedSection === "commandes" ? "bg-gray-10" : "bg-white"
                   }`}
-                  onClick={() => onSectionSelect?.("historique")}
                 >
-                  <Users size={20} />
-                  <span>Historique</span>
+                  <ListBullets size={16} />
+                  Commandes
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onSectionSelect?.("stock")}
+                  className={`flex items-center gap-2 ${
+                    selectedSection === "stock" ? "bg-gray-10" : "bg-white"
+                  }`}
+                >
+                  <Package size={16} />
+                  Gestion des stocks
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>{" "}
-        {/* Bottom part: Greeting only */}
-        <div className="flex items-center justify-start px-4 py-4 border-b border-slate-200">
-          <div className="flex flex-col items-start gap-1">
-            <h1 className="font-gilroy font-bold text-[#181818] text-2xl">
-              Bonjour {user?.prenom}
-            </h1>
-            <p className="font-title-t5-medium text-slate-400 text-sm">
-              {formattedDate} - {formattedTime}
-            </p>
-          </div>
         </div>
-      </div>{" "}
-      {/* Desktop Header - visible only on desktop */}
-      <div className="hidden lg:flex items-center justify-between px-3 md:px-6 lg:px-12 xl:px-20 py-6 w-full bg-white border-b border-slate-200">
-        <div className="flex flex-col items-start gap-1">
-          <h1 className="font-gilroy font-bold text-4xl text-[#181818] ">
+      </div>
+      {/* Desktop Header */}
+      <div className="hidden lg:flex items-center justify-between w-full bg-white px-6 lg:px-12 xl:px-20 py-6 border-b border-slate-100">
+        {/* Left: Date and greeting */}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
             Bonjour {user?.prenom}
           </h1>
-          <p className="font-title-t5-medium text-slate-400 text-[length:var(--title-t5-medium-font-size)] tracking-[var(--title-t5-medium-letter-spacing)] leading-[var(--title-t5-medium-line-height)]">
-            {formattedDate} - {formattedTime}
+          <p className="text-sm lg:text-base text-gray-600">
+            {formattedDate} • {formattedTime}
           </p>
         </div>
 
-        {/* Right side: Actions */}
+        {/* Right: User avatar and actions */}
         <div className="flex items-center gap-4">
-          {/* Bouton Ajouter une commande */}
-          <Button
-            onClick={() => setIsNewOrderModalOpen(true)}
-            disabled={isRefreshing}
-            className="bg-brand-primary-500 hover:bg-brand-primary-600 disabled:bg-brand-primary-300 text-white px-4 py-5 rounded-lg font-semibold flex items-center gap-2 transition-all duration-200"
-          >
-            {isRefreshing ? (
-              <>
-                <ButtonSpinner />
-                <span>Actualisation...</span>
-              </>
-            ) : (
-              <>
-                <PlusIcon className="w-5 h-5" />
-                <span>Ajouter une commande</span>
-              </>
-            )}
-          </Button>{" "}
-          {/* Avatar utilisateur avec menu déroulant */}{" "}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="relative w-12 h-12 cursor-pointer">
@@ -210,52 +181,34 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                 <div className="absolute w-4 h-4 -bottom-0.5 -right-0.5 bg-success-50 rounded-full border-2 border-white" />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-              <div className="px-3 py-2">
-                <p className="text-sm font-medium">
+            <DropdownMenuContent className="w-64" align="end">
+              <div className="px-4 py-3">
+                <p className="text-base font-medium">
                   {user?.prenom} {user?.nom}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {user?.role === "SERVEUR" ? "Serveur" : "Cuisinier"}
-                  {user?.isCaissier && " • Caissier"}
-                </p>
+                <p className="text-sm text-muted-foreground">Cuisinier</p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setIsChangePictureModalOpen(true)}
-                className="cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2"
               >
-                <Camera size={20} className="mr-2" />
-                Changer de photo de profil
+                <Camera size={18} />
+                Changer la photo de profil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                <LogOutIcon className="w-4 h-4 mr-2" />
-                Déconnexion
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 text-red-600"
+              >
+                <LogOutIcon size={18} />
+                Se déconnecter
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-      {/* New Order Modal */}
-      <NewOrderModal
-        isOpen={isNewOrderModalOpen}
-        onClose={async () => {
-          setIsNewOrderModalOpen(false);
-          // Actualiser les données après fermeture du modal
-          if (onOrdersRefresh || onStatsRefresh) {
-            setIsRefreshing(true);
-            try {
-              await Promise.all([onOrdersRefresh?.(), onStatsRefresh?.()]);
-            } catch (error) {
-              console.error("Erreur lors du rafraîchissement:", error);
-            } finally {
-              setIsRefreshing(false);
-            }
-          }
-        }}
-      />
-      {/* Change Profile Picture Modal */}
+      </div>{" "}
+      {/* Modal pour changer la photo de profil */}
       <ChangeProfilePictureModal
         isOpen={isChangePictureModalOpen}
         onClose={() => setIsChangePictureModalOpen(false)}

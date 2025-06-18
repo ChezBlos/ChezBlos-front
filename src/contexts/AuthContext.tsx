@@ -9,6 +9,7 @@ import { loginApi, getUserProfile } from "../services/api";
 
 export interface User {
   id: string;
+  _id?: string; // Ajout pour compatibilité avec le backend
   nom: string;
   prenom: string;
   email?: string;
@@ -16,6 +17,7 @@ export interface User {
   role: "ADMIN" | "SERVEUR" | "CUISINIER";
   isCaissier: boolean;
   actif: boolean;
+  photoProfil?: string;
 }
 
 interface AuthContextType {

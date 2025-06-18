@@ -59,6 +59,7 @@ export interface OrderStats {
   enPreparation: number;
   enCours: number;
   termine: number;
+  annule: number;
   chiffreAffairesJour: number;
   chiffreAffairesMois: number;
 }

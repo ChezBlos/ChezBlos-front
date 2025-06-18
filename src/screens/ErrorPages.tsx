@@ -1,6 +1,7 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import { useAuth } from "../contexts/AuthContext";
 
 export const NotFound: React.FC = () => {
   return (
@@ -24,6 +25,14 @@ export const NotFound: React.FC = () => {
 };
 
 export const Unauthorized: React.FC = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleReturnToLogin = () => {
+    logout(); // Déconnecter l'utilisateur
+    navigate("/login"); // Rediriger vers la page de login
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
@@ -34,11 +43,12 @@ export const Unauthorized: React.FC = () => {
         <p className="text-gray-600 mb-8">
           Vous n'avez pas les permissions nécessaires pour accéder à cette page.
         </p>
-        <Link to="/">
-          <Button className="bg-orange-500 hover:bg-orange-600">
-            Retour à l'accueil
-          </Button>
-        </Link>
+        <Button
+          onClick={handleReturnToLogin}
+          className="bg-orange-500 hover:bg-orange-600"
+        >
+          Se déconnecter et retourner au login
+        </Button>
       </div>
     </div>
   );

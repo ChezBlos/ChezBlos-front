@@ -23,7 +23,7 @@ export const getOrderStatusBadge = (statut: string): StatusBadgeInfo => {
     case "EN_COURS":
     case "en-cours":
       return {
-        label: "En cuisine",
+        label: "En cours",
         color: "bg-blue-100 text-blue-600 border-blue-200",
       };
     case "EN_PREPARATION":

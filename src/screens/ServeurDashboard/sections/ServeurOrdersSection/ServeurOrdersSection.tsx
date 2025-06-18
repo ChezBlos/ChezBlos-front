@@ -229,7 +229,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
     {
       id: "ANNULE",
       label: "Annulé",
-      count: null,
+      count: statsLoading ? null : stats?.annule || 0,
       active: selectedStatus === "ANNULE",
     },
   ];
@@ -581,11 +581,15 @@ export const ServeurOrdersSection = (): JSX.Element => {
           {/* Desktop Table - Hidden on mobile/tablet */}
           <div className="hidden lg:block w-full overflow-x-auto">
             <Table className="w-full table-auto min-w-0">
+              {" "}
               <TableHeader className="bg-gray-5">
                 <TableRow>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
                     Commande
-                  </TableHead>{" "}
+                  </TableHead>
+                  <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
+                    N° Table
+                  </TableHead>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
                     ID de commande
                   </TableHead>
@@ -610,7 +614,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 {" "}
                 {ordersLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-40 text-center">
+                    <TableCell colSpan={8} className="h-40 text-center">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <SpinnerMedium />
                         <div className="text-gray-500 text-sm">
@@ -621,7 +625,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </TableRow>
                 ) : ordersError ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-40 text-center">
+                    <TableCell colSpan={8} className="h-40 text-center">
                       <div className="flex items-center justify-center">
                         <div className="text-red-500 text-sm">
                           Erreur: {ordersError}
@@ -631,7 +635,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </TableRow>
                 ) : filteredOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-80 text-center">
+                    <TableCell colSpan={8} className="h-80 text-center">
                       <div className="flex flex-col items-center justify-center gap-4 py-8">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                           <PlusIcon className="w-8 h-8 text-gray-400" />
@@ -711,7 +715,15 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {order.items.length > 1 &&
                                 `+${order.items.length - 1} autres éléments`}
                             </div>
-                          </div>
+                          </div>{" "}
+                        </div>
+                      </TableCell>
+                      {/* N° Table Column */}
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg text-gray-900">
+                            {order.numeroTable}
+                          </span>
                         </div>
                       </TableCell>
                       {/* Order ID Column */}
@@ -989,10 +1001,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               )}
                             </div>
                           )}{" "}
-                          {/* Product info */}
+                          {/* Product info */}{" "}
                           <div className="flex flex-col gap-1 overflow-hidden flex-1">
                             <div className="font-semibold text-base text-gray-900 truncate">
                               {order.items[0]?.nom || "Commande"}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm text-gray-900">
+                                Table {order.numeroTable}
+                              </span>
+                              <span className="text-gray-400">•</span>
+                              <span className="font-semibold text-sm text-gray-900">
+                                #{order.numeroCommande}
+                              </span>
                             </div>
                             {order.items.length > 1 && (
                               <div className="font-medium text-sm text-gray-500">
@@ -1105,13 +1126,14 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     />
                   )}
                 </div>
-              )}
+              )}{" "}
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900">
                   {selectedOrderForActions.items[0]?.nom || "Commande"}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  Commande #{selectedOrderForActions.numeroCommande}
+                  Table {selectedOrderForActions.numeroTable} • Commande #
+                  {selectedOrderForActions.numeroCommande}
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {formatPrice(selectedOrderForActions.montantTotal)} XOF

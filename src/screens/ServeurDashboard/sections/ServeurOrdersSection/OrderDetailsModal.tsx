@@ -6,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../../../components/ui/dialog";
-import { ScrollArea } from "../../../../components/ui/scroll-area";
 import { Order } from "../../../../types/order";
 
 interface OrderDetailsModalProps {
@@ -32,7 +31,7 @@ export const OrderDetailsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto p-0 gap-0 rounded-3xl overflow-hidden">
+      <DialogContent className="max-w-2xl mx-auto p-0 gap-0 rounded-3xl overflow-hidden">
         {/* Header */}
         <DialogHeader className="px-6 py-5 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -48,8 +47,7 @@ export const OrderDetailsModal = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-        </DialogHeader>
-
+        </DialogHeader>{" "}
         {/* Content */}
         <div className="px-6 py-5">
           {/* Order Number */}
@@ -60,14 +58,13 @@ export const OrderDetailsModal = ({
             <p className="text-sm text-gray-500">
               ID: {order._id.slice(-6).toUpperCase()}
             </p>
-          </div>
-
+          </div>{" "}
           {/* Items List */}
           <div className="mb-6">
             <h4 className="font-title-t5-semibold text-gray-900 mb-3">
               Articles commandés
-            </h4>
-            <ScrollArea className="max-h-48">
+            </h4>{" "}
+            <div className="max-h-[300px] overflow-y-auto pr-2">
               <div className="space-y-3">
                 {order.items.map((item, index) => (
                   <div
@@ -97,7 +94,7 @@ export const OrderDetailsModal = ({
                     <div className="flex-1 min-w-0">
                       <h5 className="font-title-t5-semibold text-gray-900 truncate">
                         {item.nom || "Article"}
-                      </h5>
+                      </h5>{" "}
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <span>Qté: {item.quantite}</span>
                         {item.prixUnitaire && (
@@ -108,7 +105,7 @@ export const OrderDetailsModal = ({
                         )}
                       </div>
                       {item.notes && (
-                        <p className="text-xs text-gray-500 mt-1 truncate">
+                        <p className="text-base font-bold text-gray-500 mt-1 truncate">
                           Note: {item.notes}
                         </p>
                       )}
@@ -116,18 +113,19 @@ export const OrderDetailsModal = ({
                     {/* Item Total */}
                     {item.prixUnitaire && (
                       <div className="text-right">
-                        <div className="font-title-t5-semibold text-gray-900">
+                        <span className="font-base font-bold text-gray-900">
                           {formatPrice(item.prixUnitaire * item.quantite)}
-                        </div>
-                        <div className="text-sm text-gray-500">XOF</div>
+                        </span>{" "}
+                        <span className="text-base font-bold text-gray-500">
+                          XOF
+                        </span>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           </div>
-
           {/* Order Summary */}
           <div className="space-y-3 p-4 bg-gray-10 rounded-xl">
             <div className="flex justify-between items-center text-sm">
@@ -143,14 +141,15 @@ export const OrderDetailsModal = ({
                 Coût total:
               </span>
               <div className="flex items-center gap-1">
-                <span className="font-title-t4-semibold text-gray-900">
+                <span className="font-title-t4-semibold font-bold text-gray-900">
                   {formatPrice(order.montantTotal)}
+                </span>{" "}
+                <span className="font-title-t5-medium font-bold text-gray-500">
+                  XOF
                 </span>
-                <span className="font-title-t5-medium text-gray-500">XOF</span>
               </div>
             </div>
-          </div>
-
+          </div>{" "}
           {/* Additional Information */}
           {(order.numeroTable || order.notes || order.modePaiement) && (
             <div className="mt-6 space-y-3">
@@ -179,7 +178,7 @@ export const OrderDetailsModal = ({
               {order.notes && (
                 <div className="text-sm">
                   <span className="text-gray-600">Notes:</span>
-                  <p className="mt-1 p-2 bg-white rounded-lg text-gray-900">
+                  <p className="mt-1 p-2 bg-white rounded-lg font-bold text-gray-900">
                     {order.notes}
                   </p>
                 </div>

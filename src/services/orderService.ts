@@ -134,13 +134,23 @@ export class OrderService {
     }
   }
 
-  // Terminer la préparation d'une commande
+  // Terminer la préparation d'une commande (EN_PREPARATION -> PRET)
   static async finishCooking(id: string): Promise<Order> {
     try {
       const response = await apiClient.patch(`/orders/${id}/finish-cooking`);
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de la finalisation de la préparation");
+    }
+  }
+
+  // Marquer une commande comme terminée (PRET -> TERMINE)
+  static async markAsCompleted(id: string): Promise<Order> {
+    try {
+      const response = await apiClient.patch(`/orders/${id}/mark-completed`);
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error("Erreur lors de la finalisation de la commande");
     }
   }
 

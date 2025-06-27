@@ -35,7 +35,13 @@ export interface Order {
   numeroCommande: string;
   items: OrderItem[];
   montantTotal: number; // Changé de "total" à "montantTotal" pour correspondre au backend
-  statut: "EN_ATTENTE" | "EN_PREPARATION" | "EN_COURS" | "TERMINE" | "ANNULE";
+  statut:
+    | "EN_ATTENTE"
+    | "EN_PREPARATION"
+    | "EN_COURS"
+    | "PRET"
+    | "TERMINE"
+    | "ANNULE";
   numeroTable?: number; // Changé de "table" à "numeroTable"
   notes?: string;
   modePaiement?: string;
@@ -58,6 +64,7 @@ export interface OrderStats {
   enAttente: number;
   enPreparation: number;
   enCours: number;
+  pret: number;
   termine: number;
   annule: number;
   chiffreAffairesJour: number;

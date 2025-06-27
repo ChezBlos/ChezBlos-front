@@ -86,7 +86,7 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                     {user?.prenom} {user?.nom}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {user?.role === "SERVEUR" ? "Serveur" : "Cuisinier"}
+                    {user?.role === "SERVEUR" ? "Serveur" : "Serveur"}
                     {user?.isCaissier && " • Caissier"}
                   </p>
                 </div>
@@ -216,7 +216,7 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                   {user?.prenom} {user?.nom}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {user?.role === "SERVEUR" ? "Serveur" : "Cuisinier"}
+                  {user?.role === "SERVEUR" ? "Serveur" : "Serveur"}
                   {user?.isCaissier && " • Caissier"}
                 </p>
               </div>

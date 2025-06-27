@@ -51,6 +51,7 @@ import {
   CreditCard,
   Money,
   User,
+  CheckCircle,
 } from "phosphor-react";
 
 export const ServeurOrdersSection = (): JSX.Element => {
@@ -192,9 +193,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
           },
         ]
       : []),
-  ];
-
-  // Order status tabs data with real counts
+  ]; // Order status tabs data with real counts
   const statusTabs = [
     {
       id: "TOUTES",
@@ -203,16 +202,16 @@ export const ServeurOrdersSection = (): JSX.Element => {
       active: selectedStatus === "TOUTES",
     },
     {
-      id: "TERMINE",
-      label: "Prête",
-      count: statsLoading ? null : stats?.termine || 0,
-      active: selectedStatus === "TERMINE",
-    },
-    {
       id: "EN_ATTENTE",
       label: "En attente",
       count: statsLoading ? null : stats?.enAttente || 0,
       active: selectedStatus === "EN_ATTENTE",
+    },
+    {
+      id: "EN_PREPARATION",
+      label: "En préparation",
+      count: statsLoading ? null : stats?.enPreparation || 0,
+      active: selectedStatus === "EN_PREPARATION",
     },
     {
       id: "EN_COURS",
@@ -221,10 +220,16 @@ export const ServeurOrdersSection = (): JSX.Element => {
       active: selectedStatus === "EN_COURS",
     },
     {
-      id: "EN_PREPARATION",
-      label: "En préparation",
-      count: statsLoading ? null : stats?.enPreparation || 0,
-      active: selectedStatus === "EN_PREPARATION",
+      id: "PRET",
+      label: "Prête",
+      count: statsLoading ? null : stats?.pret || 0,
+      active: selectedStatus === "PRET",
+    },
+    {
+      id: "TERMINE",
+      label: "Terminé",
+      count: statsLoading ? null : stats?.termine || 0,
+      active: selectedStatus === "TERMINE",
     },
     {
       id: "ANNULE",
@@ -368,7 +373,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
               <img
                 src={imageUrl}
                 alt={item.nom || "Plat"}
-                className="w-full h-full object-cover"
+                className="w-full h-full mr-4 object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/img/plat_petit.png";
                 }}
@@ -416,7 +421,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
       console.error("Erreur lors de l'annulation:", error);
     }
   };
-
   const handleSendToKitchen = async (orderId: string) => {
     try {
       await OrderService.sendToKitchen(orderId);
@@ -424,6 +428,15 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
       console.error("Erreur lors de l'envoi en cuisine:", error);
+    }
+  };
+  const handleCompleteOrder = async (orderId: string) => {
+    try {
+      await OrderService.markAsCompleted(orderId);
+      refetch(); // Actualiser la liste
+      refetchStats(); // Actualiser les statistiques
+    } catch (error) {
+      console.error("Erreur lors de la finalisation de la commande:", error);
     }
   };
 
@@ -617,9 +630,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     <TableCell colSpan={8} className="h-40 text-center">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <SpinnerMedium />
-                        <div className="text-gray-500 text-sm">
-                          Chargement des commandes...
-                        </div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -683,7 +693,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {renderStackedImages(order.items)}
                             </div>
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                            <div className="w-10 h-10 rounded-xl mr-4 bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
                               {order.items[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
@@ -885,6 +895,23 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                     </span>
                                   </DropdownMenuItem>
                                 </>
+                              )}{" "}
+                              {/* Option Marquer comme terminée pour les commandes prêtes */}
+                              {order.statut === "PRET" && (
+                                <>
+                                  <DropdownMenuSeparator className="h-px bg-gray-200" />
+                                  <DropdownMenuItem
+                                    className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
+                                    onClick={() =>
+                                      handleCompleteOrder(order._id)
+                                    }
+                                  >
+                                    <CheckCircle size={20} />
+                                    <span className="text-gray-700">
+                                      Marquer comme terminée
+                                    </span>
+                                  </DropdownMenuItem>
+                                </>
                               )}
                               {(order.statut === "EN_ATTENTE" ||
                                 order.statut === "EN_PREPARATION") && (
@@ -917,9 +944,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
               <div className="p-6 text-center">
                 <div className="flex flex-col items-center justify-center gap-3">
                   <SpinnerMedium />
-                  <div className="text-gray-500 text-sm">
-                    Chargement des commandes...
-                  </div>
                 </div>
               </div>
             ) : ordersError ? (
@@ -977,7 +1001,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {renderStackedImages(order.items, 3, true)}
                             </div>
                           ) : (
-                            <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                            <div className="w-12 h-12 mr-4 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
                               {order.items[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
@@ -1004,7 +1028,12 @@ export const ServeurOrdersSection = (): JSX.Element => {
                           {/* Product info */}{" "}
                           <div className="flex flex-col gap-1 overflow-hidden flex-1">
                             <div className="font-semibold text-base text-gray-900 truncate">
-                              {order.items[0]?.nom || "Commande"}
+                              {order.items[0]?.nom || "Commande"}{" "}
+                              {order.items.length > 1 && (
+                                <span className="font-medium text-sm text-gray-500">
+                                  + {order.items.length - 1} autres
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-sm text-gray-900">
@@ -1015,11 +1044,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 #{order.numeroCommande}
                               </span>
                             </div>
-                            {order.items.length > 1 && (
-                              <div className="font-medium text-sm text-gray-500">
-                                +{order.items.length - 1} autres
-                              </div>
-                            )}{" "}
                             <div className="flex items-center gap-2 mt-1">
                               <span className="font-medium text-sm text-orange-600">
                                 Serveur:
@@ -1076,7 +1100,8 @@ export const ServeurOrdersSection = (): JSX.Element => {
                         <div className="flex flex-col items-end gap-2 flex-shrink-0">
                           <OrderStatusBadge statut={order.statut} />
                           <span className="font-semibold text-sm text-gray-900 truncate">
-                            {formatPrice(order.montantTotal)} XOF
+                            {formatPrice(order.montantTotal)}{" "}
+                            <span className="text-gray-500">XOF</span>
                           </span>
                         </div>
                       </div>
@@ -1190,6 +1215,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   icon={<CreditCard size={24} />}
                   title="Paiement"
                   description="Choisir le mode de paiement"
+                  variant="primary"
+                />
+              )}{" "}
+              {/* Marquer comme terminée - disponible pour les commandes PRET */}
+              {selectedOrderForActions.statut === "PRET" && (
+                <BottomSheetAction
+                  onClick={() => {
+                    handleCompleteOrder(selectedOrderForActions._id);
+                    handleCloseBottomSheet();
+                  }}
+                  icon={<CheckCircle size={24} />}
+                  title="Marquer comme terminée"
+                  description="Finaliser la commande après livraison"
                   variant="primary"
                 />
               )}

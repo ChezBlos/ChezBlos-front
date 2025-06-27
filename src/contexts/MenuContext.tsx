@@ -32,21 +32,21 @@ const mapCategoryToBackend = (category: CategoryType): MenuCategory | null => {
   }
 };
 
-// Fonction pour mapper les catégories backend vers frontend
-const mapCategoryToFrontend = (category: MenuCategory): CategoryType => {
-  switch (category) {
-    case MenuCategory.PLAT_PRINCIPAL:
-    case MenuCategory.ENTREE:
-    case MenuCategory.ACCOMPAGNEMENT:
-      return "menus";
-    case MenuCategory.BOISSON:
-      return "boissons";
-    case MenuCategory.DESSERT:
-      return "desserts";
-    default:
-      return "menus";
-  }
-};
+// // Fonction pour mapper les catégories backend vers frontend
+// const mapCategoryToFrontend = (category: MenuCategory): CategoryType => {
+//   switch (category) {
+//     case MenuCategory.PLAT_PRINCIPAL:
+//     case MenuCategory.ENTREE:
+//     case MenuCategory.ACCOMPAGNEMENT:
+//       return "menus";
+//     case MenuCategory.BOISSON:
+//       return "boissons";
+//     case MenuCategory.DESSERT:
+//       return "desserts";
+//     default:
+//       return "menus";
+//   }
+// };
 
 export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({
   children,

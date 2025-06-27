@@ -11,4 +11,13 @@ export default defineConfig({
       plugins: [tailwind()],
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000", // Port par défaut du serveur backend
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

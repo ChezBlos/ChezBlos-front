@@ -1,161 +1,87 @@
-import React from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import {
-  Users,
-  ForkKnife,
-  ChartBar,
-  Package,
-  CreditCard,
-  Gear,
-} from "@phosphor-icons/react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AdminHeaderSection } from "./sections/AdminHeaderSection/AdminHeaderSection";
+import { AdminSidebar } from "./AdminSidebar";
+import { AdminDashboardSection } from "./sections/AdminDashboardSection/AdminDashboardSection";
+import { AdminStaffSection } from "./sections/AdminStaffSection/AdminStaffSection";
+import { AdminHistoriqueSection } from "./sections/AdminHistoriqueSection/AdminHistoriqueSection";
+import { AdminStockSection } from "./sections/AdminStockSection/AdminStockSection";
+import { AdminStatistiquesSection } from "./sections/AdminStatistiquesSection/AdminStatistiquesSection";
+import { AdminMenuSection } from "./sections/AdminMenuSection/AdminMenuSection";
 
 export const AdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const adminMenuItems = [
-    {
-      title: "Gestion des utilisateurs",
-      description: "Gérer le personnel et les accès",
-      icon: Users,
-    },
-    {
-      title: "Gestion du menu",
-      description: "Ajouter, modifier, supprimer des plats",
-      icon: ForkKnife,
-    },
-    {
-      title: "Statistiques",
-      description: "Voir les performances du restaurant",
-      icon: ChartBar,
-    },
-    {
-      title: "Gestion du stock",
-      description: "Suivre les stocks et les approvisionnements",
-      icon: Package,
-    },
-    {
-      title: "Paiements",
-      description: "Gérer les transactions et les factures",
-      icon: CreditCard,
-    },
-    {
-      title: "Configuration",
-      description: "Paramètres du système",
-      icon: Gear,
-    },
-  ];
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // Extraire la section de l'URL, par défaut "dashboard"
+  const getSectionFromPath = (pathname: string): string => {
+    const match = pathname.match(/\/admin\/dashboard\/(.+)/);
+    return match ? match[1] : "dashboard";
+  };
+
+  const [selectedSection, setSelectedSection] = useState<
+    | "dashboard"
+    | "staff"
+    | "menu"
+    | "historique"
+    | "stock"
+    | "statistiques"
+    | "settings"
+  >(getSectionFromPath(location.pathname) as any);
+
+  // Synchroniser l'état avec l'URL lors du changement d'URL
+  useEffect(() => {
+    const newSection = getSectionFromPath(location.pathname);
+    setSelectedSection(newSection as any);
+  }, [location.pathname]);
+
+  // Fonction pour changer de section et mettre à jour l'URL
+  const handleSectionChange = (section: string) => {
+    setSelectedSection(section as any);
+    navigate(`/admin/dashboard/${section}`, { replace: true });
+  };
+  const renderSelectedSection = () => {
+    switch (selectedSection) {
+      case "dashboard":
+        return <AdminDashboardSection onSectionSelect={handleSectionChange} />;
+      case "staff":
+        return <AdminStaffSection />;
+      case "menu":
+        return <AdminMenuSection onSectionSelect={handleSectionChange} />;
+      case "historique":
+        return <AdminHistoriqueSection />;
+      case "stock":
+        return <AdminStockSection />;
+      case "statistiques":
+        return <AdminStatistiquesSection />;
+      case "settings":
+        return (
+          <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">Paramètres</h1>
+            <p className="text-gray-600">
+              Section en cours de développement...
+            </p>
+          </div>
+        );
+      default:
+        return <AdminDashboardSection onSectionSelect={handleSectionChange} />;
+    }
+  };
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <img src="/logo-55.svg" alt="Chez Blos" className="h-8" />
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Administration
-                </h1>
-                <p className="text-sm text-gray-500">Chez Blos</p>
-              </div>
-            </div>
+    <main className="bg-white flex flex-row w-full min-h-screen overflow-x-hidden">
+      <AdminSidebar selected={selectedSection} onSelect={handleSectionChange} />
+      <div className="flex-1 flex flex-col ml-0 lg:ml-64 w-full min-w-0">
+        {/* En-tête */}
+        <AdminHeaderSection
+          selectedSection={selectedSection}
+          onSectionSelect={handleSectionChange}
+        />
 
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.prenom} {user?.nom}
-                </p>
-                <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={logout}
-                className="text-red-600 border-red-200 hover:bg-red-50"
-              >
-                Déconnexion
-              </Button>
-            </div>
-          </div>
+        {/* Section principale */}
+        <div className="w-full min-w-0 pb-5 lg:pb-0">
+          {renderSelectedSection()}
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Tableau de bord administrateur
-          </h2>
-          <p className="text-gray-600">
-            Gérez tous les aspects de votre restaurant depuis cette interface
-          </p>
-        </div>
-
-        {/* Menu Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {adminMenuItems.map((item, index) => (
-            <Card
-              key={index}
-              className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-            >
-              {" "}
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center space-x-3">
-                  <item.icon size={24} className="text-orange-500" />
-                  <span className="text-lg">{item.title}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-                <Button className="w-full bg-orange-500 hover:bg-orange-600">
-                  Accéder
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mt-12">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Aperçu rapide
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-blue-600">24</div>
-                <div className="text-sm text-gray-500">
-                  Commandes aujourd'hui
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-green-600">€1,250</div>
-                <div className="text-sm text-gray-500">Chiffre d'affaires</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-orange-600">8</div>
-                <div className="text-sm text-gray-500">Personnel actif</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-purple-600">15</div>
-                <div className="text-sm text-gray-500">Tables occupées</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 };

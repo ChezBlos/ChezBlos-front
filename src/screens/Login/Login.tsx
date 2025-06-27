@@ -73,7 +73,7 @@ export const Login: React.FC = () => {
           <img
             src="/img/logo.png"
             alt="Logo Chez Blos"
-            className="w-14 h-auto"
+            className="w-60 h-auto mt-16"
           />
         </div>
 

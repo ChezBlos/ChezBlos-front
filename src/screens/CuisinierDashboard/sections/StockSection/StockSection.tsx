@@ -139,7 +139,7 @@ export const StockSection = (): JSX.Element => {
         {summaryCards.map((card, index) => (
           <Card
             key={index}
-            className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0"
+            className="flex-1 bg-white rounded-3xl overflow-hidden min-w-0"
           >
             <CardContent className="flex flex-col items-start gap-2 md:gap-3 lg:gap-6 p-3 sm:p-4 md:p-6">
               <div className="flex items-center justify-between w-full">
@@ -164,7 +164,7 @@ export const StockSection = (): JSX.Element => {
       </div>
       {/* Stock List */}
       <div className="my-0 md:mb-6 lg:mb-8 px-0 md:px-6 lg:px-12 xl:px-20">
-        <Card className="rounded-t-2xl border-b-0 rounded-b-none shadow-none md:shadow md:rounded-3xl overflow-hidden w-full">
+        <Card className="rounded-3xl overflow-hidden w-full">
           {/* Header */}
           <div className="flex flex-col border-b bg-white border-slate-200">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-3 md:px-4 lg:px-6 pt-4 pb-3 gap-3 lg:gap-4">

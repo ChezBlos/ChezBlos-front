@@ -1,9 +1,7 @@
 import React from "react";
-import { LineSpinner } from "ldrs/react";
 
 interface SpinnerProps {
   size?: string;
-  stroke?: string;
   speed?: string;
   color?: string;
   className?: string;
@@ -11,14 +9,31 @@ interface SpinnerProps {
 
 export const Spinner: React.FC<SpinnerProps> = ({
   size = "40",
-  stroke = "3",
-  speed = "1",
+  speed = "0.8",
   color = "#F97316", // Orange brand primary
   className = "",
 }) => {
+  // Nettoyer className pour retirer les classes de taille qui peuvent interférer
+  const cleanClassName = className
+    .split(" ")
+    .filter((c) => !c.startsWith("h-") && !c.startsWith("w-"))
+    .join(" ");
+
+  const sizeNumber = parseInt(size);
+
+  // Fallback CSS spinner si ldrs pose des problèmes
   return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <LineSpinner size={size} stroke={stroke} speed={speed} color={color} />
+    <div className={`flex items-center justify-center ${cleanClassName}`}>
+      <div
+        className="animate-spin rounded-full border-solid"
+        style={{
+          width: `${sizeNumber}px`,
+          height: `${sizeNumber}px`,
+          borderWidth: `${Math.ceil(sizeNumber / 10)}px`,
+          borderColor: `${color} transparent ${color} ${color}`,
+          animationDuration: `${1 / parseFloat(speed)}s`,
+        }}
+      />
     </div>
   );
 };
@@ -46,7 +61,6 @@ export const LoadingSpinner: React.FC<SpinnerProps> = (props) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div className="bg-white rounded-lg p-8 flex flex-col items-center gap-4">
       <Spinner size="60" {...props} />
-      <p className="text-gray-600 font-medium">Chargement...</p>
     </div>
   </div>
 );

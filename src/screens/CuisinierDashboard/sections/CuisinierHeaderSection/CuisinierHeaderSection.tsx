@@ -3,7 +3,6 @@ import { User, ListBullets, Package, Camera } from "@phosphor-icons/react";
 import React, { useState } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { Button } from "../../../../components/ui/button";
-import { ButtonSpinner } from "../../../../components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,15 +21,15 @@ interface CuisinierHeaderSectionProps {
 }
 
 export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
-  onOrdersRefresh,
-  onStatsRefresh,
+  // onOrdersRefresh,
+  // onStatsRefresh,
   selectedSection,
   onSectionSelect,
 }) => {
   const { user, logout } = useAuth();
   const [isChangePictureModalOpen, setIsChangePictureModalOpen] =
     useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  // const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Données pour l'en-tête
   const currentDate = new Date();
@@ -48,15 +47,15 @@ export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
     logout();
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      if (onOrdersRefresh) await onOrdersRefresh();
-      if (onStatsRefresh) await onStatsRefresh();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  // const handleRefresh = async () => {
+  //   setIsRefreshing(true);
+  //   try {
+  //     if (onOrdersRefresh) await onOrdersRefresh();
+  //     if (onStatsRefresh) await onStatsRefresh();
+  //   } finally {
+  //     setIsRefreshing(false);
+  //   }
+  // };
 
   return (
     <header className="flex flex-col w-full items-start">

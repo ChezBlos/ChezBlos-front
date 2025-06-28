@@ -31,7 +31,7 @@ export const useDashboardStats = (): UseDashboardStatsReturn => {
         AdminStatsService.getDashboardStats(),
         AdminStatsService.getUserStats(),
       ]);
-
+      // Pas de changement ici, les nouveaux champs sont automatiquement intégrés via DashboardStats
       setDashboardStats(dashboardData);
       setUserStats(userData);
     } catch (err) {

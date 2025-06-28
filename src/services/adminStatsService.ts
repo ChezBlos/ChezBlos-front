@@ -5,6 +5,17 @@ export interface DashboardStats {
   today: {
     commandes: number;
     recettes: number;
+    commandesTerminees?: number;
+    commandesTermineesParServeur?: Array<{
+      serveur: {
+        _id: string;
+        nom: string;
+        prenom: string;
+      };
+      commandesTerminees: number;
+    }>;
+    platsPrepares?: number; // Ajouté
+    platsServis?: number; // Ajouté
   };
   total: {
     commandes: number;

@@ -76,22 +76,16 @@ export interface PersonnelStats {
 export interface PersonnelStatsResponse {
   success: boolean;
   data: {
-    periode?: string;
-    dateDebut?: Date;
-    dateFin?: Date;
-    detailsPersonnel: PersonnelStats[];
-    resumeGlobal?: {
-      totalServeurs: number;
-      commandesTotales: number;
-      recettesTotales: number;
-      tempsServiceMoyen: number;
+    periode: {
+      debut: Date;
+      fin: Date;
     };
-    // Rétrocompatibilité avec l'ancienne structure
-    statsGlobales?: {
+    statsGlobales: {
       totalPersonnel: number;
       personnelActif: number;
       personnelInactif: number;
     };
+    detailsPersonnel: PersonnelStats[];
   };
 }
 
@@ -263,13 +257,14 @@ export class AdvancedStatsService {
     }
   }
 
-  // Récupérer les statistiques du dashboard (nouvelles APIs)
-  static async getDashboardStats(): Promise<AdvancedDashboardStats> {
+  // Récupérer les statistiques du dashboard
+  static async getDashboardStats(
+    period: string = "7days"
+  ): Promise<AdvancedDashboardStats> {
     return this.retryWithDelay(async () => {
       try {
-        // Utilise la nouvelle API /stats/overview qui est compatible
-        const response = await api.get(`/stats/overview`);
-        return response.data.data; // Les données sont dans response.data.data selon notre ResponseHelper
+        const response = await api.get(`/stats/dashboard?period=${period}`);
+        return response.data;
       } catch (error) {
         console.error(
           "Erreur lors de la récupération des stats dashboard:",
@@ -279,12 +274,12 @@ export class AdvancedStatsService {
       }
     });
   }
-  // Récupérer les statistiques de ventes (nouvelles APIs)
+  // Récupérer les statistiques de ventes
   static async getSalesStats(period: string = "30days"): Promise<SalesStats> {
     return this.retryWithDelay(async () => {
       try {
-        const response = await api.get(`/stats/sales?periode=${period}`);
-        return response.data.data;
+        const response = await api.get(`/stats/sales?period=${period}`);
+        return response.data;
       } catch (error) {
         console.error(
           "Erreur lors de la récupération des stats de ventes:",
@@ -295,14 +290,14 @@ export class AdvancedStatsService {
     });
   }
 
-  // Récupérer le top des plats les plus vendus (nouvelles APIs)
+  // Récupérer le top des plats les plus vendus
   static async getTopSellingItems(
     limit: number = 10
   ): Promise<TopSellingItem[]> {
     return this.retryWithDelay(async () => {
       try {
         const response = await api.get(`/stats/top-selling?limit=${limit}`);
-        return response.data.data;
+        return response.data;
       } catch (error) {
         console.error(
           "Erreur lors de la récupération du top des plats:",
@@ -313,11 +308,11 @@ export class AdvancedStatsService {
     });
   }
 
-  // Récupérer les statistiques des serveurs (nouvelles APIs)
+  // Récupérer les statistiques des serveurs
   static async getServerStats(): Promise<ServerPerformance[]> {
     try {
-      const response = await api.get("/stats/performance-complete");
-      return response.data.data.detailsPersonnel || [];
+      const response = await api.get("/stats/servers");
+      return response.data;
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des stats serveurs:",
@@ -327,11 +322,11 @@ export class AdvancedStatsService {
     }
   }
 
-  // Récupérer les statistiques des modes de paiement (nouvelles APIs)
+  // Récupérer les statistiques des modes de paiement
   static async getPaymentMethodStats(): Promise<PaymentMethodStats[]> {
     try {
       const response = await api.get("/stats/payment-methods");
-      return response.data.data;
+      return response.data;
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des stats paiements:",
@@ -340,11 +335,11 @@ export class AdvancedStatsService {
       throw error;
     }
   }
-  // Récupérer les statistiques des temps de préparation (nouvelles APIs)
+  // Récupérer les statistiques des temps de préparation
   static async getPreparationTimeStats(): Promise<PreparationTimeStats> {
     try {
       const response = await api.get("/stats/preparation-time");
-      return response.data.data;
+      return response.data;
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des temps de préparation:",
@@ -365,31 +360,14 @@ export class AdvancedStatsService {
       cacheKey,
       async () => {
         try {
-          // Utilisation de la nouvelle API v2 performance-complete qui gère TOUTES les statistiques
-          let url = "/stats/performance-complete";
+          let url = "/stats/personnel";
           const params = new URLSearchParams();
 
-          // Convertir les dates en période si nécessaire, sinon utiliser 30days par défaut
-          if (dateDebut && dateFin) {
-            const start = new Date(dateDebut);
-            const end = new Date(dateFin);
-            const diffTime = Math.abs(end.getTime() - start.getTime());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            // Mapping approximatif vers les périodes supportées
-            if (diffDays <= 7) {
-              params.append("periode", "7days");
-            } else if (diffDays <= 30) {
-              params.append("periode", "30days");
-            } else if (diffDays <= 90) {
-              params.append("periode", "3months");
-            } else if (diffDays <= 180) {
-              params.append("periode", "6months");
-            } else {
-              params.append("periode", "1year");
-            }
-          } else {
-            params.append("periode", "30days");
+          if (dateDebut) {
+            params.append("dateDebut", dateDebut);
+          }
+          if (dateFin) {
+            params.append("dateFin", dateFin);
           }
 
           if (params.toString()) {
@@ -537,7 +515,7 @@ export class AdvancedStatsService {
   ): Promise<ComparisonData> {
     try {
       const response = await api.get(
-        `/stats/comparison?startDate1=${period1}&endDate1=${period1}&startDate2=${period2}&endDate2=${period2}`
+        `/stats/compare?period1=${period1}&period2=${period2}`
       );
       return response.data;
     } catch (error) {
@@ -583,13 +561,13 @@ export class AdvancedStatsService {
     }
   }
 
-  // NOUVELLES FONCTIONS POUR STOCK & DÉPENSES (utilisant les nouvelles APIs)
+  // NOUVELLES FONCTIONS POUR STOCK & DÉPENSES
 
   // Récupérer les statistiques du stock
   static async getStockStats(): Promise<StockStats> {
     try {
-      const response = await api.get("/stats/stock");
-      return response.data.data;
+      const response = await api.get("/stock/stats");
+      return response.data;
     } catch (error) {
       console.error("Erreur lors de la récupération des stats stock:", error);
       // Retourner des données par défaut en cas d'erreur
@@ -608,7 +586,7 @@ export class AdvancedStatsService {
   static async getStockAlerts(): Promise<StockAlert[]> {
     try {
       const response = await api.get("/stock/alerts");
-      return Array.isArray(response.data.data) ? response.data.data : [];
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error("Erreur lors de la récupération des alertes stock:", error);
       return [];
@@ -619,7 +597,7 @@ export class AdvancedStatsService {
   static async getStockItems(): Promise<StockItem[]> {
     try {
       const response = await api.get("/stock");
-      return Array.isArray(response.data.data) ? response.data.data : [];
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des articles stock:",
@@ -633,10 +611,7 @@ export class AdvancedStatsService {
   static async getStockMovements(limit = 10): Promise<StockMovement[]> {
     try {
       const response = await api.get(`/stock/movements?limit=${limit}`);
-      // Les données sont dans response.data.data.movements selon la réponse API
-      const movements =
-        response.data.data?.movements || response.data.data || [];
-      return Array.isArray(movements) ? movements : [];
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des mouvements stock:",
@@ -646,7 +621,7 @@ export class AdvancedStatsService {
     }
   }
 
-  // Récupérer les statistiques des dépenses (uniquement via l'API backend)
+  // Récupérer les statistiques des dépenses
   static async getExpenseStats(period = "30days"): Promise<ExpenseStats> {
     try {
       const response = await api.get(`/stats/expenses?period=${period}`);
@@ -691,57 +666,6 @@ export class AdvancedStatsService {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erreur lors de l'export des données:", error);
-      throw error;
-    }
-  }
-
-  // Nouvelles méthodes pour utiliser les APIs avancées
-
-  // Récupérer les métriques en temps réel
-  static async getRealTimeMetrics(): Promise<any> {
-    try {
-      const response = await api.get("/stats/realtime");
-      return response.data.data;
-    } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des métriques temps réel:",
-        error
-      );
-      throw error;
-    }
-  }
-
-  // Vider le cache des statistiques
-  static async clearStatsCache(): Promise<void> {
-    try {
-      await api.post("/stats/clear-cache");
-      // Aussi vider le cache local
-      this.cache.clear();
-    } catch (error) {
-      console.error("Erreur lors de la suppression du cache:", error);
-      throw error;
-    }
-  }
-
-  // Récupérer les statistiques avancées avec filtres
-  static async getAdvancedStats(
-    filters: {
-      periode?: string;
-      groupBy?: "hour" | "day" | "week" | "month";
-    } = {}
-  ): Promise<any> {
-    try {
-      const params = new URLSearchParams();
-      if (filters.periode) params.append("periode", filters.periode);
-      if (filters.groupBy) params.append("groupBy", filters.groupBy);
-
-      const response = await api.get(`/stats/advanced?${params.toString()}`);
-      return response.data.data;
-    } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des stats avancées:",
-        error
-      );
       throw error;
     }
   }

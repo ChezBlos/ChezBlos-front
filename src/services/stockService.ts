@@ -118,29 +118,9 @@ export class StockService {
   // Créer un nouvel article de stock (JSON)
   static async createStockItem(data: any): Promise<StockItem> {
     try {
-      console.log(
-        "[StockService] Données envoyées à l’API (createStockItem):",
-        data
-      );
       const response = await apiClient.post("/stock", data);
-      console.log(
-        "[StockService] Réponse API (createStockItem):",
-        response.data
-      );
       return response.data.data;
     } catch (error: any) {
-      if (error.response) {
-        console.error(
-          "[StockService] Erreur API (createStockItem):",
-          error.response.status,
-          error.response.data
-        );
-      } else {
-        console.error(
-          "[StockService] Erreur inconnue (createStockItem):",
-          error
-        );
-      }
       throw new Error(
         error.response?.data?.message ||
           "Erreur lors de la création de l'article de stock"
@@ -151,35 +131,9 @@ export class StockService {
   // Mettre à jour un article de stock (JSON)
   static async updateStockItem(id: string, data: any): Promise<StockItem> {
     try {
-      console.log(
-        "[StockService] Données envoyées à l’API (updateStockItem):",
-        data
-      );
       const response = await apiClient.put(`/stock/${id}`, data);
-      console.log(
-        "[StockService] Réponse API (updateStockItem):",
-        response.data
-      );
       return response.data.data;
     } catch (error: any) {
-      if (error.response) {
-        console.error(
-          "[StockService] Erreur API (updateStockItem):",
-          error.response.status,
-          error.response.data
-        );
-        if (error.response.data && error.response.data.details) {
-          console.error(
-            "[StockService] Détails de l’erreur de validation:",
-            error.response.data.details
-          );
-        }
-      } else {
-        console.error(
-          "[StockService] Erreur inconnue (updateStockItem):",
-          error
-        );
-      }
       throw new Error(
         error.response?.data?.message ||
           "Erreur lors de la modification de l'article de stock"

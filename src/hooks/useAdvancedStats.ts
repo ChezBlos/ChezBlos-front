@@ -57,7 +57,7 @@ class ApiLimiter {
 const apiLimiter = new ApiLimiter();
 
 // Hook pour les statistiques dashboard avancées
-export const useAdvancedDashboardStats = () => {
+export const useAdvancedDashboardStats = (selectedPeriod: string) => {
   const [data, setData] = useState<AdvancedDashboardStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

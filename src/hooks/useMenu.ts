@@ -36,7 +36,7 @@ export const useMenu = (): UseMenuReturn => {
 
       const headers = getAuthHeaders();
 
-      const response = await fetch("/api/menu", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/menu`, {
         headers,
       });
 
@@ -87,7 +87,7 @@ export const useMenu = (): UseMenuReturn => {
     try {
       const headers = getAuthHeaders(true); // true pour FormData
 
-      const response = await fetch("/api/menu", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/menu`, {
         method: "POST",
         headers,
         body: formData,
@@ -122,11 +122,14 @@ export const useMenu = (): UseMenuReturn => {
     try {
       const headers = getAuthHeaders(true); // true pour FormData
 
-      const response = await fetch(`/api/menu/${id}`, {
-        method: "PUT",
-        headers,
-        body: formData,
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/menu/${id}`,
+        {
+          method: "PUT",
+          headers,
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -147,10 +150,13 @@ export const useMenu = (): UseMenuReturn => {
     try {
       const headers = getAuthHeaders();
 
-      const response = await fetch(`/api/menu/${id}`, {
-        method: "DELETE",
-        headers,
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/menu/${id}`,
+        {
+          method: "DELETE",
+          headers,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -168,10 +174,13 @@ export const useMenu = (): UseMenuReturn => {
     try {
       const headers = getAuthHeaders();
 
-      const response = await fetch(`/api/menu/${id}/toggle-availability`, {
-        method: "PATCH",
-        headers,
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/menu/${id}/toggle-availability`,
+        {
+          method: "PATCH",
+          headers,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();

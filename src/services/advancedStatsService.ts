@@ -188,6 +188,18 @@ export interface ExpenseStats {
 }
 
 export class AdvancedStatsService {
+  static getAdvancedStats(filters: {
+    periode?: string;
+    groupBy?: "hour" | "day" | "week" | "month";
+  }) {
+    throw new Error("Method not implemented.");
+  }
+  static clearStatsCache() {
+    throw new Error("Method not implemented.");
+  }
+  static getRealTimeMetrics() {
+    throw new Error("Method not implemented.");
+  }
   // Cache simple pour éviter les appels trop fréquents
   private static cache = new Map<
     string,

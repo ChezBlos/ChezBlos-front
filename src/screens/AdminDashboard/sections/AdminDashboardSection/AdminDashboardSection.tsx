@@ -130,53 +130,68 @@ export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = ({
             <SpinnerMedium />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {dashboardStats?.today.commandes || 0}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="rounded-3xl">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Commandes aujourd'hui
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dashboardStats?.today.commandes || 0}
+                  </p>
                 </div>
-                <div className="text-sm text-gray-500">
-                  Commandes aujourd'hui
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <ChartBar size={24} className="text-blue-600" />
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="text-2xl font-bold text-orange-600">
-                  {userStats?.actifs || 0}
+            <Card className="rounded-3xl">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Personnel actif</p>
+                  <p className="text-2xl font-bold text-orange-700">
+                    {userStats?.actifs || 0}
+                  </p>
                 </div>
-                <div className="text-sm text-gray-500">Personnel actif</div>
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <Users size={24} className="text-orange-600" />
+                </div>
               </CardContent>
             </Card>
-            {/* Additional Stats Section */}
-            {dashboardStats && (
-              <>
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <div className="text-xl font-bold text-indigo-600">
-                      {dashboardStats.total.commandes || 0}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Total des commandes
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <div className="text-xl font-bold text-emerald-600">
-                      {dashboardStats.total.recettes
-                        ? formatPrice(dashboardStats.total.recettes)
-                        : "0"}{" "}
-                      XOF
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Chiffre d'affaires total
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
+            <Card className="rounded-3xl">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Total des commandes
+                  </p>
+                  <p className="text-2xl font-bold text-indigo-700">
+                    {dashboardStats?.total.commandes || 0}
+                  </p>
+                </div>
+                <div className="p-3 bg-indigo-100 rounded-lg">
+                  <ForkKnife size={24} className="text-indigo-600" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="rounded-3xl">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Chiffre d'affaires total
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-700">
+                    {dashboardStats?.total.recettes
+                      ? formatPrice(dashboardStats.total.recettes)
+                      : "0"}{" "}
+                    XOF
+                  </p>
+                </div>
+                <div className="p-3 bg-emerald-100 rounded-lg">
+                  <Package size={24} className="text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>

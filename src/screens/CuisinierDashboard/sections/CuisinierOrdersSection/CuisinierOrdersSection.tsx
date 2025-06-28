@@ -118,27 +118,59 @@ export const CuisinierOrdersSection = (): JSX.Element => {
   };
 
   // Calcul du nombre de menus terminés aujourd'hui
-  const menusTerminesAujourdhui = useMemo(() => {
-    if (!allOrders || !Array.isArray(allOrders)) return 0;
+  // const menusTerminesAujourdhui = useMemo(() => {
+  //   if (!allOrders || !Array.isArray(allOrders)) return 0;
 
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+  //   const tomorrow = new Date(today);
+  //   tomorrow.setDate(tomorrow.getDate() + 1);
+
+  //   return allOrders
+  //     .filter((order) => {
+  //       const orderDate = new Date(order.dateCreation);
+  //       return (
+  //         orderDate >= today &&
+  //         orderDate < tomorrow &&
+  //         order.statut === "TERMINE"
+  //       );
+  //     })
+  //     .reduce((total, order) => {
+  //       return total + (order.items?.length || 0);
+  //     }, 0);
+  // }, [allOrders]);
+
+  // Calcul du nombre de commandes terminées aujourd'hui et du temps total en minutes
+  const commandesTermineesAujourdhui = useMemo(() => {
+    if (!allOrders || !Array.isArray(allOrders)) return [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    return allOrders
-      .filter((order) => {
-        const orderDate = new Date(order.dateCreation);
-        return (
-          orderDate >= today &&
-          orderDate < tomorrow &&
-          order.statut === "TERMINE"
-        );
-      })
-      .reduce((total, order) => {
-        return total + (order.items?.length || 0);
-      }, 0);
+    return allOrders.filter((order) => {
+      const orderDate = new Date(order.dateCreation);
+      return (
+        orderDate >= today && orderDate < tomorrow && order.statut === "TERMINE"
+      );
+    });
   }, [allOrders]);
+
+  // Nombre total de commandes terminées aujourd'hui
+  const totalCommandesTerminees = commandesTermineesAujourdhui.length;
+
+  // Total de minutes pour toutes les commandes terminées aujourd'hui
+  // const totalMinutesTerminees = useMemo(() => {
+  //   return commandesTermineesAujourdhui.reduce((total, order) => {
+  //     if (order.dateCreation && order.dateTermine) {
+  //       const start = new Date(order.dateCreation);
+  //       const end = new Date(order.dateTermine);
+  //       const diffMs = end.getTime() - start.getTime();
+  //       const diffMinutes = Math.max(0, Math.round(diffMs / 60000));
+  //       return total + diffMinutes;
+  //     }
+  //     return total;
+  //   }, 0);
+  // }, [commandesTermineesAujourdhui]);
 
   // Summary cards data avec les stats spécifiques au cuisinier
   const summaryCards = [
@@ -150,10 +182,10 @@ export const CuisinierOrdersSection = (): JSX.Element => {
       subtitleColor: "text-orange-500",
     },
     {
-      title: "Nombre menu terminé",
-      mobileTitle: "Terminés",
-      value: statsLoading ? "..." : menusTerminesAujourdhui.toString(),
-      subtitle: `Menus du ${formatDate(getToday())}`,
+      title: "Commandes terminées",
+      mobileTitle: "Terminées",
+      value: statsLoading ? "..." : totalCommandesTerminees.toString(),
+      subtitle: `Aujourd'hui (${formatDate(getToday())})`,
       subtitleColor: "text-green-500",
     },
   ];
@@ -211,6 +243,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
     const size = isMobile ? "w-12 h-12" : "w-10 h-10";
     const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
     const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
+    const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
 
     return (
       <div className={`relative ${size} flex-shrink-0`}>
@@ -219,7 +252,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             item.menuItem &&
             typeof item.menuItem === "object" &&
             item.menuItem.image
-              ? `${import.meta.env.VITE_IMAGE_BASE_URL}${item.menuItem.image}`
+              ? `${IMAGE_BASE_URL}${item.menuItem.image}`
               : "/img/plat_petit.png";
 
           // Classes pour le décalage et la transparence
@@ -502,7 +535,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                 {/* Images des plats */}
                                 {order.items && order.items.length > 1 ? (
                                   <div className="w-16 h-12">
-                                    {renderStackedImages(order.items, 3, false)}
+                                    {renderStackedImages(order.items, 3)}
                                   </div>
                                 ) : (
                                   <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
@@ -512,7 +545,8 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                     order.items[0].menuItem.image ? (
                                       <img
                                         src={`${
-                                          import.meta.env.VITE_IMAGE_BASE_URL
+                                          import.meta.env.VITE_IMAGE_BASE_URL ||
+                                          ""
                                         }${order.items[0].menuItem.image}`}
                                         alt={order.items[0]?.nom || "Plat"}
                                         className="w-full h-full object-cover"
@@ -718,7 +752,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                 order.items[0].menuItem.image ? (
                                   <img
                                     src={`${
-                                      import.meta.env.VITE_IMAGE_BASE_URL
+                                      import.meta.env.VITE_IMAGE_BASE_URL || ""
                                     }${order.items[0].menuItem.image}`}
                                     alt={order.items[0]?.nom || "Plat"}
                                     className="w-full h-full object-cover"

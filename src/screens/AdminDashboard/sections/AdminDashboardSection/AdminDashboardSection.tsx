@@ -115,7 +115,7 @@ export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = ({
       </div>
 
       {/* Quick Stats */}
-      <div className="mb-8">
+      <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Aperçu rapide</h3>
           {error && (
@@ -126,69 +126,61 @@ export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = ({
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-32">
+          <div className="flex justify-center items-center h-32 mb-8">
             <SpinnerMedium />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Card className="rounded-3xl">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Commandes aujourd'hui
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {dashboardStats?.today.commandes || 0}
-                  </p>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <ChartBar size={24} className="text-blue-600" />
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Commandes</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {dashboardStats?.today.commandes || 0}
+                    </p>
+                    <p className="text-sm text-blue-600 mt-2">Aujourd'hui</p>
+                  </div>
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <ForkKnife size={24} className="text-blue-600" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
             <Card className="rounded-3xl">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Personnel actif</p>
-                  <p className="text-2xl font-bold text-orange-700">
-                    {userStats?.actifs || 0}
-                  </p>
-                </div>
-                <div className="p-3 bg-orange-100 rounded-lg">
-                  <Users size={24} className="text-orange-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="rounded-3xl">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Total des commandes
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-700">
-                    {dashboardStats?.total.commandes || 0}
-                  </p>
-                </div>
-                <div className="p-3 bg-indigo-100 rounded-lg">
-                  <ForkKnife size={24} className="text-indigo-600" />
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Personnel</p>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {userStats?.actifs || 0}
+                    </p>
+                    <p className="text-sm text-orange-600 mt-2">Actifs</p>
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <Users size={24} className="text-orange-600" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
             <Card className="rounded-3xl">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Chiffre d'affaires total
-                  </p>
-                  <p className="text-2xl font-bold text-emerald-700">
-                    {dashboardStats?.total.recettes
-                      ? formatPrice(dashboardStats.total.recettes)
-                      : "0"}{" "}
-                    XOF
-                  </p>
-                </div>
-                <div className="p-3 bg-emerald-100 rounded-lg">
-                  <Package size={24} className="text-emerald-600" />
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Recettes</p>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {dashboardStats?.total.recettes
+                        ? formatPrice(dashboardStats.total.recettes)
+                        : "0"}{" "}
+                      XOF
+                    </p>
+                    <p className="text-sm text-emerald-600 mt-2">
+                      Chiffre d'affaires
+                    </p>
+                  </div>
+                  <div className="p-3 bg-emerald-100 rounded-lg">
+                    <ChartBar size={24} className="text-emerald-600" />
+                  </div>
                 </div>
               </CardContent>
             </Card>

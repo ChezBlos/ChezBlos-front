@@ -14,6 +14,8 @@ interface AdminOrderDetailsModalProps {
   order: Order | null;
 }
 
+const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+
 export const AdminOrderDetailsModal = ({
   isOpen,
   onClose,
@@ -144,23 +146,25 @@ export const AdminOrderDetailsModal = ({
                   >
                     {/* Item Image */}
                     <div className="w-12 h-12 rounded-lg bg-gray-200 flex-shrink-0 overflow-hidden">
-                      <img
-                        src={
-                          item.menuItem &&
-                          typeof item.menuItem === "object" &&
-                          item.menuItem.image
-                            ? `${"https://chezblos-back.onrender.com"}${
-                                item.menuItem.image
-                              }`
-                            : "/img/plat_petit.png"
-                        }
-                        alt={item.nom || "Plat"}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "/img/plat_petit.png";
-                        }}
-                      />
+                      {item.menuItem &&
+                      typeof item.menuItem === "object" &&
+                      item.menuItem.image ? (
+                        <img
+                          src={`${IMAGE_BASE_URL}${item.menuItem.image}`}
+                          alt={item.nom || "Plat"}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "/img/plat_petit.png";
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src="/img/plat_petit.png"
+                          alt="Plat"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                     {/* Item Details */}
                     <div className="flex-1 min-w-0">

@@ -430,7 +430,7 @@ export const AdminStaffSection: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center  h-[70vh]">
         <Spinner className="h-8 w-8" />
       </div>
     );

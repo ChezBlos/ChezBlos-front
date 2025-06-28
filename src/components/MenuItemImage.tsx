@@ -33,9 +33,7 @@ const MenuItemImage: React.FC<MenuItemImageProps> = ({
 
     // Si c'est un chemin relatif qui commence par '/uploads/', construire l'URL complète
     if (imageSrc.startsWith("/uploads/")) {
-      return `${
-        process.env.REACT_APP_API_URL || "http://localhost:5000"
-      }${imageSrc}`;
+      return `${import.meta.env.VITE_IMAGE_BASE_URL || ""}${imageSrc}`;
     }
 
     // Sinon, utiliser l'image de fallback

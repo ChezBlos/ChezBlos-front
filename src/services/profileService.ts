@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:3000/api";
 
 export interface UpdateProfilePictureResponse {
   success: boolean;
@@ -60,8 +63,9 @@ export class ProfileService {
 
     // Extraire le nom du fichier du chemin
     const filename = photoProfil.split("/").pop();
+    const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
 
     // Construire l'URL avec la route spécifique pour les images de profil
-    return `${API_BASE_URL}/auth/profile/photo/${filename}`;
+    return `${IMAGE_BASE_URL}/auth/profile/photo/${filename}`;
   }
 }

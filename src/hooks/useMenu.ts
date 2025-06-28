@@ -31,16 +31,26 @@ export const useMenu = (): UseMenuReturn => {
   };
   const fetchMenuItems = async () => {
     try {
+      console.log("🔄 [FRONTEND] Début du chargement du menu");
       setLoading(true);
       setError(null);
 
       const headers = getAuthHeaders();
+      console.log("🔑 [FRONTEND] Headers de la requête:", headers);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/menu`, {
+      const response = await fetch("/api/menu", {
         headers,
       });
 
+      console.log("📡 [FRONTEND] Réponse reçue:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        contentType: response.headers.get("content-type"),
+      });
+
       if (!response.ok) {
+        console.log("❌ [FRONTEND] Erreur de requête:", response.status);
         // Vérifier si c'est une erreur d'authentification
         if (response.status === 401) {
           throw new Error("Session expirée. Veuillez vous reconnecter.");
@@ -61,19 +71,32 @@ export const useMenu = (): UseMenuReturn => {
       // Vérifier le content-type avant de parser en JSON
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
+        console.log("❌ [FRONTEND] Type de contenu inattendu:", contentType);
         throw new Error(
           "Réponse inattendue du serveur (pas de JSON). Vérifiez que l'API backend fonctionne correctement."
         );
       }
 
       const data = await response.json();
+      console.log("📦 [FRONTEND] Données reçues:", data);
+      console.log("📊 [FRONTEND] Structure des données:", {
+        hasData: !!data.data,
+        hasMenuItems: !!data.menuItems,
+        dataLength: data.data?.length || 0,
+        menuItemsLength: data.menuItems?.length || 0,
+        keys: Object.keys(data),
+      });
 
       // Adapter selon la structure de réponse (pagination ou liste simple)
       const menuItems = data.data || data.menuItems || [];
+      console.log("✅ [FRONTEND] Menu items à définir:", menuItems.length);
+
       setMenuItems(menuItems);
     } catch (err) {
+      console.error("❌ [FRONTEND] Erreur lors du chargement du menu:", err);
       setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
+      console.log("🏁 [FRONTEND] Fin du chargement du menu");
       setLoading(false);
     }
   };
@@ -85,18 +108,37 @@ export const useMenu = (): UseMenuReturn => {
     formData: FormData
   ): Promise<MenuItemResponse> => {
     try {
+      console.log("➕ [FRONTEND] Début de la création d'un article");
+      console.log("📤 [FRONTEND] FormData à envoyer:");
+      for (const [key, value] of formData.entries()) {
+        console.log(
+          `  ${key}:`,
+          value instanceof File ? `File(${value.name})` : value
+        );
+      }
       const headers = getAuthHeaders(true); // true pour FormData
+      console.log("🔑 [FRONTEND] Headers pour création:", headers);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/menu`, {
+      const response = await fetch("/api/menu", {
         method: "POST",
         headers,
         body: formData,
       });
 
+      console.log("📡 [FRONTEND] Réponse création reçue:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({
           message: "Erreur de communication avec le serveur",
         }));
+        console.log("❌ [FRONTEND] Erreur création:", {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+        });
 
         // Message d'erreur plus spécifique
         const errorMessage =
@@ -108,10 +150,15 @@ export const useMenu = (): UseMenuReturn => {
       }
 
       const data = await response.json();
+      console.log("✅ [FRONTEND] Article créé:", data);
 
       // Adapter selon la structure de réponse
       return data.data || data.menuItem || data;
     } catch (err) {
+      console.error(
+        "❌ [FRONTEND] Erreur lors de la création de l'article:",
+        err
+      );
       throw err;
     }
   };
@@ -120,51 +167,82 @@ export const useMenu = (): UseMenuReturn => {
     formData: FormData
   ): Promise<MenuItemResponse> => {
     try {
+      console.log("✏️ [FRONTEND] Début de la mise à jour de l'article:", id);
+      console.log("📤 [FRONTEND] FormData à envoyer:");
+      for (const [key, value] of formData.entries()) {
+        console.log(
+          `  ${key}:`,
+          value instanceof File ? `File(${value.name})` : value
+        );
+      }
       const headers = getAuthHeaders(true); // true pour FormData
+      console.log("🔑 [FRONTEND] Headers pour mise à jour:", headers);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/menu/${id}`,
-        {
-          method: "PUT",
-          headers,
-          body: formData,
-        }
-      );
+      const response = await fetch(`/api/menu/${id}`, {
+        method: "PUT",
+        headers,
+        body: formData,
+      });
+
+      console.log("📡 [FRONTEND] Réponse mise à jour reçue:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.log("❌ [FRONTEND] Erreur mise à jour:", errorData);
         throw new Error(
           errorData.message || "Erreur lors de la modification de l'article"
         );
       }
 
       const data = await response.json();
+      console.log("✅ [FRONTEND] Article mis à jour:", data);
 
       // Adapter selon la structure de réponse
       return data.data || data.menuItem || data;
     } catch (err) {
+      console.error(
+        "❌ [FRONTEND] Erreur lors de la modification de l'article:",
+        err
+      );
       throw err;
     }
   };
   const deleteMenuItem = async (id: string): Promise<void> => {
     try {
-      const headers = getAuthHeaders();
+      console.log("🗑️ [FRONTEND] Début de la suppression de l'article:", id);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/menu/${id}`,
-        {
-          method: "DELETE",
-          headers,
-        }
-      );
+      const headers = getAuthHeaders();
+      console.log("🔑 [FRONTEND] Headers pour suppression:", headers);
+
+      const response = await fetch(`/api/menu/${id}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      console.log("📡 [FRONTEND] Réponse suppression reçue:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.log("❌ [FRONTEND] Erreur suppression:", errorData);
         throw new Error(
           errorData.message || "Erreur lors de la suppression de l'article"
         );
       }
+
+      console.log("✅ [FRONTEND] Article supprimé avec succès:", id);
     } catch (err) {
+      console.error(
+        "❌ [FRONTEND] Erreur lors de la suppression de l'article:",
+        err
+      );
       throw err;
     }
   };
@@ -172,18 +250,25 @@ export const useMenu = (): UseMenuReturn => {
     id: string
   ): Promise<MenuItemResponse> => {
     try {
-      const headers = getAuthHeaders();
+      console.log("🔄 [FRONTEND] Début du changement de disponibilité:", id);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/menu/${id}/toggle-availability`,
-        {
-          method: "PATCH",
-          headers,
-        }
-      );
+      const headers = getAuthHeaders();
+      console.log("🔑 [FRONTEND] Headers pour toggle:", headers);
+
+      const response = await fetch(`/api/menu/${id}/toggle-availability`, {
+        method: "PATCH",
+        headers,
+      });
+
+      console.log("📡 [FRONTEND] Réponse toggle reçue:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.log("❌ [FRONTEND] Erreur toggle:", errorData);
         throw new Error(
           errorData.message ||
             "Erreur lors de la modification de la disponibilité"
@@ -191,10 +276,15 @@ export const useMenu = (): UseMenuReturn => {
       }
 
       const data = await response.json();
+      console.log("✅ [FRONTEND] Disponibilité changée:", data);
 
       // Adapter selon la structure de réponse
       return data.data || data.menuItem || data;
     } catch (err) {
+      console.error(
+        "❌ [FRONTEND] Erreur lors de la modification de la disponibilité:",
+        err
+      );
       throw err;
     }
   };

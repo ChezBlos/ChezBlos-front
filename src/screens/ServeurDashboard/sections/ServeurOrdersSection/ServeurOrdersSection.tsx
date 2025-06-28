@@ -54,6 +54,8 @@ import {
   CheckCircle,
 } from "phosphor-react";
 
+const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+
 export const ServeurOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>("TOUTES");
@@ -220,14 +222,8 @@ export const ServeurOrdersSection = (): JSX.Element => {
       active: selectedStatus === "EN_COURS",
     },
     {
-      id: "PRET",
-      label: "Prête",
-      count: statsLoading ? null : stats?.pret || 0,
-      active: selectedStatus === "PRET",
-    },
-    {
       id: "TERMINE",
-      label: "Terminé",
+      label: "Prête",
       count: statsLoading ? null : stats?.termine || 0,
       active: selectedStatus === "TERMINE",
     },
@@ -353,7 +349,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
             item.menuItem &&
             typeof item.menuItem === "object" &&
             item.menuItem.image
-              ? `${import.meta.env.VITE_IMAGE_BASE_URL}${item.menuItem.image}`
+              ? `${IMAGE_BASE_URL}${item.menuItem.image}`
               : "/img/plat_petit.png";
 
           // Classes pour le décalage et la transparence
@@ -405,6 +401,15 @@ export const ServeurOrdersSection = (): JSX.Element => {
       setIsRefreshing(false);
     }
   };
+
+  // Rafraîchissement automatique toutes les 1 minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+      refetchStats();
+    }, 60000); // 60 000 ms = 1 minute
+    return () => clearInterval(interval);
+  }, [refetch, refetchStats]);
 
   // Mise à jour des données quand les filtres changent
   useEffect(() => {
@@ -694,13 +699,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             </div>
                           ) : (
                             <div className="w-10 h-10 rounded-xl mr-4 bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                              {order.items[0]?.menuItem &&
+                              {order.items?.[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
                                 <img
-                                  src={`${import.meta.env.VITE_IMAGE_BASE_URL}${
-                                    order.items[0].menuItem.image
-                                  }`}
+                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
                                   alt={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -913,8 +916,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   </DropdownMenuItem>
                                 </>
                               )}
-                              {(order.statut === "EN_ATTENTE" ||
-                                order.statut === "EN_PREPARATION") && (
+                              {order.statut === "EN_ATTENTE" && (
                                 <>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                   <DropdownMenuItem
@@ -1002,13 +1004,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             </div>
                           ) : (
                             <div className="w-12 h-12 mr-4 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                              {order.items[0]?.menuItem &&
+                              {order.items?.[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
                                 <img
-                                  src={`${import.meta.env.VITE_IMAGE_BASE_URL}${
-                                    order.items[0].menuItem.image
-                                  }`}
+                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
                                   alt={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -1133,9 +1133,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     "object" &&
                   selectedOrderForActions.items[0].menuItem.image ? (
                     <img
-                      src={`${import.meta.env.VITE_IMAGE_BASE_URL}${
-                        selectedOrderForActions.items[0].menuItem.image
-                      }`}
+                      src={`${IMAGE_BASE_URL}${selectedOrderForActions.items[0].menuItem.image}`}
                       alt={selectedOrderForActions.items[0]?.nom || "Plat"}
                       className="w-full h-full object-cover"
                       onError={(e) => {

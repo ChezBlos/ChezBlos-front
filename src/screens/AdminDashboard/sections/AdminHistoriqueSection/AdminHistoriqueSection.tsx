@@ -364,7 +364,7 @@ export const AdminHistoriqueSection: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-[70vh]">
         <SpinnerMedium />
       </div>
     );
@@ -571,27 +571,11 @@ export const AdminHistoriqueSection: React.FC = () => {
                     </span>
                   </TabsTrigger>
                   <TabsTrigger
-                    value="PRETE"
-                    className="flex items-center justify-start gap-2 px-3 md:px-4 lg:px-6 py-3 md:py-4 lg:py-5 rounded-none data-[state=active]:border-b-4 data-[state=active]:border-orange-500 data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-600 whitespace-nowrap flex-shrink-0"
-                  >
-                    <span className="font-semibold text-xs md:text-sm">
-                      Prête
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="SERVIE"
-                    className="flex items-center justify-start gap-2 px-3 md:px-4 lg:px-6 py-3 md:py-4 lg:py-5 rounded-none data-[state=active]:border-b-4 data-[state=active]:border-orange-500 data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-600 whitespace-nowrap flex-shrink-0"
-                  >
-                    <span className="font-semibold text-xs md:text-sm">
-                      Servie
-                    </span>
-                  </TabsTrigger>
-                  <TabsTrigger
                     value="TERMINE"
                     className="flex items-center justify-start gap-2 px-3 md:px-4 lg:px-6 py-3 md:py-4 lg:py-5 rounded-none data-[state=active]:border-b-4 data-[state=active]:border-orange-500 data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-600 whitespace-nowrap flex-shrink-0"
                   >
                     <span className="font-semibold text-xs md:text-sm">
-                      Terminée
+                      Prête
                     </span>
                   </TabsTrigger>
                   <TabsTrigger

@@ -25,16 +25,61 @@ const CommandesRecettesStatsSection = ({
   revenueChange,
   monthlyRevenueData,
   weeklyTrendData,
+  trendTitle = "Tendance des Commandes",
+  selectedPeriod = "7days",
   paymentStats,
   topItems,
   comparisonData,
   formatPrice,
 }: any) => {
+  // Fonction pour formater les noms des modes de paiement
+  function formatPaymentMethodName(mode: string): string {
+    const formatMap: { [key: string]: string } = {
+      ESPECES: "Espèces",
+      CARTE: "Carte Bancaire",
+      CHEQUE: "Chèque",
+      WAVE: "Wave",
+      ORANGE_MONEY: "Orange Money",
+      MOBILE_MONEY: "Mobile Money",
+      MTN_MONEY: "MTN Money",
+      MOOV_MONEY: "Moov Money",
+      PAYPAL: "PayPal",
+      VIREMENT: "Virement",
+    };
+    return (
+      formatMap[mode] ||
+      mode
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (l) => l.toUpperCase())
+    );
+  }
+
+  // Générer des titres dynamiques basés sur la période
+  const getRevenueTitle = () => {
+    const periodLabels: { [key: string]: string } = {
+      "7days": "Évolution des Ventes (7 jours)",
+      "30days": "Évolution des Ventes (30 jours)",
+      "3months": "Évolution des Ventes (3 mois)",
+      "6months": "Évolution des Ventes (6 mois)",
+      "1year": "Évolution des Ventes (12 mois)",
+    };
+    return periodLabels[selectedPeriod] || "Évolution des Ventes";
+  };
+
+  // Transformer les données de paiement pour le graphique
+  const transformedPaymentData =
+    paymentStats?.data?.map((payment: any) => ({
+      modePaiement: formatPaymentMethodName(payment._id) || "Inconnu",
+      montantTotal: payment.montantTotal || 0,
+      pourcentage: payment.pourcentageTransactions || 0,
+    })) || [];
+
   return (
     <>
       {/* KPI Cards Performances */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -61,7 +106,7 @@ const CommandesRecettesStatsSection = ({
                   >
                     {todayVsYesterday.value.toFixed(1)}%
                   </span>
-                  <span className="text-sm text-gray-5">vs hier</span>
+                  <span className="text-sm text-gray-500">vs hier</span>
                 </div>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
@@ -70,7 +115,7 @@ const CommandesRecettesStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -100,7 +145,7 @@ const CommandesRecettesStatsSection = ({
                   >
                     {revenueChange.value.toFixed(1)}%
                   </span>
-                  <span className="text-sm text-gray-5">vs hier</span>
+                  <span className="text-sm text-gray-500">vs hier</span>
                 </div>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
@@ -109,7 +154,7 @@ const CommandesRecettesStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -135,7 +180,7 @@ const CommandesRecettesStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -164,34 +209,34 @@ const CommandesRecettesStatsSection = ({
       </div>
       {/* Graphiques de performances */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Évolution des Ventes</CardTitle>
+            <CardTitle>{getRevenueTitle()}</CardTitle>
           </CardHeader>
           <CardContent>
             {monthlyRevenueData && monthlyRevenueData.length > 0 ? (
               <SalesBarChart data={monthlyRevenueData} height={350} />
             ) : (
-              <div className="h-80 flex items-center justify-center text-gray-5">
+              <div className="h-80 flex items-center justify-center text-gray-500">
                 Aucune donnée disponible
               </div>
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>Tendance des Commandes</CardTitle>
+            <CardTitle>{trendTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             {weeklyTrendData && weeklyTrendData.length > 0 ? (
               <TrendLineChart
                 data={weeklyTrendData}
-                title="Commandes 7 derniers jours"
+                title={trendTitle}
                 color="#f97316"
                 height={350}
               />
             ) : (
-              <div className="h-80 flex items-center justify-center text-gray-5">
+              <div className="h-80 flex items-center justify-center text-gray-500">
                 Aucune donnée disponible
               </div>
             )}
@@ -200,21 +245,21 @@ const CommandesRecettesStatsSection = ({
       </div>
       {/* Modes de paiement et Top plats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
             <CardTitle>Modes de Paiement</CardTitle>
           </CardHeader>
           <CardContent>
-            {paymentStats && paymentStats.length > 0 ? (
-              <PaymentMethodChart data={paymentStats} height={350} />
+            {transformedPaymentData && transformedPaymentData.length > 0 ? (
+              <PaymentMethodChart data={transformedPaymentData} height={350} />
             ) : (
-              <div className="h-80 flex items-center justify-center text-gray-5">
+              <div className="h-80 flex items-center justify-center text-gray-500">
                 Aucune donnée disponible
               </div>
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
             <CardTitle>Top Plats Vendus</CardTitle>
           </CardHeader>
@@ -223,27 +268,40 @@ const CommandesRecettesStatsSection = ({
               {topItems && topItems.length > 0 ? (
                 topItems.map((plat: any, index: number) => (
                   <div
-                    key={plat._id}
+                    key={plat._id || plat.id || index}
                     className="flex items-center justify-between p-3 bg-gray-5 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-gray-5">
+                      <span className="text-sm font-medium text-gray-500">
                         #{index + 1}
                       </span>
-                      <span className="text-sm font-medium">{plat.nom}</span>
+                      <span className="text-sm font-medium">
+                        {plat.nom || plat.name || "Plat inconnu"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-sm text-gray-600">
-                        {plat.quantiteVendue} vendus
+                        {plat.totalVendu ||
+                          plat.quantiteVendue ||
+                          plat.quantity ||
+                          0}{" "}
+                        vendus
                       </span>
                       <span className="text-sm font-semibold">
-                        {formatPrice(plat.revenus)} XOF
+                        {formatPrice(
+                          plat.totalRecettes ||
+                            plat.revenus ||
+                            plat.revenue ||
+                            plat.recettes ||
+                            0
+                        )}{" "}
+                        XOF
                       </span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-gray-5 py-8">
+                <div className="text-center text-gray-500 py-8">
                   Aucune donnée disponible
                 </div>
               )}

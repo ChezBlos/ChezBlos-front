@@ -31,6 +31,12 @@ export const CuisinierDashboard: React.FC = () => {
 
         {/* Section principale */}
         <div className="w-full min-w-0 pb-20 lg:pb-0">
+          <div className=" px-3 md:px-6 lg:px-12 xl:px-20 pt-6">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Dashboard Cuisinier -{" "}
+              {section === "commandes" ? "Commandes" : "Stock"}
+            </h1>
+          </div>
           {section === "commandes" ? (
             <CuisinierOrdersSection />
           ) : (

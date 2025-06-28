@@ -1,9 +1,10 @@
 /// <reference types="vite/client" />
+// Déclaration des variables d'environnement Vite pour l'autocomplétion et la compatibilité TypeScript
 
 interface ImportMetaEnv {
-  readonly VITE_API_URL: string;
-  readonly VITE_IMAGE_BASE_URL: string;
-  // Ajoutez d'autres variables d'environnement ici si besoin
+  readonly VITE_API_BASE_URL?: string;
+  readonly VITE_API_URL?: string;
+  readonly VITE_IMAGE_BASE_URL?: string;
 }
 
 interface ImportMeta {

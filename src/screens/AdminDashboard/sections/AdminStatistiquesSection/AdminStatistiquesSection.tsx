@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "../../../../components/ui/button";
 import { Tabs, TabsContent } from "../../../../components/ui/tabs";
+import { Spinner } from "../../../../components/ui/spinner";
 import { useDashboardStats } from "../../../../hooks/useDashboardStats";
 import {
   useAdvancedDashboardStats,
@@ -8,16 +9,19 @@ import {
   useTopSellingItems,
   useServerPerformance,
   usePaymentMethodStats,
-  usePreparationTimeStats,
   useComparisonStats,
   useGeneralStats,
   useExportStats,
   useStockStats,
   useStockAlerts,
   useStockItems,
-  // useStockMovements,
-  // useExpenseStats,
+  useStockMovements,
+  useExpenseStats,
   usePersonnelStats,
+  // Nouveaux hooks commentés temporairement pour éviter les erreurs
+  // useRealTimeMetrics,
+  // useAdvancedStatsWithFilters,
+  // useClearStatsCache,
 } from "../../../../hooks/useAdvancedStats";
 import { ComparisonModal } from "../../../../components/modals/ComparisonModal/ComparisonModal";
 import { useAlert } from "../../../../contexts/AlertContext";
@@ -33,17 +37,17 @@ export const AdminStatistiquesSection: React.FC = () => {
     period1: "",
     period2: "",
   });
-  const [personnelDateRange, setPersonnelDateRange] = useState({
+  // Variables pour la section personnel (même si la version simple ne les utilise pas)
+  const [personnelDateRange] = useState({
     dateDebut: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0],
     dateFin: new Date().toISOString().split("T")[0],
   });
-  const [sortCriteria, setSortCriteria] = useState("performanceGlobale");
+  const [sortCriteria] = useState("performanceGlobale");
   // Hooks pour les données
   const {
     dashboardStats,
-    userStats,
     loading: dashboardLoading,
     error: dashboardError,
   } = useDashboardStats();
@@ -51,13 +55,12 @@ export const AdminStatistiquesSection: React.FC = () => {
     data: advancedStats,
     loading: advancedLoading,
     error: advancedError,
-  } = useAdvancedDashboardStats(selectedPeriod);
+  } = useAdvancedDashboardStats();
   const { data: salesStats, error: salesError } = useSalesStats(selectedPeriod);
-  const { data: topItems, error: topItemsError } = useTopSellingItems(5);
+  const { data: topItems, error: topItemsError } = useTopSellingItems(10);
   const { error: serverError } = useServerPerformance();
   const { data: paymentStats, error: paymentError } = usePaymentMethodStats();
-  const { data: preparationStats, error: preparationError } =
-    usePreparationTimeStats();
+  // TODO: Mettre à jour ces hooks pour supporter selectedPeriod en paramètre
   const {
     // data: generalStats,
     loading: generalLoading,
@@ -84,16 +87,17 @@ export const AdminStatistiquesSection: React.FC = () => {
     loading: itemsLoading,
     error: itemsError,
   } = useStockItems();
-  // Désactiver temporairement les mouvements de stock et dépenses qui causent des erreurs
-  // const { data: stockMovements, loading: movementsLoading, error: movementsError } = useStockMovements(10);
-  // const { data: expenseStats, loading: expenseLoading, error: expenseError } = useExpenseStats(selectedPeriod);
-  // Données mockées temporaires pour éviter les erreurs
-  const stockMovements: any[] = [];
-  const movementsLoading = false;
-  const movementsError = null;
-  const expenseStats = null;
-  const expenseLoading = false;
-  const expenseError = null; // Hook pour les statistiques du personnel avec polling automatique accéléré
+  // Hooks pour Stock & Dépenses - ACTIVÉS pour afficher les vraies données
+  const {
+    data: stockMovements,
+    loading: movementsLoading,
+    error: movementsError,
+  } = useStockMovements(10);
+  const {
+    data: expenseStats,
+    loading: expenseLoading,
+    error: expenseError,
+  } = useExpenseStats(selectedPeriod); // Hook pour les statistiques du personnel avec polling automatique accéléré
   const {
     data: personnelStats,
     loading: personnelLoading,
@@ -105,7 +109,16 @@ export const AdminStatistiquesSection: React.FC = () => {
     false, // Désactiver le polling automatique
     30000 // Intervalle non utilisé
   );
+  // Nouveaux hooks pour les fonctionnalités avancées - temporairement commentés
+  // const { data: realTimeMetrics, loading: realTimeLoading } = useRealTimeMetrics(true);
+  // const { data: advancedFiltered } = useAdvancedStatsWithFilters({
+  //   periode: selectedPeriod,
+  //   groupBy: 'day'
+  // });
+  // const { clearCache, loading: cacheLoading } = useClearStatsCache();
+
   const { showAlert } = useAlert();
+
   // Calculs des variations avec gestion robuste des undefined
   const todayVsYesterday = useMemo(() => {
     try {
@@ -145,36 +158,145 @@ export const AdminStatistiquesSection: React.FC = () => {
       return { value: 0, isPositive: true };
     }
   }, [advancedStats]);
-  // Données pour les graphiques avec vérifications robustes
-  const weeklyTrendData = useMemo(() => {
-    try {
-      if (!salesStats?.daily || !Array.isArray(salesStats.daily)) return [];
-      return salesStats.daily.slice(0, 7).map((item) => ({
-        date: item?.date
-          ? new Date(item.date).toLocaleDateString("fr-FR", {
-              weekday: "short",
-            })
-          : "N/A",
-        value: Number(item?.commandes) || 0,
-      }));
-    } catch (error) {
-      console.error("Erreur dans weeklyTrendData:", error);
-      return [];
+  // Données pour les graphiques avec adaptabilité selon la période sélectionnée
+  const { trendData, revenueData, trendTitle } = useMemo(() => {
+    if (!salesStats) {
+      return {
+        trendData: null,
+        revenueData: null,
+        trendTitle: "Tendance des Commandes",
+      };
     }
-  }, [salesStats]);
-  const monthlyRevenueData = useMemo(() => {
-    try {
-      if (!salesStats?.monthly || !Array.isArray(salesStats.monthly)) return [];
-      return salesStats.monthly.slice(0, 6).map((item) => ({
-        date: item?.month || "N/A",
-        commandes: Number(item?.commandes) || 0,
-        recettes: Number(item?.recettes) || 0,
-      }));
-    } catch (error) {
-      console.error("Erreur dans monthlyRevenueData:", error);
-      return [];
+
+    // Configuration selon la période
+    const periodConfig = {
+      "7days": {
+        trendTitle: "Commandes 7 derniers jours",
+        revenueTitle: "Évolution des Ventes (7 jours)",
+        dataLimit: 7,
+        dateFormat: "day", // Format jour/mois
+      },
+      "30days": {
+        trendTitle: "Commandes 30 derniers jours",
+        revenueTitle: "Évolution des Ventes (30 jours)",
+        dataLimit: 30,
+        dateFormat: "day", // Format jour/mois
+      },
+      "3months": {
+        trendTitle: "Commandes 3 derniers mois",
+        revenueTitle: "Évolution des Ventes (3 mois)",
+        dataLimit: 12, // Semaines ou mois
+        dateFormat: "week", // Format semaine ou mois
+      },
+      "6months": {
+        trendTitle: "Commandes 6 derniers mois",
+        revenueTitle: "Évolution des Ventes (6 mois)",
+        dataLimit: 6,
+        dateFormat: "month", // Format mois
+      },
+      "1year": {
+        trendTitle: "Commandes sur l'année",
+        revenueTitle: "Évolution des Ventes (12 mois)",
+        dataLimit: 12,
+        dateFormat: "month", // Format mois
+      },
+    };
+
+    const config =
+      periodConfig[selectedPeriod as keyof typeof periodConfig] ||
+      periodConfig["7days"];
+
+    // Fonction pour formater les dates selon la période
+    const formatDateForPeriod = (item: any, format: string) => {
+      if (!item._id) return "N/A";
+
+      switch (format) {
+        case "day":
+          if (item._id.day && item._id.month) {
+            return `${item._id.day}/${item._id.month}`;
+          }
+          break;
+        case "week":
+          if (item._id.week && item._id.year) {
+            return `S${item._id.week}`;
+          } else if (item._id.day && item._id.month) {
+            return `${item._id.day}/${item._id.month}`;
+          }
+          break;
+        case "month":
+          if (item._id.month && item._id.year) {
+            const months = [
+              "Jan",
+              "Fév",
+              "Mar",
+              "Avr",
+              "Mai",
+              "Jun",
+              "Jul",
+              "Aoû",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Déc",
+            ];
+            return months[item._id.month - 1] || `M${item._id.month}`;
+          }
+          break;
+      }
+      return "N/A";
+    };
+
+    // Données pour la tendance (priorité: monthly > weekly > daily)
+    let trendSource: any[] = salesStats?.daily || [];
+    if (
+      ["6months", "1year"].includes(selectedPeriod) &&
+      salesStats?.monthly?.length > 0
+    ) {
+      trendSource = salesStats.monthly;
+    } else if (
+      ["3months"].includes(selectedPeriod) &&
+      salesStats?.weekly?.length > 0
+    ) {
+      trendSource = salesStats.weekly;
     }
-  }, [salesStats]);
+
+    const trendData =
+      Array.isArray(trendSource) && trendSource.length > 0
+        ? trendSource.slice(0, config.dataLimit).map((item: any) => ({
+            date: formatDateForPeriod(item, config.dateFormat),
+            value: Number(item?.commandes) || 0,
+          }))
+        : [];
+
+    // Données pour les revenus (même logique)
+    let revenueSource: any[] = salesStats?.daily || [];
+    if (
+      ["6months", "1year"].includes(selectedPeriod) &&
+      salesStats?.monthly?.length > 0
+    ) {
+      revenueSource = salesStats.monthly;
+    } else if (
+      ["3months"].includes(selectedPeriod) &&
+      salesStats?.weekly?.length > 0
+    ) {
+      revenueSource = salesStats.weekly;
+    }
+
+    const revenueData =
+      Array.isArray(revenueSource) && revenueSource.length > 0
+        ? revenueSource.slice(0, config.dataLimit).map((item: any) => ({
+            date: formatDateForPeriod(item, config.dateFormat),
+            commandes: Number(item?.commandes) || 0,
+            recettes: Number(item?.recettes) || 0,
+          }))
+        : [];
+
+    return {
+      trendData: trendData.length > 0 ? trendData : null,
+      revenueData: revenueData.length > 0 ? revenueData : null,
+      trendTitle: config.trendTitle,
+    };
+  }, [salesStats, selectedPeriod]);
   const periods = [
     { value: "7days", label: "7 derniers jours" },
     { value: "30days", label: "30 derniers jours" },
@@ -196,17 +318,22 @@ export const AdminStatistiquesSection: React.FC = () => {
       showAlert("error", `Erreur lors de l'export ${format.toUpperCase()}`);
     }
   };
+
   const handleComparison = (period1: string, period2: string) => {
     setComparisonPeriods({ period1, period2 });
   };
   // Fonction pour trier les données du personnel
   const sortedPersonnelData = useMemo(() => {
-    if (!personnelStats?.data?.detailsPersonnel) return [];
+    if (!personnelStats?.data?.detailsPersonnel) {
+      return [];
+    }
+
     // Normalisation de la casse des rôles pour éviter les bugs d'affichage
     const normalized = personnelStats.data.detailsPersonnel.map((p) => ({
       ...p,
       role: p.role ? p.role.toUpperCase() : "NON DEFINI",
     }));
+
     const sorted = [...normalized].sort((a, b) => {
       switch (sortCriteria) {
         case "performanceGlobale":
@@ -225,6 +352,7 @@ export const AdminStatistiquesSection: React.FC = () => {
           return (b.performanceGlobale || 0) - (a.performanceGlobale || 0);
       }
     });
+
     return sorted;
   }, [personnelStats, sortCriteria]);
   const loading =
@@ -241,7 +369,7 @@ export const AdminStatistiquesSection: React.FC = () => {
     topItemsError,
     serverError,
     paymentError,
-    preparationError,
+    // preparationError,
     generalError,
     comparisonError,
     stockError,
@@ -254,11 +382,8 @@ export const AdminStatistiquesSection: React.FC = () => {
   const hasCriticalErrors = dashboardError || advancedError || generalError;
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Chargement des statistiques...</p>
-        </div>
+      <div className="flex justify-center items-center  h-[70vh]">
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }
@@ -318,6 +443,7 @@ export const AdminStatistiquesSection: React.FC = () => {
           >
             Comparer
           </Button>
+
           <Button
             onClick={() => handleExport("excel")}
             disabled={exportLoading}
@@ -357,6 +483,7 @@ export const AdminStatistiquesSection: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Onglets principaux */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center gap-3 mb-6 p-1 bg-gray-10 rounded-full w-fit">
@@ -395,12 +522,6 @@ export const AdminStatistiquesSection: React.FC = () => {
         <TabsContent value="personnel" className="space-y-6">
           <PersonnelStatsSection
             personnelStats={personnelStats}
-            userStats={userStats}
-            preparationStats={preparationStats}
-            sortCriteria={sortCriteria}
-            setSortCriteria={setSortCriteria}
-            personnelDateRange={personnelDateRange}
-            setPersonnelDateRange={setPersonnelDateRange}
             refetchPersonnelStats={refetchPersonnelStats}
             personnelLoading={personnelLoading}
             personnelError={personnelError}
@@ -413,8 +534,10 @@ export const AdminStatistiquesSection: React.FC = () => {
             dashboardStats={dashboardStats}
             todayVsYesterday={todayVsYesterday}
             revenueChange={revenueChange}
-            monthlyRevenueData={monthlyRevenueData}
-            weeklyTrendData={weeklyTrendData}
+            monthlyRevenueData={revenueData}
+            weeklyTrendData={trendData}
+            trendTitle={trendTitle}
+            selectedPeriod={selectedPeriod}
             paymentStats={paymentStats}
             topItems={topItems}
             comparisonData={comparisonData}
@@ -425,14 +548,20 @@ export const AdminStatistiquesSection: React.FC = () => {
           <StocksDepensesStatsSection
             stockStats={stockStats}
             stockLoading={stockLoading}
+            stockError={stockError}
             expenseStats={expenseStats}
             expenseLoading={expenseLoading}
+            expenseError={expenseError}
             stockAlerts={stockAlerts}
             alertsLoading={alertsLoading}
+            alertsError={alertsError}
             stockMovements={stockMovements}
             movementsLoading={movementsLoading}
+            movementsError={movementsError}
             stockItems={stockItems}
             itemsLoading={itemsLoading}
+            itemsError={itemsError}
+            selectedPeriod={selectedPeriod}
             formatPrice={formatPrice}
           />
         </TabsContent>

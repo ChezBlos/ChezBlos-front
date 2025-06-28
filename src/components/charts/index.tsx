@@ -387,3 +387,93 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({
     </div>
   );
 };
+
+// Composant pour diagramme circulaire des dépenses par catégorie
+interface ExpenseCategoryPieChartProps {
+  data: Array<{
+    categorie: string;
+    montant: number;
+    pourcentage: number;
+  }>;
+  height?: number;
+}
+
+export const ExpenseCategoryPieChart: React.FC<
+  ExpenseCategoryPieChartProps
+> = ({ data, height = 320 }) => {
+  const colors = [
+    "#3b82f6", // Bleu
+    "#10b981", // Vert
+    "#f97316", // Orange
+    "#8b5cf6", // Violet
+    "#f59e0b", // Jaune
+    "#ef4444", // Rouge
+    "#06b6d4", // Cyan
+    "#84cc16", // Lime
+  ];
+
+  const chartData = {
+    labels: data.map((item) => item.categorie),
+    datasets: [
+      {
+        data: data.map((item) => item.montant),
+        backgroundColor: colors.slice(0, data.length),
+        borderColor: "#ffffff",
+        borderWidth: 2,
+        hoverBorderWidth: 3,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom" as const,
+        labels: {
+          font: {
+            family: "Gilroy, sans-serif",
+            size: 12,
+          },
+          color: "#374151",
+          usePointStyle: true,
+          padding: 20,
+        },
+      },
+      tooltip: {
+        backgroundColor: "#1f2937",
+        titleColor: "#f9fafb",
+        bodyColor: "#f9fafb",
+        borderColor: "#f97316",
+        borderWidth: 1,
+        cornerRadius: 8,
+        callbacks: {
+          label: function (context: any) {
+            const item = data[context.dataIndex];
+            return `${item.categorie}: ${new Intl.NumberFormat("fr-FR").format(
+              item.montant
+            )} XOF (${item.pourcentage.toFixed(1)}%)`;
+          },
+        },
+      },
+      title: {
+        display: true,
+        text: "Dépenses par Catégorie",
+        font: {
+          family: "Gilroy, sans-serif",
+          size: 16,
+          weight: 600,
+        },
+        color: "#1f2937",
+      },
+    },
+    cutout: "60%",
+  };
+
+  return (
+    <div style={{ height: `${height}px` }}>
+      <Doughnut data={chartData} options={options} />
+    </div>
+  );
+};

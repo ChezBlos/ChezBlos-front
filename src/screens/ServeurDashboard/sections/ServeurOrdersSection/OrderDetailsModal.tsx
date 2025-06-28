@@ -79,7 +79,9 @@ export const OrderDetailsModal = ({
                           item.menuItem &&
                           typeof item.menuItem === "object" &&
                           item.menuItem.image
-                            ? `${"http://localhost:3000"}${item.menuItem.image}`
+                            ? `${import.meta.env.VITE_IMAGE_BASE_URL}${
+                                item.menuItem.image
+                              }`
                             : "/img/plat_petit.png"
                         }
                         alt={item.nom || "Plat"}

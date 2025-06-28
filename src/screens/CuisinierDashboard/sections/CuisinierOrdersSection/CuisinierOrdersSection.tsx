@@ -219,7 +219,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             item.menuItem &&
             typeof item.menuItem === "object" &&
             item.menuItem.image
-              ? `${"http://localhost:3000"}${item.menuItem.image}`
+              ? `${import.meta.env.VITE_IMAGE_BASE_URL}${item.menuItem.image}`
               : "/img/plat_petit.png";
 
           // Classes pour le décalage et la transparence
@@ -502,7 +502,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                 {/* Images des plats */}
                                 {order.items && order.items.length > 1 ? (
                                   <div className="w-16 h-12">
-                                    {renderStackedImages(order.items, 3)}
+                                    {renderStackedImages(order.items, 3, false)}
                                   </div>
                                 ) : (
                                   <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
@@ -511,9 +511,9 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                       "object" &&
                                     order.items[0].menuItem.image ? (
                                       <img
-                                        src={`${"http://localhost:3000"}${
-                                          order.items[0].menuItem.image
-                                        }`}
+                                        src={`${
+                                          import.meta.env.VITE_IMAGE_BASE_URL
+                                        }${order.items[0].menuItem.image}`}
                                         alt={order.items[0]?.nom || "Plat"}
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
@@ -717,9 +717,9 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                 typeof order.items[0].menuItem === "object" &&
                                 order.items[0].menuItem.image ? (
                                   <img
-                                    src={`${"http://localhost:3000"}${
-                                      order.items[0].menuItem.image
-                                    }`}
+                                    src={`${
+                                      import.meta.env.VITE_IMAGE_BASE_URL
+                                    }${order.items[0].menuItem.image}`}
                                     alt={order.items[0]?.nom || "Plat"}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {

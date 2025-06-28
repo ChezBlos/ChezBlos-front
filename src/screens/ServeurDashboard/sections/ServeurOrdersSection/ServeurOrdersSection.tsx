@@ -353,7 +353,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
             item.menuItem &&
             typeof item.menuItem === "object" &&
             item.menuItem.image
-              ? `${"http://localhost:3000"}${item.menuItem.image}`
+              ? `${import.meta.env.VITE_IMAGE_BASE_URL}${item.menuItem.image}`
               : "/img/plat_petit.png";
 
           // Classes pour le décalage et la transparence
@@ -698,7 +698,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
                                 <img
-                                  src={`${"http://localhost:3000"}${
+                                  src={`${import.meta.env.VITE_IMAGE_BASE_URL}${
                                     order.items[0].menuItem.image
                                   }`}
                                   alt={order.items[0]?.nom || "Plat"}
@@ -1006,7 +1006,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
                                 <img
-                                  src={`${"http://localhost:3000"}${
+                                  src={`${import.meta.env.VITE_IMAGE_BASE_URL}${
                                     order.items[0].menuItem.image
                                   }`}
                                   alt={order.items[0]?.nom || "Plat"}
@@ -1133,7 +1133,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     "object" &&
                   selectedOrderForActions.items[0].menuItem.image ? (
                     <img
-                      src={`${"http://localhost:3000"}${
+                      src={`${import.meta.env.VITE_IMAGE_BASE_URL}${
                         selectedOrderForActions.items[0].menuItem.image
                       }`}
                       alt={selectedOrderForActions.items[0]?.nom || "Plat"}

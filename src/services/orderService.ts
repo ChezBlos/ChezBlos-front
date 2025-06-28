@@ -1,7 +1,7 @@
 import { Order, CreateOrderRequest, OrderStats } from "../types/order";
 import axios from "axios";
 
-const API_BASE_URL = process.env.VITE_API_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // Configuration axios avec intercepteurs
 const apiClient = axios.create({

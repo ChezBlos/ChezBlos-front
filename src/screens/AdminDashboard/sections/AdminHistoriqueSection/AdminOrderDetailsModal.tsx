@@ -149,7 +149,9 @@ export const AdminOrderDetailsModal = ({
                           item.menuItem &&
                           typeof item.menuItem === "object" &&
                           item.menuItem.image
-                            ? `${"http://localhost:3000"}${item.menuItem.image}`
+                            ? `${"https://chezblos-back.onrender.com"}${
+                                item.menuItem.image
+                              }`
                             : "/img/plat_petit.png"
                         }
                         alt={item.nom || "Plat"}

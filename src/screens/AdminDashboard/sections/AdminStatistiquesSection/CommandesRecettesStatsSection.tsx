@@ -79,7 +79,7 @@ const CommandesRecettesStatsSection = ({
     <>
       {/* KPI Cards Performances */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -115,7 +115,7 @@ const CommandesRecettesStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -154,7 +154,7 @@ const CommandesRecettesStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -180,7 +180,7 @@ const CommandesRecettesStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -209,7 +209,7 @@ const CommandesRecettesStatsSection = ({
       </div>
       {/* Graphiques de performances */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
             <CardTitle>{getRevenueTitle()}</CardTitle>
           </CardHeader>
@@ -223,7 +223,7 @@ const CommandesRecettesStatsSection = ({
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
             <CardTitle>{trendTitle}</CardTitle>
           </CardHeader>
@@ -245,7 +245,7 @@ const CommandesRecettesStatsSection = ({
       </div>
       {/* Modes de paiement et Top plats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
             <CardTitle>Modes de Paiement</CardTitle>
           </CardHeader>
@@ -259,7 +259,7 @@ const CommandesRecettesStatsSection = ({
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-3xl">
           <CardHeader>
             <CardTitle>Top Plats Vendus</CardTitle>
           </CardHeader>

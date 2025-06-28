@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "../../../../components/ui/button";
 import { Tabs, TabsContent } from "../../../../components/ui/tabs";
+import { Spinner } from "../../../../components/ui/spinner";
 import { useDashboardStats } from "../../../../hooks/useDashboardStats";
 import {
   useAdvancedDashboardStats,
@@ -24,7 +25,7 @@ import {
 } from "../../../../hooks/useAdvancedStats";
 import { ComparisonModal } from "../../../../components/modals/ComparisonModal/ComparisonModal";
 import { useAlert } from "../../../../contexts/AlertContext";
-import PersonnelStatsSection from "./PersonnelStatsSimple";
+import PersonnelStatsSection from "./PersonnelStatsSection";
 import CommandesRecettesStatsSection from "./CommandesRecettesStatsSection";
 import StocksDepensesStatsSection from "./StocksDepensesStatsSection";
 
@@ -382,10 +383,7 @@ export const AdminStatistiquesSection: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Chargement des statistiques...</p>
-        </div>
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }

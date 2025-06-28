@@ -646,84 +646,11 @@ export class AdvancedStatsService {
     }
   }
 
-  // Récupérer les statistiques des dépenses (route non encore implémentée)
+  // Récupérer les statistiques des dépenses (uniquement via l'API backend)
   static async getExpenseStats(period = "30days"): Promise<ExpenseStats> {
     try {
-      // TODO: Implémenter la route /stats/expenses dans le backend
-      // console.warn("Route /stats/expenses non implémentée, retour de données mockées");
-      // const response = await api.get(`/stats/expenses?period=${period}`);
-      // return response.data;
-
-      // Données mockées réalistes selon la période pour tester l'interface
-      const mockData = {
-        "7days": {
-          totalDepenses: 45000,
-          depensesMensuelle: 45000,
-          depensesHebdomadaire: 45000,
-          depensesJournaliere: 6430,
-          moyenneDepenseParCommande: 850,
-          parCategorie: [
-            { categorie: "Légumes", montant: 18000, pourcentage: 40 },
-            { categorie: "Viandes", montant: 13500, pourcentage: 30 },
-            { categorie: "Boissons", montant: 9000, pourcentage: 20 },
-            { categorie: "Autres", montant: 4500, pourcentage: 10 },
-          ],
-        },
-        "30days": {
-          totalDepenses: 180000,
-          depensesMensuelle: 180000,
-          depensesHebdomadaire: 45000,
-          depensesJournaliere: 6000,
-          moyenneDepenseParCommande: 800,
-          parCategorie: [
-            { categorie: "Légumes", montant: 72000, pourcentage: 40 },
-            { categorie: "Viandes", montant: 54000, pourcentage: 30 },
-            { categorie: "Boissons", montant: 36000, pourcentage: 20 },
-            { categorie: "Autres", montant: 18000, pourcentage: 10 },
-          ],
-        },
-        "3months": {
-          totalDepenses: 540000,
-          depensesMensuelle: 180000,
-          depensesHebdomadaire: 45000,
-          depensesJournaliere: 6000,
-          moyenneDepenseParCommande: 780,
-          parCategorie: [
-            { categorie: "Légumes", montant: 216000, pourcentage: 40 },
-            { categorie: "Viandes", montant: 162000, pourcentage: 30 },
-            { categorie: "Boissons", montant: 108000, pourcentage: 20 },
-            { categorie: "Autres", montant: 54000, pourcentage: 10 },
-          ],
-        },
-        "6months": {
-          totalDepenses: 1080000,
-          depensesMensuelle: 180000,
-          depensesHebdomadaire: 45000,
-          depensesJournaliere: 6000,
-          moyenneDepenseParCommande: 760,
-          parCategorie: [
-            { categorie: "Légumes", montant: 432000, pourcentage: 40 },
-            { categorie: "Viandes", montant: 324000, pourcentage: 30 },
-            { categorie: "Boissons", montant: 216000, pourcentage: 20 },
-            { categorie: "Autres", montant: 108000, pourcentage: 10 },
-          ],
-        },
-        "1year": {
-          totalDepenses: 2160000,
-          depensesMensuelle: 180000,
-          depensesHebdomadaire: 45000,
-          depensesJournaliere: 5900,
-          moyenneDepenseParCommande: 750,
-          parCategorie: [
-            { categorie: "Légumes", montant: 864000, pourcentage: 40 },
-            { categorie: "Viandes", montant: 648000, pourcentage: 30 },
-            { categorie: "Boissons", montant: 432000, pourcentage: 20 },
-            { categorie: "Autres", montant: 216000, pourcentage: 10 },
-          ],
-        },
-      } as any;
-
-      return mockData[period] || mockData["30days"];
+      const response = await api.get(`/stats/expenses?period=${period}`);
+      return response.data;
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des stats dépenses:",

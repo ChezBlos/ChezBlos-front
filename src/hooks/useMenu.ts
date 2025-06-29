@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { MenuItemResponse } from "../types/menu";
 
 interface UseMenuReturn {
@@ -40,38 +41,19 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders();
       console.log("🔑 [FRONTEND] Headers de la requête:", headers);
 
-      const response = await fetch(`${API_BASE_URL}/api/menu`, {
+      const response = await axios.get(`${API_BASE_URL}/api/menu`, {
         headers,
       });
 
       console.log("📡 [FRONTEND] Réponse reçue:", {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok,
-        contentType: response.headers.get("content-type"),
+        ok: response.status === 200,
+        contentType: response.headers["content-type"],
       });
 
-      if (!response.ok) {
-        console.log("❌ [FRONTEND] Erreur de requête:", response.status);
-        // Vérifier si c'est une erreur d'authentification
-        if (response.status === 401) {
-          throw new Error("Session expirée. Veuillez vous reconnecter.");
-        }
-        if (response.status === 404) {
-          throw new Error(
-            "Endpoint menu non trouvé. Vérifiez que le serveur backend est démarré."
-          );
-        }
-        if (response.status === 500) {
-          throw new Error(
-            "Erreur serveur. Vérifiez les logs du serveur backend."
-          );
-        }
-        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
-      }
-
       // Vérifier le content-type avant de parser en JSON
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers["content-type"];
       if (!contentType || !contentType.includes("application/json")) {
         console.log("❌ [FRONTEND] Type de contenu inattendu:", contentType);
         throw new Error(
@@ -79,7 +61,7 @@ export const useMenu = (): UseMenuReturn => {
         );
       }
 
-      const data = await response.json();
+      const data = response.data;
       console.log("📦 [FRONTEND] Données reçues:", data);
       console.log("📊 [FRONTEND] Structure des données:", {
         hasData: !!data.data,
@@ -121,21 +103,19 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders(true); // true pour FormData
       console.log("🔑 [FRONTEND] Headers pour création:", headers);
 
-      const response = await fetch(`${API_BASE_URL}/api/menu`, {
-        method: "POST",
+      const response = await axios.post(`${API_BASE_URL}/api/menu`, formData, {
         headers,
-        body: formData,
       });
 
       console.log("📡 [FRONTEND] Réponse création reçue:", {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok,
+        ok: response.status === 200,
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
+      if (response.status !== 200) {
+        const errorData = response.data || {
           message: "Erreur de communication avec le serveur",
-        }));
+        };
         console.log("❌ [FRONTEND] Erreur création:", {
           status: response.status,
           statusText: response.statusText,
@@ -151,7 +131,7 @@ export const useMenu = (): UseMenuReturn => {
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      const data = response.data;
       console.log("✅ [FRONTEND] Article créé:", data);
 
       // Adapter selon la structure de réponse
@@ -180,27 +160,29 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders(true); // true pour FormData
       console.log("🔑 [FRONTEND] Headers pour mise à jour:", headers);
 
-      const response = await fetch(`${API_BASE_URL}/api/menu/${id}`, {
-        method: "PUT",
-        headers,
-        body: formData,
-      });
+      const response = await axios.put(
+        `${API_BASE_URL}/api/menu/${id}`,
+        formData,
+        {
+          headers,
+        }
+      );
 
       console.log("📡 [FRONTEND] Réponse mise à jour reçue:", {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok,
+        ok: response.status === 200,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (response.status !== 200) {
+        const errorData = response.data;
         console.log("❌ [FRONTEND] Erreur mise à jour:", errorData);
         throw new Error(
           errorData.message || "Erreur lors de la modification de l'article"
         );
       }
 
-      const data = await response.json();
+      const data = response.data;
       console.log("✅ [FRONTEND] Article mis à jour:", data);
 
       // Adapter selon la structure de réponse
@@ -220,19 +202,18 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders();
       console.log("🔑 [FRONTEND] Headers pour suppression:", headers);
 
-      const response = await fetch(`${API_BASE_URL}/api/menu/${id}`, {
-        method: "DELETE",
+      const response = await axios.delete(`${API_BASE_URL}/api/menu/${id}`, {
         headers,
       });
 
       console.log("📡 [FRONTEND] Réponse suppression reçue:", {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok,
+        ok: response.status === 200,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (response.status !== 200) {
+        const errorData = response.data;
         console.log("❌ [FRONTEND] Erreur suppression:", errorData);
         throw new Error(
           errorData.message || "Erreur lors de la suppression de l'article"
@@ -257,10 +238,10 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders();
       console.log("🔑 [FRONTEND] Headers pour toggle:", headers);
 
-      const response = await fetch(
+      const response = await axios.patch(
         `${API_BASE_URL}/api/menu/${id}/toggle-availability`,
+        null,
         {
-          method: "PATCH",
           headers,
         }
       );
@@ -268,11 +249,11 @@ export const useMenu = (): UseMenuReturn => {
       console.log("📡 [FRONTEND] Réponse toggle reçue:", {
         status: response.status,
         statusText: response.statusText,
-        ok: response.ok,
+        ok: response.status === 200,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (response.status !== 200) {
+        const errorData = response.data;
         console.log("❌ [FRONTEND] Erreur toggle:", errorData);
         throw new Error(
           errorData.message ||
@@ -280,7 +261,7 @@ export const useMenu = (): UseMenuReturn => {
         );
       }
 
-      const data = await response.json();
+      const data = response.data;
       console.log("✅ [FRONTEND] Disponibilité changée:", data);
 
       // Adapter selon la structure de réponse

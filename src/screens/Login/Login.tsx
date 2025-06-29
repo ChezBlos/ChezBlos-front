@@ -4,6 +4,7 @@ import { useAuthRedirect } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import { EnvelopeSimple, Eye, EyeSlash, Lock, Phone } from "phosphor-react";
 import { Button } from "../../components/ui/button";
+import { SpinnerSmall } from "../../components/ui/spinner";
 
 export const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -225,7 +226,7 @@ export const Login: React.FC = () => {
                     !adminCredentials.motDePasse
                   }
                 >
-                  {isLoading ? "Connexion..." : "Se connecter"}
+                  {isLoading ? <SpinnerSmall color="white" /> : "Se connecter"}
                 </Button>
               </form>
             ) : (
@@ -312,7 +313,7 @@ export const Login: React.FC = () => {
                     !staffCredentials.codeAcces
                   }
                 >
-                  {isLoading ? "Connexion..." : "Se connecter"}
+                  {isLoading ? <SpinnerSmall color="white" /> : "Se connecter"}
                 </Button>
               </form>
             )}
@@ -470,7 +471,7 @@ export const Login: React.FC = () => {
                     !adminCredentials.motDePasse
                   }
                 >
-                  {isLoading ? "Connexion..." : "Se connecter"}
+                  {isLoading ? <SpinnerSmall color="white" /> : "Se connecter"}
                 </Button>
               </form>
             ) : (
@@ -557,7 +558,7 @@ export const Login: React.FC = () => {
                     !staffCredentials.codeAcces
                   }
                 >
-                  {isLoading ? "Connexion..." : "Se connecter"}
+                  {isLoading ? <SpinnerSmall color="white" /> : "Se connecter"}
                 </Button>
               </form>
             )}

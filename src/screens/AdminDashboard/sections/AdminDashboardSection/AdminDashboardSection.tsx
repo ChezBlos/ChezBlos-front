@@ -392,7 +392,7 @@ export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = ({
         {adminMenuItems.map((item, index) => (
           <Card
             key={index}
-            className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+            className="cursor-pointer rounded-3xl"
             onClick={() => handleMenuItemClick(item.action)}
           >
             <CardHeader className="pb-3">

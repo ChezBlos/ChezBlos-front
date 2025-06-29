@@ -387,7 +387,7 @@ export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = ({
       })()}
 
       {/* Menu Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {" "}
         {adminMenuItems.map((item, index) => (
           <Card
@@ -415,7 +415,7 @@ export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = ({
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "../../../../components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
+import { SpinnerMedium } from "../../../../components/ui/spinner";
 
 // Composant simplifié pour le tableau du personnel
 const PersonnelStatsSection = ({
@@ -211,8 +212,7 @@ const PersonnelStatsSection = ({
           {personnelLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Chargement...</p>
+                <SpinnerMedium />
               </div>
             </div>
           ) : personnelError ? (

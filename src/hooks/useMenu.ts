@@ -29,6 +29,8 @@ export const useMenu = (): UseMenuReturn => {
 
     return headers;
   };
+  // Utiliser la variable d'environnement pour l'URL de base de l'API
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
   const fetchMenuItems = async () => {
     try {
       console.log("🔄 [FRONTEND] Début du chargement du menu");
@@ -38,7 +40,7 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders();
       console.log("🔑 [FRONTEND] Headers de la requête:", headers);
 
-      const response = await fetch("/api/menu", {
+      const response = await fetch(`${API_BASE_URL}/api/menu`, {
         headers,
       });
 
@@ -119,7 +121,7 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders(true); // true pour FormData
       console.log("🔑 [FRONTEND] Headers pour création:", headers);
 
-      const response = await fetch("/api/menu", {
+      const response = await fetch(`${API_BASE_URL}/api/menu`, {
         method: "POST",
         headers,
         body: formData,
@@ -178,7 +180,7 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders(true); // true pour FormData
       console.log("🔑 [FRONTEND] Headers pour mise à jour:", headers);
 
-      const response = await fetch(`/api/menu/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/${id}`, {
         method: "PUT",
         headers,
         body: formData,
@@ -218,7 +220,7 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders();
       console.log("🔑 [FRONTEND] Headers pour suppression:", headers);
 
-      const response = await fetch(`/api/menu/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/menu/${id}`, {
         method: "DELETE",
         headers,
       });
@@ -255,10 +257,13 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders();
       console.log("🔑 [FRONTEND] Headers pour toggle:", headers);
 
-      const response = await fetch(`/api/menu/${id}/toggle-availability`, {
-        method: "PATCH",
-        headers,
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/menu/${id}/toggle-availability`,
+        {
+          method: "PATCH",
+          headers,
+        }
+      );
 
       console.log("📡 [FRONTEND] Réponse toggle reçue:", {
         status: response.status,

@@ -31,14 +31,14 @@ export const useMenu = (): UseMenuReturn => {
     return headers;
   };
   // Utiliser la variable d'environnement pour l'URL de base de l'API
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "";
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const headers = getAuthHeaders();
-      const response = await axios.get(`${API_BASE_URL}/api/menu`, { headers });
+      const response = await axios.get(`${API_BASE_URL}/menu`, { headers });
 
       const contentType =
         response.headers["content-type"] || response.headers["Content-Type"];
@@ -66,7 +66,7 @@ export const useMenu = (): UseMenuReturn => {
   ): Promise<MenuItemResponse> => {
     try {
       const headers = getAuthHeaders(true); // true pour FormData
-      const response = await axios.post(`${API_BASE_URL}/api/menu`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/menu`, formData, {
         headers,
       });
       const data = response.data;
@@ -81,11 +81,9 @@ export const useMenu = (): UseMenuReturn => {
   ): Promise<MenuItemResponse> => {
     try {
       const headers = getAuthHeaders(true); // true pour FormData
-      const response = await axios.put(
-        `${API_BASE_URL}/api/menu/${id}`,
-        formData,
-        { headers }
-      );
+      const response = await axios.put(`${API_BASE_URL}/menu/${id}`, formData, {
+        headers,
+      });
       const data = response.data;
       return data.data || data.menuItem || data;
     } catch (err) {
@@ -95,7 +93,7 @@ export const useMenu = (): UseMenuReturn => {
   const deleteMenuItem = async (id: string): Promise<void> => {
     try {
       const headers = getAuthHeaders();
-      await axios.delete(`${API_BASE_URL}/api/menu/${id}`, { headers });
+      await axios.delete(`${API_BASE_URL}/menu/${id}`, { headers });
     } catch (err) {
       throw err;
     }
@@ -106,7 +104,7 @@ export const useMenu = (): UseMenuReturn => {
     try {
       const headers = getAuthHeaders();
       const response = await axios.patch(
-        `${API_BASE_URL}/api/menu/${id}/toggle-availability`,
+        `${API_BASE_URL}/menu/${id}/toggle-availability`,
         null,
         { headers }
       );

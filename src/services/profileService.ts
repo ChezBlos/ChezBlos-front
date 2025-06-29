@@ -61,6 +61,7 @@ export class ProfileService {
     const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
 
     // Construire l'URL avec la route spécifique pour les images de profil
-    return `${IMAGE_BASE_URL}/auth/profile/photo/${filename}`;
+    // Ajout d'un paramètre unique pour forcer le rafraîchissement après upload
+    return `${IMAGE_BASE_URL}/auth/profile/photo/${filename}?t=${Date.now()}`;
   }
 }

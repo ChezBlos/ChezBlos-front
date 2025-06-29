@@ -328,7 +328,7 @@ export const EditMenuItemModal: React.FC<EditMenuItemModalProps> = ({
                           className={`p-2 rounded-full text-2xl ${
                             formData.categorie === category.id
                               ? "bg-brand-primary-500 text-brand-primary-50"
-                              : "bg-gray-100"
+                              : "bg-gray-10"
                           }`}
                         >
                           {category.icon}

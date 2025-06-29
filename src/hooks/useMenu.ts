@@ -40,7 +40,8 @@ export const useMenu = (): UseMenuReturn => {
       const headers = getAuthHeaders();
       const response = await axios.get(`${API_BASE_URL}/api/menu`, { headers });
 
-      const contentType = response.headers["content-type"] || response.headers["Content-Type"];
+      const contentType =
+        response.headers["content-type"] || response.headers["Content-Type"];
       if (!contentType || !contentType.includes("application/json")) {
         throw new Error(
           "Réponse inattendue du serveur (pas de JSON). Vérifiez que l'API backend fonctionne correctement."
@@ -65,7 +66,9 @@ export const useMenu = (): UseMenuReturn => {
   ): Promise<MenuItemResponse> => {
     try {
       const headers = getAuthHeaders(true); // true pour FormData
-      const response = await axios.post(`${API_BASE_URL}/api/menu`, formData, { headers });
+      const response = await axios.post(`${API_BASE_URL}/api/menu`, formData, {
+        headers,
+      });
       const data = response.data;
       return data.data || data.menuItem || data;
     } catch (err) {
@@ -78,7 +81,11 @@ export const useMenu = (): UseMenuReturn => {
   ): Promise<MenuItemResponse> => {
     try {
       const headers = getAuthHeaders(true); // true pour FormData
-      const response = await axios.put(`${API_BASE_URL}/api/menu/${id}`, formData, { headers });
+      const response = await axios.put(
+        `${API_BASE_URL}/api/menu/${id}`,
+        formData,
+        { headers }
+      );
       const data = response.data;
       return data.data || data.menuItem || data;
     } catch (err) {
@@ -98,7 +105,11 @@ export const useMenu = (): UseMenuReturn => {
   ): Promise<MenuItemResponse> => {
     try {
       const headers = getAuthHeaders();
-      const response = await axios.patch(`${API_BASE_URL}/api/menu/${id}/toggle-availability`, null, { headers });
+      const response = await axios.patch(
+        `${API_BASE_URL}/api/menu/${id}/toggle-availability`,
+        null,
+        { headers }
+      );
       const data = response.data;
       return data.data || data.menuItem || data;
     } catch (err) {

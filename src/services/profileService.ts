@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
@@ -32,23 +34,16 @@ export class ProfileService {
       throw new Error("Token d'authentification manquant");
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/profile/photo`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.message || "Erreur lors de l'upload de la photo"
-      );
-    }
-
-    const result = await response.json();
-    return result;
+    const response = await axios.post(
+      `${API_BASE_URL}/auth/profile/photo`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
   }
   // Récupérer l'URL complète d'une photo de profil
   static getProfilePictureUrl(photoProfil?: string): string {

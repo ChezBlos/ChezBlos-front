@@ -1,4 +1,5 @@
 import api from "./api";
+import axios from "axios";
 
 // Types pour les statistiques avancées
 export interface AdvancedDashboardStats {

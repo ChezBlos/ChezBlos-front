@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "../../../../components/ui/table";
 import { useAlert } from "../../../../contexts/AlertContext";
+import axios from "axios";
 
 interface AdminCaisseSectionProps {
   onSectionSelect?: (section: string) => void;
@@ -76,29 +77,26 @@ export const AdminCaisseSection: React.FC<AdminCaisseSectionProps> = () => {
   const fetchCashierData = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/payments/daily-report", {
+      const response = await axios.get("/api/payments/daily-report", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCashierData({
-          totalSales: data.totalSales || 0,
-          totalOrders: data.totalOrders || 0,
-          paymentMethods: {
-            cash: data.paymentMethods?.cash || 0,
-            card: data.paymentMethods?.card || 0,
-            other: data.paymentMethods?.other || 0,
-          },
-          expectedCash: data.paymentMethods?.cash || 0,
-          actualCash: 0,
-          difference: 0,
-          status: data.status || "open",
-          lastClosure: data.lastClosure,
-        });
-      }
+      const data = response.data;
+      setCashierData({
+        totalSales: data.totalSales || 0,
+        totalOrders: data.totalOrders || 0,
+        paymentMethods: {
+          cash: data.paymentMethods?.cash || 0,
+          card: data.paymentMethods?.card || 0,
+          other: data.paymentMethods?.other || 0,
+        },
+        expectedCash: data.paymentMethods?.cash || 0,
+        actualCash: 0,
+        difference: 0,
+        status: data.status || "open",
+        lastClosure: data.lastClosure,
+      });
     } catch (error) {
       console.error("Erreur lors du chargement des données de caisse:", error);
     }
@@ -119,32 +117,26 @@ export const AdminCaisseSection: React.FC<AdminCaisseSectionProps> = () => {
       showAlert("warning", "Veuillez saisir le montant en caisse");
       return;
     }
-
     setIsClosing(true);
-
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/payments/close-cashier", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      await axios.post(
+        "/api/payments/close-cashier",
+        {
           actualCash: parseFloat(actualCash),
           notes,
           date: new Date().toISOString(),
-        }),
-      });
-
-      if (response.ok) {
-        setCashierData((prev) => ({ ...prev, status: "closed" }));
-        showAlert("success", "Caisse clôturée avec succès !");
-        // Optionnel: génerer un rapport PDF
-        await generateClosureReport();
-      } else {
-        showAlert("error", "Erreur lors de la clôture de caisse");
-      }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setCashierData((prev) => ({ ...prev, status: "closed" }));
+      showAlert("success", "Caisse clôturée avec succès !");
+      await generateClosureReport();
     } catch (error) {
       console.error("Erreur lors de la clôture:", error);
       showAlert("error", "Erreur lors de la clôture de caisse");
@@ -156,26 +148,23 @@ export const AdminCaisseSection: React.FC<AdminCaisseSectionProps> = () => {
   const generateClosureReport = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/api/payments/closure-report", {
-        method: "GET",
+      const response = await axios.get("/api/payments/closure-report", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        responseType: "blob",
       });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `cloture_caisse_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `cloture_caisse_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Erreur lors de la génération du rapport:", error);
     }

@@ -1,26 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/api";
-
-// Configuration axios avec intercepteurs
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Intercepteur pour ajouter le token d'authentification
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from "./api";
 
 export interface StockItem {
   _id: string;
@@ -53,7 +31,7 @@ export class StockService {
   // Récupérer tous les articles de stock
   static async getStockItems(): Promise<StockItem[]> {
     try {
-      const response = await apiClient.get("/stock");
+      const response = await api.get("/stock");
       return response.data.data.stockItems; // Correction ici
     } catch (error: any) {
       throw new Error(
@@ -66,7 +44,7 @@ export class StockService {
   // Récupérer un article de stock par ID
   static async getStockItemById(id: string): Promise<StockItem> {
     try {
-      const response = await apiClient.get(`/stock/${id}`);
+      const response = await api.get(`/stock/${id}`);
       return response.data.data;
     } catch (error: any) {
       throw new Error(
@@ -82,7 +60,7 @@ export class StockService {
     adjustment: StockAdjustment
   ): Promise<StockItem> {
     try {
-      const response = await apiClient.post(`/stock/${id}/adjust`, adjustment);
+      const response = await api.post(`/stock/${id}/adjust`, adjustment);
       return response.data.data;
     } catch (error: any) {
       throw new Error(
@@ -94,7 +72,7 @@ export class StockService {
   // Récupérer les statistiques du stock
   static async getStockStats(): Promise<StockStats> {
     try {
-      const response = await apiClient.get("/stock/stats");
+      const response = await api.get("/stock/stats");
       return response.data.data;
     } catch (error: any) {
       throw new Error(
@@ -106,7 +84,7 @@ export class StockService {
   // Récupérer les alertes de stock
   static async getStockAlerts(): Promise<StockItem[]> {
     try {
-      const response = await apiClient.get("/stock/alerts");
+      const response = await api.get("/stock/alerts");
       const alertsData = response.data.data;
       // Combiner les articles en stock bas et les articles qui expirent
       return [...(alertsData.stockBas || []), ...(alertsData.expiration || [])];
@@ -125,7 +103,7 @@ export class StockService {
         "[StockService] Données envoyées à l’API (createStockItem):",
         data
       );
-      const response = await apiClient.post("/stock", data);
+      const response = await api.post("/stock", data);
       console.log(
         "[StockService] Réponse API (createStockItem):",
         response.data
@@ -158,7 +136,7 @@ export class StockService {
         "[StockService] Données envoyées à l’API (updateStockItem):",
         data
       );
-      const response = await apiClient.put(`/stock/${id}`, data);
+      const response = await api.put(`/stock/${id}`, data);
       console.log(
         "[StockService] Réponse API (updateStockItem):",
         response.data
@@ -193,7 +171,7 @@ export class StockService {
   // Supprimer un article de stock
   static async deleteStockItem(id: string): Promise<void> {
     try {
-      await apiClient.delete(`/stock/${id}`);
+      await api.delete(`/stock/${id}`);
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||

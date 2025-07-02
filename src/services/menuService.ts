@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "./api";
 import {
   MenuItemResponse,
   MenuByCategoryResponse,
@@ -9,21 +9,15 @@ import {
   UploadImageResponse,
 } from "../types/menu";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/api";
-
 export class MenuService {
   // Upload d'image
   static async uploadImage(file: File): Promise<UploadImageResponse> {
     const formData = new FormData();
     formData.append("image", file);
 
-    const response = await axios.post(
-      `${API_BASE_URL}/menu/upload-image`,
-      formData
-    );
+    const response = await api.post("/menu/upload-image", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
     return response.data.data;
   }
@@ -32,7 +26,7 @@ export class MenuService {
   static async createMenuItem(
     data: CreateMenuItemRequest
   ): Promise<MenuItemResponse> {
-    const response = await axios.post(`${API_BASE_URL}/menu`, data, {
+    const response = await api.post("/menu", data, {
       headers: { "Content-Type": "application/json" },
     });
 
@@ -59,23 +53,21 @@ export class MenuService {
       }
     });
 
-    const response = await axios.get(
-      `${API_BASE_URL}/menu?${searchParams.toString()}`
-    );
+    const response = await api.get(`/menu?${searchParams.toString()}`);
 
     return response.data;
   }
 
   // Récupérer le menu par catégorie (pour affichage public)
   static async getMenuByCategory(): Promise<MenuByCategoryResponse[]> {
-    const response = await axios.get(`${API_BASE_URL}/menu/by-category`);
+    const response = await api.get("/menu/by-category");
 
     return response.data.data;
   }
 
   // Récupérer un article par ID
   static async getMenuItemById(id: string): Promise<MenuItemResponse> {
-    const response = await axios.get(`${API_BASE_URL}/menu/${id}`);
+    const response = await api.get(`/menu/${id}`);
 
     return response.data.data;
   }
@@ -85,7 +77,7 @@ export class MenuService {
     id: string,
     data: UpdateMenuItemRequest
   ): Promise<MenuItemResponse> {
-    const response = await axios.put(`${API_BASE_URL}/menu/${id}`, data, {
+    const response = await api.put(`/menu/${id}`, data, {
       headers: { "Content-Type": "application/json" },
     });
 
@@ -94,14 +86,12 @@ export class MenuService {
 
   // Supprimer un article de menu
   static async deleteMenuItem(id: string): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/menu/${id}`);
+    await api.delete(`/menu/${id}`);
   }
 
   // Basculer la disponibilité
   static async toggleAvailability(id: string): Promise<MenuItemResponse> {
-    const response = await axios.patch(
-      `${API_BASE_URL}/menu/${id}/toggle-availability`
-    );
+    const response = await api.patch(`/menu/${id}/toggle-availability`);
 
     return response.data.data;
   }
@@ -118,16 +108,14 @@ export class MenuService {
       }
     });
 
-    const response = await axios.get(
-      `${API_BASE_URL}/menu/search?${searchParams.toString()}`
-    );
+    const response = await api.get(`/menu/search?${searchParams.toString()}`);
 
     return response.data.data;
   }
 
   // Récupérer les statistiques du menu
   static async getMenuStats(): Promise<any> {
-    const response = await axios.get(`${API_BASE_URL}/menu/stats`);
+    const response = await api.get("/menu/stats");
 
     return response.data.data;
   }

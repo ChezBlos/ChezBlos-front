@@ -1,5 +1,5 @@
 import api from "./api";
-import axios from "axios";
+// import axios from "axios";
 
 // Types pour les statistiques avancées
 export interface AdvancedDashboardStats {
@@ -194,6 +194,32 @@ export interface ExpenseStats {
   }>;
 }
 
+// Nouvelle version : accepte PeriodSelection (mode, value)
+export interface PeriodSelection {
+  mode: "quick" | "date" | "range";
+  value: string | { startDate: string; endDate: string };
+}
+
+// Helper pour convertir une période en start/end date
+function getStartEndFromPeriod(period: PeriodSelection): {
+  start: string;
+  end: string;
+} {
+  if (period.mode === "quick") {
+    // Pour les périodes rapides, on mappe vers une date ou un intervalle
+    // (à adapter selon la logique métier, ici on suppose que l'API backend sait gérer les valeurs comme "today", "this_week", etc.)
+    return { start: period.value as string, end: period.value as string };
+  }
+  if (period.mode === "date") {
+    return { start: period.value as string, end: period.value as string };
+  }
+  if (period.mode === "range") {
+    const v = period.value as { startDate: string; endDate: string };
+    return { start: v.startDate, end: v.endDate };
+  }
+  return { start: "", end: "" };
+}
+
 export class AdvancedStatsService {
   // Cache simple pour éviter les appels trop fréquents
   private static cache = new Map<
@@ -270,7 +296,16 @@ export class AdvancedStatsService {
       try {
         // Utilise la nouvelle API /stats/overview qui est compatible
         const response = await api.get(`/stats/overview`);
-        return response.data.data; // Les données sont dans response.data.data selon notre ResponseHelper
+        const data = response.data.data;
+
+        // Récupérer séparément les vraies stats de la semaine calendaire
+        const currentWeekStats = await this.getCurrentWeekStats();
+
+        // Remplacer les stats de semaine par les vraies stats calendaires
+        return {
+          ...data,
+          week: currentWeekStats,
+        };
       } catch (error) {
         console.error(
           "Erreur lors de la récupération des stats dashboard:",
@@ -362,6 +397,13 @@ export class AdvancedStatsService {
       dateFin || "default"
     }`;
 
+    // Log de débogage
+    console.log("🔍 [advancedStatsService.getPersonnelStats] Paramètres:", {
+      dateDebut,
+      dateFin,
+      cacheKey,
+    });
+
     return this.getFromCacheOrFetch(
       cacheKey,
       async () => {
@@ -392,6 +434,15 @@ export class AdvancedStatsService {
           } else {
             params.append("periode", "30days");
           }
+
+          // Log de la période et des paramètres
+          console.log(
+            "🔍 [advancedStatsService.getPersonnelStats] Requête API:",
+            {
+              url,
+              params: params.toString(),
+            }
+          );
 
           if (params.toString()) {
             url += `?${params.toString()}`;
@@ -533,14 +584,16 @@ export class AdvancedStatsService {
 
   // Comparer deux périodes
   static async getComparisonStats(
-    period1: string,
-    period2: string
+    period1: PeriodSelection,
+    period2: PeriodSelection
   ): Promise<ComparisonData> {
+    const { start: startDate1, end: endDate1 } = getStartEndFromPeriod(period1);
+    const { start: startDate2, end: endDate2 } = getStartEndFromPeriod(period2);
     try {
       const response = await api.get(
-        `/stats/comparison?startDate1=${period1}&endDate1=${period1}&startDate2=${period2}&endDate2=${period2}`
+        `/stats/comparison?startDate1=${startDate1}&endDate1=${endDate1}&startDate2=${startDate2}&endDate2=${endDate2}`
       );
-      return response.data;
+      return response.data?.data || response.data;
     } catch (error) {
       console.error("Erreur lors de la comparaison des périodes:", error);
       throw error;
@@ -634,9 +687,8 @@ export class AdvancedStatsService {
   static async getStockMovements(limit = 10): Promise<StockMovement[]> {
     try {
       const response = await api.get(`/stock/movements?limit=${limit}`);
-      // Les données sont dans response.data.data.movements selon la réponse API
-      const movements =
-        response.data.data?.movements || response.data.data || [];
+      // Les données sont directement dans response.data.data selon la structure du backend
+      const movements = response.data.data || [];
       return Array.isArray(movements) ? movements : [];
     } catch (error) {
       console.error(
@@ -728,7 +780,7 @@ export class AdvancedStatsService {
   static async getAdvancedStats(
     filters: {
       periode?: string;
-      groupBy?: "hour" | "day" | "week" | "month";
+      groupBy?: "hour" | "day" | "week" | "month" | "year";
     } = {}
   ): Promise<any> {
     try {
@@ -745,5 +797,55 @@ export class AdvancedStatsService {
       );
       throw error;
     }
+  }
+
+  // Récupérer les statistiques de la semaine calendaire (lundi au dimanche)
+  static async getCurrentWeekStats(): Promise<{
+    commandes: number;
+    recettes: number;
+  }> {
+    return this.retryWithDelay(async () => {
+      try {
+        // Calculer le lundi de cette semaine
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = dimanche, 1 = lundi, ..., 6 = samedi
+        const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Si dimanche, reculer de 6 jours, sinon reculer au lundi
+
+        const mondayOfThisWeek = new Date(now);
+        mondayOfThisWeek.setDate(now.getDate() - daysToSubtract);
+        mondayOfThisWeek.setHours(0, 0, 0, 0);
+
+        // Calculer le dimanche de cette semaine
+        const sundayOfThisWeek = new Date(mondayOfThisWeek);
+        sundayOfThisWeek.setDate(mondayOfThisWeek.getDate() + 6);
+        sundayOfThisWeek.setHours(23, 59, 59, 999);
+
+        // Formater les dates pour l'API
+        const dateDebut = mondayOfThisWeek.toISOString().split("T")[0];
+        const dateFin = sundayOfThisWeek.toISOString().split("T")[0];
+
+        console.log(
+          `[getCurrentWeekStats] Semaine calendaire: ${dateDebut} au ${dateFin}`
+        );
+
+        // Appeler l'API avec les dates spécifiques
+        const response = await api.get(
+          `/stats/recettes-periode?dateDebut=${dateDebut}&dateFin=${dateFin}`
+        );
+        const data = response.data.data;
+
+        return {
+          commandes: data.totalCommandes || 0,
+          recettes: data.totalRecettes || 0,
+        };
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération des stats de la semaine calendaire:",
+          error
+        );
+        // Fallback vers les données par défaut
+        return { commandes: 0, recettes: 0 };
+      }
+    });
   }
 }

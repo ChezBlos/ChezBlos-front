@@ -1,486 +1,391 @@
-import React, { useState, useEffect } from "react";
-import {
-  Calculator,
-  DollarSign,
-  CreditCard,
-  Banknote,
-  PiggyBank,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  Calendar,
-  TrendingUp,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../../components/ui/card";
-import { Button } from "../../../../components/ui/button";
-import { Input } from "../../../../components/ui/input";
-import { Badge } from "../../../../components/ui/badge";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent } from "../../../../components/ui/card";
+// import { Input } from "../../../../components/ui/input";
 import {
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
 } from "../../../../components/ui/table";
-import { useAlert } from "../../../../contexts/AlertContext";
-import axios from "axios";
+import { Funnel } from "@phosphor-icons/react";
+import { Button } from "../../../../components/ui/button";
+import { ChartPie } from "@phosphor-icons/react";
+import { PaymentMethodChart } from "../../../../components/charts";
+import { useCaisseStats } from "../../../../hooks/useCaisseStats";
 
-interface AdminCaisseSectionProps {
-  onSectionSelect?: (section: string) => void;
-}
-
-interface CashierData {
-  totalSales: number;
-  totalOrders: number;
-  paymentMethods: {
-    cash: number;
-    card: number;
-    other: number;
+function formatPaymentMethodName(mode: string): string {
+  const formatMap: Record<string, string> = {
+    ESPECES: "Espèces",
+    CARTE: "Carte Bancaire",
+    CHEQUE: "Chèque",
+    WAVE: "Wave",
+    ORANGE_MONEY: "Orange Money",
+    MOBILE_MONEY: "Mobile Money",
+    MTN_MONEY: "MTN Money",
+    MOOV_MONEY: "Moov Money",
+    PAYPAL: "PayPal",
+    VIREMENT: "Virement",
   };
-  expectedCash: number;
-  actualCash: number;
-  difference: number;
-  status: "open" | "closed" | "pending";
-  lastClosure?: string;
-}
-
-export const AdminCaisseSection: React.FC<AdminCaisseSectionProps> = () => {
-  const [actualCash, setActualCash] = useState<string>("");
-  const [cashierData, setCashierData] = useState<CashierData>({
-    totalSales: 0,
-    totalOrders: 0,
-    paymentMethods: {
-      cash: 0,
-      card: 0,
-      other: 0,
-    },
-    expectedCash: 0,
-    actualCash: 0,
-    difference: 0,
-    status: "open",
-  });
-  const [isClosing, setIsClosing] = useState(false);
-  const [notes, setNotes] = useState("");
-  const { showAlert } = useAlert();
-
-  // Charger les données de la caisse
-  useEffect(() => {
-    fetchCashierData();
-  }, []);
-
-  const fetchCashierData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/payments/daily-report", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = response.data;
-      setCashierData({
-        totalSales: data.totalSales || 0,
-        totalOrders: data.totalOrders || 0,
-        paymentMethods: {
-          cash: data.paymentMethods?.cash || 0,
-          card: data.paymentMethods?.card || 0,
-          other: data.paymentMethods?.other || 0,
-        },
-        expectedCash: data.paymentMethods?.cash || 0,
-        actualCash: 0,
-        difference: 0,
-        status: data.status || "open",
-        lastClosure: data.lastClosure,
-      });
-    } catch (error) {
-      console.error("Erreur lors du chargement des données de caisse:", error);
-    }
-  };
-
-  // Calculer la différence
-  useEffect(() => {
-    const actual = parseFloat(actualCash) || 0;
-    const difference = actual - cashierData.expectedCash;
-    setCashierData((prev) => ({
-      ...prev,
-      actualCash: actual,
-      difference,
-    }));
-  }, [actualCash, cashierData.expectedCash]);
-  const handleCloseCashier = async () => {
-    if (!actualCash) {
-      showAlert("warning", "Veuillez saisir le montant en caisse");
-      return;
-    }
-    setIsClosing(true);
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "/api/payments/close-cashier",
-        {
-          actualCash: parseFloat(actualCash),
-          notes,
-          date: new Date().toISOString(),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      setCashierData((prev) => ({ ...prev, status: "closed" }));
-      showAlert("success", "Caisse clôturée avec succès !");
-      await generateClosureReport();
-    } catch (error) {
-      console.error("Erreur lors de la clôture:", error);
-      showAlert("error", "Erreur lors de la clôture de caisse");
-    } finally {
-      setIsClosing(false);
-    }
-  };
-
-  const generateClosureReport = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/payments/closure-report", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: "blob",
-      });
-      const blob = response.data;
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `cloture_caisse_${
-        new Date().toISOString().split("T")[0]
-      }.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Erreur lors de la génération du rapport:", error);
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(amount);
-  };
-
-  const currentDate = new Date().toLocaleDateString("fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Clôture de Caisse
-          </h1>
-          <p className="text-gray-600 flex items-center gap-2">
-            <Calendar size={16} />
-            {currentDate}
-          </p>
-        </div>
-        <Badge
-          variant={cashierData.status === "closed" ? "default" : "secondary"}
-          className={`px-3 py-1 ${
-            cashierData.status === "closed"
-              ? "bg-green-100 text-green-800"
-              : "bg-orange-100 text-orange-800"
-          }`}
-        >
-          {cashierData.status === "closed" ? "Caisse fermée" : "Caisse ouverte"}
-        </Badge>
-      </div>
-      {/* Résumé des ventes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Chiffre d'affaires
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(cashierData.totalSales)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Total des ventes aujourd'hui
-            </p>
-          </CardContent>
-        </Card>
+    formatMap[mode] ||
+    mode
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l: string) => l.toUpperCase())
+  );
+}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Commandes</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{cashierData.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">Commandes traitées</p>
-          </CardContent>
-        </Card>
+export const AdminCaisseSection: React.FC = () => {
+  // States pour les filtres
+  const [searchTerm] = useState(""); // Pour recherche future
+  const [date, setDate] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ticket moyen</CardTitle>
-            <Calculator className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(
-                cashierData.totalOrders > 0
-                  ? cashierData.totalSales / cashierData.totalOrders
-                  : 0
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Montant moyen par commande
-            </p>
-          </CardContent>
-        </Card>
-      </div>{" "}
-      {/* Répartition par mode de paiement */}
-      <Card className="rounded-3xl overflow-hidden">
-        <CardHeader>
-          <CardTitle>Répartition des paiements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mode de paiement</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Pourcentage</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="flex items-center gap-2">
-                  <Banknote size={16} className="text-green-600" />
-                  Espèces
-                </TableCell>
-                <TableCell className="font-medium">
-                  {formatCurrency(cashierData.paymentMethods.cash)}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {cashierData.totalSales > 0
-                      ? (
-                          (cashierData.paymentMethods.cash /
-                            cashierData.totalSales) *
-                          100
-                        ).toFixed(1)
-                      : 0}
-                    %
-                  </Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="flex items-center gap-2">
-                  <CreditCard size={16} className="text-blue-600" />
-                  Carte
-                </TableCell>
-                <TableCell className="font-medium">
-                  {formatCurrency(cashierData.paymentMethods.card)}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {cashierData.totalSales > 0
-                      ? (
-                          (cashierData.paymentMethods.card /
-                            cashierData.totalSales) *
-                          100
-                        ).toFixed(1)
-                      : 0}
-                    %
-                  </Badge>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="flex items-center gap-2">
-                  <DollarSign size={16} className="text-purple-600" />
-                  Autres
-                </TableCell>
-                <TableCell className="font-medium">
-                  {formatCurrency(cashierData.paymentMethods.other)}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {cashierData.totalSales > 0
-                      ? (
-                          (cashierData.paymentMethods.other /
-                            cashierData.totalSales) *
-                          100
-                        ).toFixed(1)
-                      : 0}
-                    %
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>{" "}
-      {/* Vérification de caisse */}
-      {cashierData.status !== "closed" && (
-        <Card className="rounded-3xl overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PiggyBank size={20} />
-              Vérification de caisse
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Espèces attendues
-                </label>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <span className="text-lg font-semibold">
-                    {formatCurrency(cashierData.expectedCash)}
-                  </span>
-                </div>
-              </div>
+  // Utilisation du hook optimisé
+  const { loading, error, formattedData, refetch } = useCaisseStats({
+    date,
+    startDate,
+    endDate,
+  });
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Espèces en caisse
-                </label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={actualCash}
-                  onChange={(e) => setActualCash(e.target.value)}
-                  className="text-lg"
-                />
-              </div>
+  // Déstructuration des données formatées
+  const { summaryCards, recettesParJour, paymentStats } = formattedData || {
+    summaryCards: [],
+    recettesParJour: [],
+    paymentStats: [],
+  };
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Différence
-                </label>
-                <div
-                  className={`p-3 rounded-lg ${
-                    Math.abs(cashierData.difference) < 0.01
-                      ? "bg-green-50 text-green-700"
-                      : cashierData.difference > 0
-                      ? "bg-blue-50 text-blue-700"
-                      : "bg-red-50 text-red-700"
-                  }`}
-                >
-                  <span className="text-lg font-semibold flex items-center gap-1">
-                    {cashierData.difference > 0 ? "+" : ""}
-                    {formatCurrency(cashierData.difference)}
-                    {Math.abs(cashierData.difference) < 0.01 && (
-                      <CheckCircle size={16} />
-                    )}
-                    {Math.abs(cashierData.difference) >= 0.01 && (
-                      <AlertCircle size={16} />
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
+  // Filtrage par recherche et date (sur les données API)
+  const filteredRecettes = useMemo(() => {
+    return recettesParJour.filter((row: any) => {
+      const matchSearch =
+        searchTerm === "" ||
+        row.date.includes(searchTerm) ||
+        row.ca.toString().includes(searchTerm) ||
+        row.commandes.toString().includes(searchTerm);
+      let matchDate = true;
+      if (date) matchDate = row.date === date;
+      if (startDate && endDate)
+        matchDate = row.date >= startDate && row.date <= endDate;
+      else if (startDate) matchDate = row.date >= startDate;
+      else if (endDate) matchDate = row.date <= endDate;
+      return matchSearch && matchDate;
+    });
+  }, [recettesParJour, searchTerm, date, startDate, endDate]);
 
-            {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Notes (optionnel)
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Commentaires sur la clôture de caisse..."
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-                rows={3}
+  // Agrégation des stats de paiement filtrées (ici, on prend tout le paymentStats de l'API)
+  const paymentStatsAgg = paymentStats.map((stat: any) => ({
+    modePaiement: formatPaymentMethodName(stat._id),
+    montantTotal: stat.montantTotal,
+    pourcentage: stat.pourcentageTransactions,
+  }));
+
+  // Handler pour le modal (à adapter selon le code réel)
+  const handleApplyDateFilter = (params: {
+    date?: string;
+    start?: string;
+    end?: string;
+  }) => {
+    setDate(params.date || null);
+    setStartDate(params.start || null);
+    setEndDate(params.end || null);
+    setIsDateFilterOpen(false);
+  };
+
+  // Modal de filtre par date (composant local)
+  const DateFilterModal = ({
+    isOpen,
+    onClose,
+    onApply,
+    currentDate,
+    currentStart,
+    currentEnd,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    onApply: (params: { date?: string; start?: string; end?: string }) => void;
+    currentDate: string | null;
+    currentStart: string | null;
+    currentEnd: string | null;
+  }) => {
+    const [localDate, setLocalDate] = useState(currentDate || "");
+    const [localStart, setLocalStart] = useState(currentStart || "");
+    const [localEnd, setLocalEnd] = useState(currentEnd || "");
+    const handleApply = () => {
+      onApply({ date: localDate, start: localStart, end: localEnd });
+      onClose();
+    };
+    const handleClear = () => {
+      setLocalDate("");
+      setLocalStart("");
+      setLocalEnd("");
+    };
+    if (!isOpen) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+        <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm">
+          <h3 className="font-bold text-lg mb-4">Filtrer par date</h3>
+          <div className="flex flex-col gap-3">
+            <label className="text-xs">Date précise :</label>
+            <input
+              type="date"
+              value={localDate}
+              onChange={(e) => setLocalDate(e.target.value)}
+              className="border rounded px-2 py-1"
+            />
+            <label className="text-xs mt-2">Ou intervalle :</label>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={localStart}
+                onChange={(e) => setLocalStart(e.target.value)}
+                className="border rounded px-2 py-1"
+              />
+              <span className="text-xs self-center">à</span>
+              <input
+                type="date"
+                value={localEnd}
+                onChange={(e) => setLocalEnd(e.target.value)}
+                className="border rounded px-2 py-1"
               />
             </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <button
+              className="px-3 py-1 rounded border text-gray-700"
+              onClick={onClose}
+            >
+              Annuler
+            </button>
+            <button
+              className="px-3 py-1 rounded border text-gray-700"
+              onClick={handleClear}
+              type="button"
+            >
+              Réinitialiser
+            </button>
+            <button
+              className="px-3 py-1 rounded bg-orange-500 text-white"
+              onClick={handleApply}
+            >
+              Appliquer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={handleCloseCashier}
-                disabled={isClosing || !actualCash}
-                className="flex items-center gap-2"
-              >
-                {isClosing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Clôture en cours...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle size={16} />
-                    Clôturer la caisse
-                  </>
-                )}
-              </Button>
+  return (
+    <section className="flex flex-col w-full gap-4 md:gap-6">
+      {/* Gestion du loading et des erreurs */}
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+          <span className="ml-2 text-gray-600">Chargement des données...</span>
+        </div>
+      )}
 
-              <Button
-                variant="outline"
-                onClick={generateClosureReport}
-                className="flex items-center gap-2"
+      {error && (
+        <div className="mx-3 md:mx-6 lg:mx-12 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
-                <FileText size={16} />
-                Générer un rapport
-              </Button>
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </div>
-          </CardContent>
-        </Card>
-      )}
-      {/* Informations de clôture (si fermée) */}
-      {cashierData.status === "closed" && cashierData.lastClosure && (
-        <Card className="rounded-3xl overflow-hidden bg-green-50 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="text-green-600" size={20} />
-              <h3 className="font-semibold text-green-800">Caisse clôturée</h3>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Erreur de chargement
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={refetch}
+                  className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200"
+                >
+                  Réessayer
+                </button>
+              </div>
             </div>
-            <p className="text-sm text-green-700">
-              Dernière clôture:{" "}
-              {new Date(cashierData.lastClosure).toLocaleString("fr-FR")}
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
-      {/* Informations d'aide */}{" "}
-      <Card className="rounded-3xl overflow-hidden bg-blue-50 border-blue-200">
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-blue-800 mb-2">Instructions</h3>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Comptez les espèces présentes dans la caisse</li>
-            <li>
-              • Saisissez le montant exact dans le champ "Espèces en caisse"
-            </li>
-            <li>
-              • Vérifiez que la différence est acceptable (généralement &lt; 5€)
-            </li>
-            <li>• Ajoutez des notes si nécessaire pour expliquer les écarts</li>
-            <li>
-              • Une fois clôturée, un rapport PDF sera généré automatiquement
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-    </div>
+
+      {!loading && !error && (
+        <>
+          <div className="flex items-center justify-end px-3 md:px-6 lg:px-12 mt-4  md:mt-6 lg:mt-8 ">
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 rounded-full border-orange-500 text-orange-600 bg-orange-50 hover:bg-orange-100"
+              onClick={() => setIsDateFilterOpen(true)}
+            >
+              <Funnel className="h-5 w-5" />
+              Filtrer par date
+            </Button>
+          </div>
+
+          {/* Summary Cards + Donut Chart */}
+          <div className="px-3 md:px-6 lg:px-12 flex flex-col md:flex-row items-start gap-4 md:gap-6 w-full min-w-0">
+            <div className="flex-1 flex flex-row gap-2 sm:gap-3 md:gap-5 w-full min-w-0">
+              {summaryCards.map((card: any, index: number) => (
+                <Card
+                  key={index}
+                  className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0"
+                >
+                  <CardContent className="flex flex-col items-start gap-2 md:gap-3 lg:gap-6 p-3 sm:p-4 md:p-6">
+                    <h3 className="font-semibold text-sm sm:text-base md:text-lg text-gray-900 truncate w-full">
+                      {card.title}
+                    </h3>
+                    <div className="flex flex-col items-start gap-1 w-full min-w-0">
+                      <div className="flex items-start gap-1 w-full min-w-0">
+                        <span className="font-bold text-xl sm:text-2xl md:text-3xl text-gray-900 truncate">
+                          {card.value}
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-1 w-full min-w-0">
+                        <span
+                          className={`font-medium text-xs md:text-sm ${card.color} truncate w-full`}
+                        >
+                          {card.subtitle}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          {/* Tableau des recettes par jour - version desktop only, header épais, pas de fallback mobile */}
+          <div className="my-0 md:mb-6 lg:mb-8 px-0 md:px-6 lg:px-12 h-full flex flex-col md:flex-row items-start gap-4 md:gap-6 w-full min-w-0">
+            <Card className="rounded-t-2xl  border-b-0 rounded-b-none shadow-none md:shadow md:rounded-3xl overflow-hidden w-full">
+              <div className="flex flex-col bg-white border-slate-200">
+                <div className="flex flex-row items-center justify-between px-3 md:px-4 lg:px-6 pt-4 pb-3 gap-3 lg:gap-4">
+                  <h2 className="font-bold text-lg md:text-xl lg:text-2xl text-gray-900 flex-shrink-0">
+                    Recettes par jour
+                  </h2>
+                  {/* <div className="relative flex-1 lg:w-80 max-w-xs ml-auto">
+                <Input
+                  className="pl-4 pr-10 py-2.5 md:py-3 h-10 md:h-12 rounded-[123px] border border-[#eff1f3] text-sm md:text-base w-full"
+                  placeholder="Rechercher une date, un montant, une commande..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <MagnifyingGlass className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
+                </div>
+              </div> */}
+                </div>
+              </div>
+              <CardContent className="p-0">
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-10 border-b border-slate-200">
+                        <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Date
+                        </TableHead>
+                        <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Chiffre d'affaires
+                        </TableHead>
+                        <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Commandes
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredRecettes.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={3}
+                            className="text-center text-gray-400 py-8"
+                          >
+                            Aucune donnée trouvée
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredRecettes.map((row: any, idx: number) => (
+                          <TableRow
+                            key={idx}
+                            className="border-b bg-white border-slate-100 hover:bg-gray-10 transition-colors"
+                          >
+                            <TableCell className="py-4 px-4 lg:px-6 font-medium text-gray-900">
+                              {row.date}
+                            </TableCell>
+                            <TableCell className="py-4 px-4 lg:px-6 font-semibold text-orange-600">
+                              {row.ca} XOF
+                            </TableCell>
+                            <TableCell className="py-4 px-4 lg:px-6 font-medium text-gray-900">
+                              {row.commandes}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+            {/* Donut chart modes de paiement */}
+            <div className="w-1/3 flex-shrink-0 mt-2 md:mt-0">
+              <Card className="bg-white rounded-2xl md:rounded-3xl overflow-hidden h-full flex flex-col">
+                <CardContent className="flex flex-col items-center justify-center p-4 md:p-6 h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ChartPie className="text-orange-500" size={22} />
+                    <span className="font-semibold text-base md:text-lg text-gray-900">
+                      Modes de paiement
+                    </span>
+                  </div>
+                  {paymentStatsAgg && paymentStatsAgg.length > 0 ? (
+                    <PaymentMethodChart data={paymentStatsAgg} height={220} />
+                  ) : (
+                    <div className="h-40 flex items-center justify-center text-gray-400">
+                      Aucune donnée
+                    </div>
+                  )}
+                  <div className="mt-2 w-full flex flex-col gap-1">
+                    {paymentStatsAgg.map((p: any, i: number) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between text-xs text-gray-700"
+                      >
+                        <span>{p.modePaiement}</span>
+                        <span className="font-semibold text-gray-900">
+                          {p.pourcentage}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de filtre par date */}
+      <DateFilterModal
+        isOpen={isDateFilterOpen}
+        onClose={() => setIsDateFilterOpen(false)}
+        onApply={handleApplyDateFilter}
+        currentDate={date}
+        currentStart={startDate}
+        currentEnd={endDate}
+      />
+    </section>
   );
 };

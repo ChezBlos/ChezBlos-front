@@ -27,6 +27,7 @@ import { useOrders, useOrderStats } from "../../../../hooks/useOrderAPI";
 import { Order } from "../../../../types/order";
 import { updateOrderStatus } from "../../../../services/api";
 import { ProfileService } from "../../../../services/profileService";
+import { getOrderItemImage } from "../../../../services/imageService";
 import { OrderDetailsModal } from "../../../ServeurDashboard/sections/ServeurOrdersSection/OrderDetailsModal";
 import { Eye, DotsThreeVertical, CookingPot, User } from "phosphor-react";
 
@@ -243,7 +244,8 @@ export const CuisinierOrdersSection = (): JSX.Element => {
     const size = isMobile ? "w-12 h-12" : "w-10 h-10";
     const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
     const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
-    const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+    // Utilisation du service d'images centralisé
+    // const IMAGE_BASE_URL = import.meta.env.VITE_API_URL || "";
 
     return (
       <div className={`relative ${size} flex-shrink-0`}>
@@ -252,7 +254,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             item.menuItem &&
             typeof item.menuItem === "object" &&
             item.menuItem.image
-              ? `${IMAGE_BASE_URL}${item.menuItem.image}`
+              ? getOrderItemImage(item.menuItem.image)
               : "/img/plat_petit.png";
 
           // Classes pour le décalage et la transparence
@@ -545,8 +547,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                     order.items[0].menuItem.image ? (
                                       <img
                                         src={`${
-                                          import.meta.env.VITE_IMAGE_BASE_URL ||
-                                          ""
+                                          import.meta.env.VITE_API_URL || ""
                                         }${order.items[0].menuItem.image}`}
                                         alt={order.items[0]?.nom || "Plat"}
                                         className="w-full h-full object-cover"
@@ -752,7 +753,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                 order.items[0].menuItem.image ? (
                                   <img
                                     src={`${
-                                      import.meta.env.VITE_IMAGE_BASE_URL || ""
+                                      import.meta.env.VITE_API_URL || ""
                                     }${order.items[0].menuItem.image}`}
                                     alt={order.items[0]?.nom || "Plat"}
                                     className="w-full h-full object-cover"

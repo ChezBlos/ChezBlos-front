@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://chezblos-back.onrender.com", // Port par défaut du serveur backend
+        target: "http://localhost:3000", // Port par défaut du serveur backend local
         changeOrigin: true,
         secure: false,
       },

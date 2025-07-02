@@ -7,7 +7,7 @@ import {
 import {
   TrendUp,
   TrendDown,
-  CurrencyDollar,
+  // CurrencyDollar,
   ChartBar,
   ChartPie,
 } from "@phosphor-icons/react";
@@ -22,11 +22,10 @@ const CommandesRecettesStatsSection = ({
   advancedStats,
   dashboardStats,
   todayVsYesterday,
-  revenueChange,
+  // revenueChange,
   monthlyRevenueData,
   weeklyTrendData,
   trendTitle = "Tendance des Commandes",
-  selectedPeriod = "7days",
   paymentStats,
   topItems,
   comparisonData,
@@ -64,7 +63,7 @@ const CommandesRecettesStatsSection = ({
       "6months": "Évolution des Ventes (6 mois)",
       "1year": "Évolution des Ventes (12 mois)",
     };
-    return periodLabels[selectedPeriod] || "Évolution des Ventes";
+    return periodLabels["7days"] || "Évolution des Ventes";
   };
 
   // Transformer les données de paiement pour le graphique
@@ -76,9 +75,9 @@ const CommandesRecettesStatsSection = ({
     })) || [];
 
   return (
-    <>
+    <section className="space-y-6">
       {/* KPI Cards Performances */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -115,7 +114,7 @@ const CommandesRecettesStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-3xl">
+        {/* <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -153,7 +152,7 @@ const CommandesRecettesStatsSection = ({
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
         <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -164,14 +163,6 @@ const CommandesRecettesStatsSection = ({
                     ? advancedStats.week.commandes
                     : 0}{" "}
                   commandes
-                </p>
-                <p className="text-sm text-orange-600">
-                  {formatPrice(
-                    advancedStats?.week?.recettes !== undefined
-                      ? advancedStats.week.recettes
-                      : 0
-                  )}{" "}
-                  XOF
                 </p>
               </div>
               <div className="p-2 bg-blue-50 rounded-lg">
@@ -190,14 +181,6 @@ const CommandesRecettesStatsSection = ({
                     ? advancedStats.month.commandes
                     : 0}{" "}
                   commandes
-                </p>
-                <p className="text-sm text-orange-600">
-                  {formatPrice(
-                    advancedStats?.month?.recettes !== undefined
-                      ? advancedStats.month.recettes
-                      : 0
-                  )}{" "}
-                  XOF
                 </p>
               </div>
               <div className="p-2 bg-green-50 rounded-lg">
@@ -409,7 +392,7 @@ const CommandesRecettesStatsSection = ({
           </CardContent>
         </Card>
       )}
-    </>
+    </section>
   );
 };
 

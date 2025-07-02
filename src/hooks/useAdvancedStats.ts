@@ -16,6 +16,7 @@ import {
   ExpenseStats,
   PersonnelStatsResponse,
 } from "../services/advancedStatsService";
+import type { PeriodSelection } from "../services/advancedStatsService";
 
 // Système de limitation des appels API pour éviter le spam
 class ApiLimiter {
@@ -269,14 +270,30 @@ export const usePreparationTimeStats = () => {
 };
 
 // Hook pour la comparaison de périodes
-export const useComparisonStats = (period1: string, period2: string) => {
+export const useComparisonStats = (
+  period1: PeriodSelection | null,
+  period2: PeriodSelection | null
+) => {
   const [data, setData] = useState<ComparisonData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
     if (!period1 || !period2) return;
-
+    // Validation : il faut que chaque période soit bien renseignée
+    if (
+      (period1.mode === "quick" && !period1.value) ||
+      (period1.mode === "date" && !period1.value) ||
+      (period1.mode === "range" &&
+        (!(period1.value as any).startDate ||
+          !(period1.value as any).endDate)) ||
+      (period2.mode === "quick" && !period2.value) ||
+      (period2.mode === "date" && !period2.value) ||
+      (period2.mode === "range" &&
+        (!(period2.value as any).startDate || !(period2.value as any).endDate))
+    ) {
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -789,4 +806,37 @@ export const useClearStatsCache = () => {
     loading,
     error,
   };
+};
+
+// Hook pour les statistiques de la semaine calendaire
+export const useCurrentWeekStats = () => {
+  const [data, setData] = useState<{ commandes: number; recettes: number } | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    if (!apiLimiter.canMakeRequest("week-stats")) {
+      setError("Trop de requêtes. Veuillez patienter quelques instants.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const stats = await AdvancedStatsService.getCurrentWeekStats();
+      setData(stats);
+    } catch (err: any) {
+      console.error("Erreur lors de la récupération des statistiques de la semaine:", err);
+      setError("Erreur lors du chargement des statistiques de la semaine");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  return { data, loading, error, refetch: fetchStats };
 };

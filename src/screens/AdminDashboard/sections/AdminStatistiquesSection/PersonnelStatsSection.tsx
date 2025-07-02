@@ -1,20 +1,10 @@
 import { useState } from "react";
-import {
-  Users,
-  ArrowClockwise,
-  ChefHat,
-  XCircle,
-  CurrencyDollar,
-} from "@phosphor-icons/react";
+import { Users, ChefHat, XCircle } from "@phosphor-icons/react";
 import { Button } from "../../../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../../../components/ui/card";
+import { Card, CardContent } from "../../../../components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
+import { UserAvatar } from "../../../../components/UserAvatar";
 
 // Composant simplifié pour le tableau du personnel
 const PersonnelStatsSection = ({
@@ -57,10 +47,6 @@ const PersonnelStatsSection = ({
     (acc: number, p: any) => acc + (p.nombreCommandes || p.totalCommandes || 0),
     0
   );
-  const totalRecettes = personnelDataToUse.reduce(
-    (acc: number, p: any) => acc + (p.recettesTotales || 0),
-    0
-  );
   const totalAnnulees = personnelDataToUse.reduce(
     (acc: number, p: any) => acc + (p.commandesAnnulees || 0),
     0
@@ -68,26 +54,8 @@ const PersonnelStatsSection = ({
 
   return (
     <div className="space-y-6">
-      {/* Header avec contrôles */}
-      {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">
-            Statistiques Personnel
-          </h2>
-          <p className="text-sm text-gray-600">
-            Performance du personnel pour la période sélectionnée
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={refetchPersonnelStats} variant="outline" size="sm">
-            <ArrowClockwise size={16} className="mr-1" />
-            Actualiser
-          </Button>
-        </div>
-      </div> */}
-
       {/* Cards de résumé harmonisées */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -120,7 +88,7 @@ const PersonnelStatsSection = ({
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-3xl">
+        {/* <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -137,7 +105,7 @@ const PersonnelStatsSection = ({
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
         <Card className="rounded-3xl">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -231,7 +199,7 @@ const PersonnelStatsSection = ({
                 <p className="text-lg font-medium">Aucune donnée disponible</p>
                 <p className="text-sm mt-2">
                   {activeTab === "TOUS"
-                    ? "Aucun personnel trouvé pour cette période"
+                    ? "Aucun personnel trouvé"
                     : `Aucun ${activeTab.toLowerCase()} trouvé`}
                 </p>
               </div>
@@ -269,11 +237,13 @@ const PersonnelStatsSection = ({
                     >
                       <td className="py-4 px-4 lg:px-6">
                         <div className="flex items-center gap-2">
-                          {/* Avatar ou initiales */}
-                          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-800 font-bold text-sm">
-                            {(person.prenom?.[0] || "") +
-                              (person.nom?.[0] || "")}
-                          </div>
+                          {/* Avatar avec image ou initiales */}
+                          <UserAvatar
+                            photo={person.photoProfil}
+                            nom={person.nom}
+                            prenom={person.prenom}
+                            size="sm"
+                          />
                           <div className="flex flex-col">
                             <span className="text-sm font-medium text-gray-900">
                               {person.prenom} {person.nom}

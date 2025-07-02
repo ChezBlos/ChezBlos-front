@@ -351,8 +351,23 @@ export const AdminHistoriqueSection: React.FC = () => {
     setSelectedOrder(null);
   };
 
-  const handleApplyDateFilter = (startDate: string, endDate: string) => {
-    setDateFilter({ startDate, endDate });
+  // Correction : adapter la signature pour accepter deux string OU un objet (compatibilité descendante)
+  // On gère les deux cas : (startDate, endDate) OU ({mode, ...})
+  const handleApplyDateFilter = (arg1: any, arg2?: any) => {
+    if (typeof arg1 === "object" && arg1 !== null) {
+      // Appel depuis le nouveau modal (objet)
+      if (arg1.mode === "single") {
+        setDateFilter({ startDate: arg1.date || "", endDate: arg1.date || "" });
+      } else {
+        setDateFilter({
+          startDate: arg1.startDate || "",
+          endDate: arg1.endDate || "",
+        });
+      }
+    } else {
+      // Ancien appel (deux string)
+      setDateFilter({ startDate: arg1 || "", endDate: arg2 || "" });
+    }
   };
 
   const handleClearDateFilter = () => {

@@ -36,7 +36,7 @@ import {
   useDeleteUser,
   useToggleUserStatus,
 } from "../../../../hooks/useUserAPI";
-import { ProfileService } from "../../../../services/profileService";
+import { UserAvatar } from "../../../../components/UserAvatar";
 import { FileSpreadsheet, FileText, UserCheck, UserX } from "lucide-react";
 import { AccessCodeModal } from "../../../../components/modals/AccessCodeModal";
 import { AddStaffModal } from "../../../../components/modals/AddStaffModal";
@@ -668,22 +668,13 @@ export const AdminStaffSection: React.FC = () => {
                         >
                           <TableCell className="py-4 px-4 lg:px-6">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                {user.photoProfil ? (
-                                  <img
-                                    src={ProfileService.getProfilePictureUrl(
-                                      user.photoProfil
-                                    )}
-                                    alt={`${user.prenom} ${user.nom}`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-4 h-4 text-gray-600 flex items-center justify-center font-semibold">
-                                    {user.prenom.charAt(0).toUpperCase()}
-                                    {user.nom.charAt(0).toUpperCase()}
-                                  </div>
-                                )}
-                              </div>
+                              <UserAvatar
+                                photo={user.photoProfil}
+                                nom={user.nom}
+                                prenom={user.prenom}
+                                size="sm"
+                                className="flex-shrink-0"
+                              />
                               <div>
                                 <div className="font-medium text-gray-900">
                                   {user.nom} {user.prenom}
@@ -794,27 +785,18 @@ export const AdminStaffSection: React.FC = () => {
                         <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                {user.photoProfil ? (
-                                  <img
-                                    src={ProfileService.getProfilePictureUrl(
-                                      user.photoProfil
-                                    )}
-                                    alt={`${user.prenom} ${user.nom}`}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="text-xs text-gray-600 font-semibold">
-                                    {user.prenom.charAt(0).toUpperCase()}
-                                    {user.nom.charAt(0).toUpperCase()}
-                                  </div>
-                                )}
-                              </div>{" "}
+                              <UserAvatar
+                                photo={user.photoProfil}
+                                nom={user.nom}
+                                prenom={user.prenom}
+                                size="sm"
+                                className="flex-shrink-0"
+                              />
                               <span className="font-bold text-lg text-gray-900 truncate">
                                 {user.prenom} {user.nom}
                               </span>
                               {user.isCaissier && getCashierBadge()}
-                            </div>{" "}
+                            </div>
                             <div
                               className="text-sm text-gray-600 mb-2 max-w-[250px] truncate"
                               title={user.email || "Email non défini"}

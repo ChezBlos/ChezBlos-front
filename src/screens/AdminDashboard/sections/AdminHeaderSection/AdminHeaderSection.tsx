@@ -1,6 +1,5 @@
 import { LogOutIcon, MenuIcon } from "lucide-react";
 import {
-  User,
   Users,
   ForkKnife,
   ChartBar,
@@ -20,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "../../../../components/ui/dropdown-menu";
 import { ChangeProfilePictureModal } from "../../../../components/modals/ChangeProfilePictureModal";
-import { ProfileService } from "../../../../services/profileService";
+import { UserAvatar } from "../../../../components/UserAvatar";
 
 interface AdminHeaderSectionProps {
   onRefresh?: () => void;
@@ -31,7 +30,8 @@ interface AdminHeaderSectionProps {
     | "historique"
     | "stock"
     | "statistiques"
-    | "settings";
+    | "settings"
+    | "caisse";
   onSectionSelect?: (
     section:
       | "dashboard"
@@ -41,6 +41,7 @@ interface AdminHeaderSectionProps {
       | "stock"
       | "statistiques"
       | "settings"
+      | "caisse"
   ) => void;
 }
 
@@ -74,6 +75,7 @@ export const AdminHeaderSection: React.FC<AdminHeaderSectionProps> = ({
     { id: "historique", label: "Historique des commandes", icon: ForkKnife },
     { id: "stock", label: "Gestion du stock", icon: Package },
     { id: "statistiques", label: "Statistiques", icon: ChartBar },
+    { id: "caisse", label: "Caisse", icon: Receipt },
     { id: "settings", label: "Paramètres", icon: Gear },
   ] as const;
 
@@ -89,21 +91,15 @@ export const AdminHeaderSection: React.FC<AdminHeaderSectionProps> = ({
             {/* Mobile user avatar */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="relative w-10 h-10 cursor-pointer">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors overflow-hidden">
-                    {user?.photoProfil ? (
-                      <img
-                        src={ProfileService.getProfilePictureUrl(
-                          user.photoProfil
-                        )}
-                        alt="Photo de profil"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User size={20} className="text-gray-600" />
-                    )}
-                  </div>
-                  <div className="absolute w-3 h-3 -bottom-0.5 -right-0.5 bg-success-50 rounded-full border-2 border-white" />
+                <div className="relative cursor-pointer">
+                  <UserAvatar
+                    photo={user?.photoProfil}
+                    nom={user?.nom}
+                    prenom={user?.prenom}
+                    size="md"
+                    className="hover:ring-2 hover:ring-orange-200 transition-all"
+                  />
+                  <div className="absolute w-3 h-3 -bottom-0.5 -right-0.5 bg-green-500 rounded-full border-2 border-white" />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
@@ -194,21 +190,15 @@ export const AdminHeaderSection: React.FC<AdminHeaderSectionProps> = ({
           {/* Avatar utilisateur avec menu déroulant */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="relative w-12 h-12 cursor-pointer">
-                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors overflow-hidden">
-                  {user?.photoProfil ? (
-                    <img
-                      src={ProfileService.getProfilePictureUrl(
-                        user.photoProfil
-                      )}
-                      alt="Photo de profil"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User size={24} className="text-gray-600" />
-                  )}
-                </div>
-                <div className="absolute w-4 h-4 -bottom-0.5 -right-0.5 bg-success-50 rounded-full border-2 border-white" />
+              <div className="relative cursor-pointer">
+                <UserAvatar
+                  photo={user?.photoProfil}
+                  nom={user?.nom}
+                  prenom={user?.prenom}
+                  size="lg"
+                  className="hover:ring-2 hover:ring-orange-200 transition-all"
+                />
+                <div className="absolute w-4 h-4 -bottom-0.5 -right-0.5 bg-green-500 rounded-full border-2 border-white" />
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64" align="end">

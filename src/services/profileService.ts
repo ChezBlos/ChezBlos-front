@@ -1,9 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/api";
+  import.meta.env.VITE_API_URL || "https://chezblos-back.onrender.com/api";
 
 export interface UpdateProfilePictureResponse {
   success: boolean;
@@ -46,9 +44,14 @@ export class ProfileService {
     return response.data;
   }
   // Récupérer l'URL complète d'une photo de profil
+  // DEPRECATED: Utiliser getUserAvatarUrl du imageService à la place
   static getProfilePictureUrl(photoProfil?: string): string {
+    console.warn(
+      "ProfileService.getProfilePictureUrl est déprécié. Utilisez getUserAvatarUrl du imageService."
+    );
+
     if (!photoProfil) {
-      return "/avatar.png"; // Image par défaut
+      return "/img/plat_petit.png"; // Image par défaut
     }
 
     // Si c'est déjà une URL complète, la retourner telle quelle
@@ -58,7 +61,7 @@ export class ProfileService {
 
     // Extraire le nom du fichier du chemin
     const filename = photoProfil.split("/").pop();
-    const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+    const IMAGE_BASE_URL = import.meta.env.VITE_API_URL || "";
 
     // Construire l'URL avec la route spécifique pour les images de profil
     // Ajout d'un paramètre unique pour forcer le rafraîchissement après upload

@@ -2,9 +2,7 @@ import axios, { AxiosResponse } from "axios";
 
 // Utilisation de la variable d'environnement pour l'URL de l'API
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/api";
+  import.meta.env.VITE_API_URL || "https://chezblos-back.onrender.com/api";
 
 // Configuration axios
 const api = axios.create({

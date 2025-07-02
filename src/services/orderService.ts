@@ -1,27 +1,18 @@
 import { Order, CreateOrderRequest, OrderStats } from "../types/order";
-import axios from "axios";
+import api from "./api";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/api";
-
-// Configuration axios avec intercepteurs
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Intercepteur pour ajouter le token d'authentification
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+export interface OrderFilters {
+  statut?: string;
+  serveur?: string;
+  numeroTable?: number;
+  search?: string;
+  dateFilter?: {
+    mode: "single" | "period";
+    date?: string;
+    startDate?: string;
+    endDate?: string;
+  };
+}
 
 export class OrderService {
   // Créer une nouvelle commande
@@ -31,7 +22,7 @@ export class OrderService {
     console.log("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
 
     try {
-      const response = await apiClient.post("/orders", data);
+      const response = await api.post("/orders", data);
 
       console.log("📡 [OrderService] Statut de la réponse:", response.status);
       console.log("✅ [OrderService] Résultat du backend:", response.data);
@@ -45,10 +36,73 @@ export class OrderService {
           "Erreur lors de la création de la commande"
       );
     }
-  } // Récupérer toutes les commandes (sans pagination)
-  static async getOrders(): Promise<Order[]> {
+  }
+
+  // Récupérer toutes les commandes avec pagination et filtres
+  async getOrders(
+    page: number = 1,
+    limit: number = 10,
+    filters: OrderFilters = {}
+  ): Promise<{
+    orders: Order[];
+    totalPages: number;
+    currentPage: number;
+    totalOrders: number;
+  }> {
     try {
-      const response = await apiClient.get("/orders");
+      console.log("🔍 [OrderService] Récupération des commandes:", {
+        page,
+        limit,
+        filters,
+      });
+
+      const params: any = { page, limit };
+
+      // Ajouter les filtres aux paramètres
+      if (filters.statut && filters.statut !== "TOUTES") {
+        params.statut = filters.statut;
+      }
+      if (filters.serveur) {
+        params.serveur = filters.serveur;
+      }
+      if (filters.numeroTable) {
+        params.numeroTable = filters.numeroTable;
+      }
+      if (filters.search) {
+        params.search = filters.search;
+      }
+      if (filters.dateFilter) {
+        if (filters.dateFilter.mode === "single") {
+          params.date = filters.dateFilter.date;
+        } else {
+          params.startDate = filters.dateFilter.startDate;
+          params.endDate = filters.dateFilter.endDate;
+        }
+      }
+
+      const response = await api.get("/orders", { params });
+
+      console.log("✅ [OrderService] Commandes récupérées:", response.data);
+
+      return {
+        orders: response.data.data.orders || [],
+        totalPages: response.data.data.totalPages || 1,
+        currentPage: response.data.data.currentPage || 1,
+        totalOrders: response.data.data.totalOrders || 0,
+      };
+    } catch (error: any) {
+      console.error(
+        "❌ [OrderService] Erreur lors de la récupération des commandes:",
+        error
+      );
+      throw new Error("Erreur lors de la récupération des commandes");
+    }
+  }
+
+  // Récupérer toutes les commandes (sans pagination)
+  static async getAllOrders(): Promise<Order[]> {
+    try {
+      const response = await api.get("/orders");
       console.log("📦 [OrderService] API response complet:", response.data);
 
       // S'assurer qu'on retourne toujours un tableau
@@ -90,7 +144,7 @@ export class OrderService {
   // Récupérer une commande par ID
   static async getOrderById(id: string): Promise<Order> {
     try {
-      const response = await apiClient.get(`/orders/${id}`);
+      const response = await api.get(`/orders/${id}`);
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de la récupération de la commande");
@@ -100,7 +154,7 @@ export class OrderService {
   // Récupérer les commandes pour la cuisine
   static async getKitchenOrders(): Promise<Order[]> {
     try {
-      const response = await apiClient.get("/orders/kitchen");
+      const response = await api.get("/orders/kitchen");
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de la récupération des commandes cuisine");
@@ -110,7 +164,7 @@ export class OrderService {
   // Récupérer les statistiques des commandes
   static async getOrderStats(): Promise<OrderStats> {
     try {
-      const response = await apiClient.get("/orders/stats");
+      const response = await api.get("/orders/stats");
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de la récupération des statistiques");
@@ -120,7 +174,7 @@ export class OrderService {
   // Envoyer une commande en cuisine
   static async sendToKitchen(id: string): Promise<Order> {
     try {
-      const response = await apiClient.patch(`/orders/${id}/send-to-kitchen`);
+      const response = await api.patch(`/orders/${id}/send-to-kitchen`);
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de l'envoi en cuisine");
@@ -130,7 +184,7 @@ export class OrderService {
   // Commencer la préparation d'une commande
   static async startCooking(id: string): Promise<Order> {
     try {
-      const response = await apiClient.patch(`/orders/${id}/start-cooking`);
+      const response = await api.patch(`/orders/${id}/start-cooking`);
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors du démarrage de la préparation");
@@ -140,7 +194,7 @@ export class OrderService {
   // Terminer la préparation d'une commande (EN_PREPARATION -> PRET)
   static async finishCooking(id: string): Promise<Order> {
     try {
-      const response = await apiClient.patch(`/orders/${id}/finish-cooking`);
+      const response = await api.patch(`/orders/${id}/finish-cooking`);
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de la finalisation de la préparation");
@@ -150,7 +204,7 @@ export class OrderService {
   // Marquer une commande comme terminée (PRET -> TERMINE)
   static async markAsCompleted(id: string): Promise<Order> {
     try {
-      const response = await apiClient.patch(`/orders/${id}/mark-completed`);
+      const response = await api.patch(`/orders/${id}/mark-completed`);
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de la finalisation de la commande");
@@ -163,7 +217,7 @@ export class OrderService {
     data: Partial<CreateOrderRequest>
   ): Promise<Order> {
     try {
-      const response = await apiClient.put(`/orders/${id}`, data);
+      const response = await api.put(`/orders/${id}`, data);
       return response.data.data;
     } catch (error: any) {
       throw new Error("Erreur lors de la mise à jour de la commande");
@@ -180,7 +234,7 @@ export class OrderService {
     console.log("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
 
     try {
-      const response = await apiClient.put(`/orders/${id}/complete`, data);
+      const response = await api.put(`/orders/${id}/complete`, data);
 
       console.log("📡 [OrderService] Statut de la réponse:", response.status);
       console.log("✅ [OrderService] Résultat du backend:", response.data);
@@ -200,7 +254,7 @@ export class OrderService {
   // Annuler une commande
   static async cancelOrder(id: string): Promise<void> {
     try {
-      await apiClient.delete(`/orders/${id}`);
+      await api.delete(`/orders/${id}`);
     } catch (error: any) {
       throw new Error("Erreur lors de l'annulation de la commande");
     }

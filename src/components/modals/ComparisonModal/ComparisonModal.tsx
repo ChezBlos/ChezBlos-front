@@ -11,7 +11,7 @@ import { X, Calendar } from "@phosphor-icons/react";
 interface ComparisonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCompare: (period1: string, period2: string) => void;
+  onCompare: (date1: string, date2?: string) => void;
 }
 
 export const ComparisonModal: React.FC<ComparisonModalProps> = ({
@@ -19,34 +19,27 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
   onClose,
   onCompare,
 }) => {
-  const [period1, setPeriod1] = useState("");
-  const [period2, setPeriod2] = useState("");
+  // Mode: "single" pour filtrer une date, "compare" pour comparer deux dates
+  const [mode, setMode] = useState<"single" | "compare">("single");
+  const [date1, setDate1] = useState("");
+  const [date2, setDate2] = useState("");
 
   const handleCompare = () => {
-    if (period1 && period2) {
-      onCompare(period1, period2);
+    if (mode === "single" && date1) {
+      onCompare(date1);
+      onClose();
+    } else if (mode === "compare" && date1 && date2) {
+      onCompare(date1, date2);
       onClose();
     }
   };
 
   const handleClose = () => {
-    setPeriod1("");
-    setPeriod2("");
+    setMode("single");
+    setDate1("");
+    setDate2("");
     onClose();
   };
-
-  const periods = [
-    { value: "today", label: "Aujourd'hui" },
-    { value: "yesterday", label: "Hier" },
-    { value: "this_week", label: "Cette semaine" },
-    { value: "last_week", label: "Semaine dernière" },
-    { value: "this_month", label: "Ce mois" },
-    { value: "last_month", label: "Mois dernier" },
-    { value: "this_quarter", label: "Ce trimestre" },
-    { value: "last_quarter", label: "Trimestre dernier" },
-    { value: "this_year", label: "Cette année" },
-    { value: "last_year", label: "Année dernière" },
-  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -55,7 +48,7 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
           <div className="flex items-center justify-between">
             <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <Calendar size={20} className="text-orange-500" />
-              Comparer les Périodes
+              {mode === "single" ? "Filtrer par date" : "Comparer deux dates"}
             </DialogTitle>
             <Button
               variant="ghost"
@@ -67,58 +60,57 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
             </Button>
           </div>
         </DialogHeader>
-
         <div className="space-y-6 py-4">
-          {/* Première période */}
+          <div className="flex gap-4 mb-2">
+            <label className="flex items-center gap-1">
+              <input
+                type="radio"
+                checked={mode === "single"}
+                onChange={() => setMode("single")}
+              />
+              Filtrer par date
+            </label>
+            <label className="flex items-center gap-1">
+              <input
+                type="radio"
+                checked={mode === "compare"}
+                onChange={() => setMode("compare")}
+              />
+              Comparer deux dates
+            </label>
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              Première période
+              {mode === "single" ? "Date" : "Première date"}
             </label>
-            <select
-              value={period1}
-              onChange={(e) => setPeriod1(e.target.value)}
+            <input
+              type="date"
+              value={date1}
+              onChange={(e) => setDate1(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="">Sélectionner une période</option>
-              {periods.map((period) => (
-                <option key={period.value} value={period.value}>
-                  {period.label}
-                </option>
-              ))}
-            </select>
+            />
           </div>
-
-          {/* Deuxième période */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Deuxième période
-            </label>
-            <select
-              value={period2}
-              onChange={(e) => setPeriod2(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="">Sélectionner une période</option>
-              {periods
-                .filter((period) => period.value !== period1)
-                .map((period) => (
-                  <option key={period.value} value={period.value}>
-                    {period.label}
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          {/* Information */}
+          {mode === "compare" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Deuxième date
+              </label>
+              <input
+                type="date"
+                value={date2}
+                onChange={(e) => setDate2(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+            </div>
+          )}
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
             <p className="text-sm text-orange-700">
-              Comparez les performances entre deux périodes différentes pour
-              analyser l'évolution de votre activité.
+              {mode === "single"
+                ? "Filtrez les statistiques pour une date précise."
+                : "Comparez les performances entre deux dates différentes."}
             </p>
           </div>
         </div>
-
-        {/* Actions */}
         <div className="flex gap-3 pt-4 border-t">
           <Button
             onClick={handleClose}
@@ -129,10 +121,10 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
           </Button>
           <Button
             onClick={handleCompare}
-            disabled={!period1 || !period2}
+            disabled={mode === "single" ? !date1 : !date1 || !date2}
             className="flex-1 bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-300 disabled:text-gray-500"
           >
-            Comparer
+            {mode === "single" ? "Filtrer" : "Comparer"}
           </Button>
         </div>
       </DialogContent>

@@ -1,50 +1,50 @@
 import React, { useState } from "react";
+import {
+  getMenuImageUrl,
+  handleImageError,
+  IMAGE_DEFAULTS,
+} from "../services/imageService";
 
 interface MenuItemImageProps {
-  src: string | null | undefined;
-  alt: string;
+  src?: string | null;
+  alt?: string;
   className?: string;
   fallbackSrc?: string;
+  onImageError?: () => void;
 }
 
+/**
+ * Composant optimisé pour les images de plats/menu
+ * Utilise le service centralisé pour la gestion des images
+ */
 const MenuItemImage: React.FC<MenuItemImageProps> = ({
   src,
-  alt,
+  alt = "Image du plat",
   className = "",
-  fallbackSrc = "/images/placeholder-dish.svg",
+  fallbackSrc = IMAGE_DEFAULTS.menuItem,
+  onImageError,
 }) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleImageError = () => {
+  const handleImageLoadError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     setImageError(true);
     setIsLoading(false);
+    onImageError?.();
+    handleImageError(e, fallbackSrc);
   };
 
   const handleImageLoad = () => {
+    setImageError(false);
     setIsLoading(false);
   };
-  // Construire l'URL complète pour les images uploadées
-  const getImageUrl = (imageSrc: string | null | undefined): string => {
-    if (!imageSrc) return fallbackSrc;
 
-    // Si c'est déjà une URL complète, l'utiliser telle quelle
-    if (imageSrc.startsWith("http")) return imageSrc;
-
-    // Si c'est un chemin relatif qui commence par '/uploads/', construire l'URL complète
-    if (imageSrc.startsWith("/uploads/")) {
-      return `${import.meta.env.VITE_IMAGE_BASE_URL || ""}${imageSrc}`;
-    }
-
-    // Sinon, utiliser l'image de fallback
-    return fallbackSrc;
-  };
-
-  const imageUrl = imageError ? fallbackSrc : getImageUrl(src);
+  // Utiliser le service centralisé pour obtenir l'URL
+  const imageUrl = imageError ? fallbackSrc : getMenuImageUrl(src);
 
   return (
     <div className={`relative ${className}`}>
-      {isLoading && (
+      {isLoading && !imageError && (
         <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
           <div className="text-gray-400 text-sm">Chargement...</div>
         </div>
@@ -52,11 +52,12 @@ const MenuItemImage: React.FC<MenuItemImageProps> = ({
       <img
         src={imageUrl}
         alt={alt}
-        onError={handleImageError}
+        onError={handleImageLoadError}
         onLoad={handleImageLoad}
         className={`w-full h-full object-cover rounded-lg ${
           isLoading ? "opacity-0" : "opacity-100"
         } transition-opacity duration-300`}
+        loading="lazy"
       />
     </div>
   );

@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "../../../../components/ui/dialog";
 import { Order } from "../../../../types/order";
+import { getOrderItemImage } from "../../../../services/imageService";
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -14,7 +15,8 @@ interface OrderDetailsModalProps {
   order: Order | null;
 }
 
-const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+// Utilisation du service d'images centralisé
+// const IMAGE_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 export const OrderDetailsModal = ({
   isOpen,
@@ -80,7 +82,7 @@ export const OrderDetailsModal = ({
                       typeof item.menuItem === "object" &&
                       item.menuItem.image ? (
                         <img
-                          src={`${IMAGE_BASE_URL}${item.menuItem.image}`}
+                          src={getOrderItemImage(item.menuItem.image)}
                           alt={item.nom || "Plat"}
                           className="w-full h-full object-cover"
                           onError={(e) => {

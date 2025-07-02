@@ -1,18 +1,18 @@
 import React from "react";
-import { Button } from "../../../../components/ui/button";
+// import { Button } from "../../../../components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
+  // CardHeader,
+  // CardTitle,
 } from "../../../../components/ui/card";
 import {
   Users,
   ForkKnife,
   ChartBar,
-  Package,
-  Gear,
-  FileText,
+  // Package,
+  // Gear,
+  // FileText,
 } from "@phosphor-icons/react";
 import { useDashboardStats } from "../../../../hooks/useDashboardStats";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
@@ -31,78 +31,80 @@ interface AdminDashboardSectionProps {
   ) => void;
 }
 
-export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = ({
-  onSectionSelect,
-}) => {
+export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = (
+  {
+    // onSectionSelect,
+  }
+) => {
   const { dashboardStats, userStats, loading, error } = useDashboardStats();
 
   // Fonction pour formater les prix en XOF
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("fr-FR").format(price);
   };
-  const handleMenuItemClick = (action: string) => {
-    switch (action) {
-      case "staff":
-        onSectionSelect?.("staff");
-        break;
-      case "menu":
-        onSectionSelect?.("menu");
-        break;
-      case "stock":
-        onSectionSelect?.("stock");
-        break;
-      case "statistiques":
-        onSectionSelect?.("statistiques");
-        break;
-      case "historique":
-        onSectionSelect?.("historique");
-        break;
-      case "settings":
-        onSectionSelect?.("settings");
-        break;
-      default:
-        break;
-    }
-  };
+  // const handleMenuItemClick = (action: string) => {
+  //   switch (action) {
+  //     case "staff":
+  //       onSectionSelect?.("staff");
+  //       break;
+  //     case "menu":
+  //       onSectionSelect?.("menu");
+  //       break;
+  //     case "stock":
+  //       onSectionSelect?.("stock");
+  //       break;
+  //     case "statistiques":
+  //       onSectionSelect?.("statistiques");
+  //       break;
+  //     case "historique":
+  //       onSectionSelect?.("historique");
+  //       break;
+  //     case "settings":
+  //       onSectionSelect?.("settings");
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
 
-  const adminMenuItems = [
-    {
-      title: "Gestion du personnel",
-      description: "Gérer les comptes utilisateurs et leurs permissions",
-      icon: Users,
-      action: "staff",
-    },
-    {
-      title: "Gestion du menu",
-      description: "Créer, modifier, supprimer des plats et gérer les prix",
-      icon: ForkKnife,
-      action: "menu",
-    },
-    {
-      title: "Gestion du stock",
-      description: "Entrées/sorties, suivi inventaire, alertes stock bas",
-      icon: Package,
-      action: "stock",
-    },
-    {
-      title: "Statistiques de ventes",
-      description: "Analyses par période (jour, semaine, mois)",
-      icon: ChartBar,
-      action: "statistiques",
-    },
-    {
-      title: "Historique des commandes",
-      description: "Consulter l'historique complet des commandes",
-      icon: FileText,
-      action: "historique",
-    },
-    {
-      title: "Configuration",
-      description: "Paramètres du système et du restaurant",
-      icon: Gear,
-      action: "settings",
-    },
-  ];
+  // const adminMenuItems = [
+  //   {
+  //     title: "Gestion du personnel",
+  //     description: "Gérer les comptes utilisateurs et leurs permissions",
+  //     icon: Users,
+  //     action: "staff",
+  //   },
+  //   {
+  //     title: "Gestion du menu",
+  //     description: "Créer, modifier, supprimer des plats et gérer les prix",
+  //     icon: ForkKnife,
+  //     action: "menu",
+  //   },
+  //   {
+  //     title: "Gestion du stock",
+  //     description: "Entrées/sorties, suivi inventaire, alertes stock bas",
+  //     icon: Package,
+  //     action: "stock",
+  //   },
+  //   {
+  //     title: "Statistiques de ventes",
+  //     description: "Analyses par période (jour, semaine, mois)",
+  //     icon: ChartBar,
+  //     action: "statistiques",
+  //   },
+  //   {
+  //     title: "Historique des commandes",
+  //     description: "Consulter l'historique complet des commandes",
+  //     icon: FileText,
+  //     action: "historique",
+  //   },
+  //   {
+  //     title: "Configuration",
+  //     description: "Paramètres du système et du restaurant",
+  //     icon: Gear,
+  //     action: "settings",
+  //   },
+  // ];
 
   return (
     <div className="p-6">

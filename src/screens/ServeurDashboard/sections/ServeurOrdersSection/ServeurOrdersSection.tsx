@@ -52,9 +52,12 @@ import {
   Money,
   User,
   CheckCircle,
+  DotsThreeVertical,
 } from "phosphor-react";
+import { getOrderItemImage } from "../../../../services/imageService";
 
-const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+// Utilisation du service d'images centralisé au lieu de la définition locale
+// const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
 
 export const ServeurOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -349,7 +352,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
             item.menuItem &&
             typeof item.menuItem === "object" &&
             item.menuItem.image
-              ? `${IMAGE_BASE_URL}${item.menuItem.image}`
+              ? getOrderItemImage(item.menuItem.image)
               : "/img/plat_petit.png";
 
           // Classes pour le décalage et la transparence
@@ -703,7 +706,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
                                 <img
-                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
+                                  src={getOrderItemImage(
+                                    order.items[0].menuItem.image
+                                  )}
                                   alt={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -840,11 +845,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   : ""
                               }`}
                             >
-                              <img
-                                className="w-6 h-6"
-                                alt="Action menu"
-                                src="/monotone-add.svg"
-                              />
+                              <DotsThreeVertical size={32} />
                             </Button>
                           </DropdownMenuTrigger>
                           {activeDropdown === order._id && (
@@ -1008,7 +1009,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
                                 <img
-                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
+                                  src={getOrderItemImage(
+                                    order.items[0].menuItem.image
+                                  )}
                                   alt={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -1133,7 +1136,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     "object" &&
                   selectedOrderForActions.items[0].menuItem.image ? (
                     <img
-                      src={`${IMAGE_BASE_URL}${selectedOrderForActions.items[0].menuItem.image}`}
+                      src={getOrderItemImage(
+                        selectedOrderForActions.items[0].menuItem.image
+                      )}
                       alt={selectedOrderForActions.items[0]?.nom || "Plat"}
                       className="w-full h-full object-cover"
                       onError={(e) => {

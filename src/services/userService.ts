@@ -1,40 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:3000/api";
-
-// Configuration axios
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Intercepteur pour ajouter le token d'authentification
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Intercepteur de réponse pour gérer les erreurs
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("Erreur API complète:", error.response?.data);
-    return Promise.reject(error);
-  }
-);
+import api from "./api";
 
 export interface StaffUser {
   _id: string;

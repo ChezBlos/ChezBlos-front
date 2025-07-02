@@ -1,5 +1,5 @@
 import api from "./api";
-import { logger} from "../utils/logger";
+import { logger } from "../utils/logger";
 // import axios from "axios";
 
 // Types pour les statistiques avancées

@@ -20,13 +20,13 @@ export const useMenu = (): UseMenuReturn => {
   const [error, setError] = useState<string | null>(null);
   const getAuthHeaders = (isFormData = false) => {
     const token = localStorage.getItem("token");
-    
+
     logger.debug("🔑 [USE MENU] Auth headers:", {
       hasToken: !!token,
       tokenLength: token?.length,
-      isFormData
+      isFormData,
     });
-    
+
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
     };
@@ -40,12 +40,12 @@ export const useMenu = (): UseMenuReturn => {
   };
   // Utiliser la variable d'environnement pour l'URL de base de l'API
   const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-  
+
   // Log de debug pour vérifier la configuration
   logger.debug("🌐 [USE MENU] Configuration API:", {
     API_BASE_URL,
     envViteApiUrl: import.meta.env.VITE_API_URL,
-    mode: import.meta.env.MODE
+    mode: import.meta.env.MODE,
   });
   const fetchMenuItems = async () => {
     try {
@@ -118,7 +118,7 @@ export const useMenu = (): UseMenuReturn => {
   ): Promise<MenuItemResponse> => {
     try {
       const headers = getAuthHeaders();
-      
+
       logger.debug("🔄 [USE MENU] Toggle availability pour ID:", {
         id,
         idType: typeof id,
@@ -126,26 +126,34 @@ export const useMenu = (): UseMenuReturn => {
         url: `${API_BASE_URL}/menu/${id}/toggle-availability`,
         headers: {
           ...headers,
-          Authorization: headers.Authorization ? "[TOKEN PRESENT]" : "[TOKEN MISSING]"
-        }
+          Authorization: headers.Authorization
+            ? "[TOKEN PRESENT]"
+            : "[TOKEN MISSING]",
+        },
       });
-      
+
       const response = await axios.patch(
         `${API_BASE_URL}/menu/${id}/toggle-availability`,
         {}, // Objet vide au lieu de null
         { headers }
       );
       const data = response.data;
-      
+
       logger.debug("✅ [USE MENU] Toggle availability succès:", data);
-      
+
       return data.data || data.menuItem || data;
     } catch (err) {
       logger.error("❌ [USE MENU] Erreur toggle availability:", {
         id,
-        error: err instanceof Error ? err.message : 'Erreur inconnue',
-        status: err instanceof Error && 'response' in err ? (err as any).response?.status : undefined,
-        responseData: err instanceof Error && 'response' in err ? (err as any).response?.data : undefined,
+        error: err instanceof Error ? err.message : "Erreur inconnue",
+        status:
+          err instanceof Error && "response" in err
+            ? (err as any).response?.status
+            : undefined,
+        responseData:
+          err instanceof Error && "response" in err
+            ? (err as any).response?.data
+            : undefined,
       });
       throw err;
     }

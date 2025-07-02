@@ -208,15 +208,21 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 <CalendarBlank className="w-5 h-5 text-gray-500" />
                 <div>
                   <div className="text-sm text-gray-500">Date de création</div>
-                  <div className="font-medium">{formatDate(user.dateCreation)}</div>
+                  <div className="font-medium">
+                    {formatDate(user.dateCreation)}
+                  </div>
                 </div>
               </div>
               {user.dateModification && (
                 <div className="flex items-center space-x-3">
                   <CalendarBlank className="w-5 h-5 text-gray-500" />
                   <div>
-                    <div className="text-sm text-gray-500">Dernière modification</div>
-                    <div className="font-medium">{formatDate(user.dateModification)}</div>
+                    <div className="text-sm text-gray-500">
+                      Dernière modification
+                    </div>
+                    <div className="font-medium">
+                      {formatDate(user.dateModification)}
+                    </div>
                   </div>
                 </div>
               )}
@@ -235,9 +241,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     {getRoleIcon(user.role)}
                     <span className="font-medium">Rôle principal</span>
                   </div>
-                  <Badge variant="outline">
-                    {getRoleLabel(user.role)}
-                  </Badge>
+                  <Badge variant="outline">{getRoleLabel(user.role)}</Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-2">

@@ -23,6 +23,7 @@ import {
 } from "@phosphor-icons/react";
 import { useCreateUser } from "../../hooks/useUserAPI";
 import type { CreateUserRequest } from "../../services/userService";
+import { logger } from "../../utils/logger";
 
 interface AddStaffModalProps {
   isOpen: boolean;

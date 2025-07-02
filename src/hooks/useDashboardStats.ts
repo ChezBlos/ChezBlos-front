@@ -4,6 +4,7 @@ import {
   DashboardStats,
   UserStats,
 } from "../services/adminStatsService";
+import { logger } from "../utils/logger";
 
 interface UseDashboardStatsReturn {
   dashboardStats: DashboardStats | null;

@@ -18,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "../ui/dropdown-menu";
+import { logger } from "../../utils/logger";
 
 interface StockFormData {
   nom: string;

@@ -8,6 +8,7 @@ import {
 } from "../../../../../components/ui/spinner";
 import { useOrder } from "../../../../../contexts/OrderContext";
 import { useTab } from "../../../../../contexts/TabContext";
+import { logger } from "../../../../../utils/logger";
 
 interface OrderConfirmationSectionProps {
   onClose?: () => void;
@@ -68,7 +69,7 @@ export const OrderConfirmationSection = ({
     }
   };
 
-  const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+  // const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = getTotalAmount();
 
   const formatPrice = (price: number): string => {

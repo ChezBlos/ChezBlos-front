@@ -16,6 +16,7 @@ import { Order } from "../../types/order";
 import { useMenu } from "../../contexts/MenuContext";
 import { useOrder } from "../../contexts/OrderContext";
 import { useToast } from "../../hooks/useToast";
+import { logger } from "../../utils/logger";
 
 type MobileOrderStep =
   | "categories"

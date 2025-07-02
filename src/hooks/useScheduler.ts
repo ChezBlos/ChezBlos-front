@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { SchedulerService, SchedulerStats } from "../services/schedulerService";
+import { logger } from "../utils/logger";
 
 // Hook pour récupérer le statut du scheduler
 export const useSchedulerStatus = (autoRefresh: boolean = true) => {

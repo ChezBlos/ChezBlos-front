@@ -282,6 +282,13 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   };
   const handleToggleAvailability = async (id: string, itemName?: string) => {
     try {
+      logger.debug("🔄 [ADMIN MENU] Tentative de changement de disponibilité:", {
+        id,
+        itemName,
+        idType: typeof id,
+        idLength: id?.length,
+      });
+      
       const updatedItem = await toggleItemAvailability(id);
       // Rafraîchir la liste pour avoir les dernières données du serveur
       await refreshMenu();
@@ -295,6 +302,11 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
+      logger.error("❌ [ADMIN MENU] Erreur changement disponibilité:", {
+        id,
+        itemName,
+        error: errorMessage,
+      });
       showAlert(
         "error",
         `Erreur lors du changement de disponibilité: ${errorMessage}`

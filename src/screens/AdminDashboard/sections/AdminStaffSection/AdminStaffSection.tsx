@@ -16,7 +16,7 @@ import {
   UserPlus,
   PencilSimple,
   DotsThreeVertical as DotsThreeVerticalIcon,
-  Eye as EyeIcon,
+  //Eye as EyeIcon,
   MagnifyingGlass as SearchIcon,
   Download as DownloadIcon,
   Key as KeyIcon,
@@ -40,6 +40,8 @@ import { UserAvatar } from "../../../../components/UserAvatar";
 import { FileSpreadsheet, FileText, UserCheck, UserX } from "lucide-react";
 import { AccessCodeModal } from "../../../../components/modals/AccessCodeModal";
 import { AddStaffModal } from "../../../../components/modals/AddStaffModal";
+import { EditStaffModal } from "../../../../components/modals/EditStaffModal";
+//import { UserDetailsModal } from "../../../../components/modals/UserDetailsModal";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
 import { ExportService } from "../../../../services/exportService";
 import { useAlert } from "../../../../contexts/AlertContext";
@@ -67,6 +69,8 @@ export const AdminStaffSection: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [accessCodeModalOpen, setAccessCodeModalOpen] = useState(false);
   const [addStaffModalOpen, setAddStaffModalOpen] = useState(false);
+  const [editStaffModalOpen, setEditStaffModalOpen] = useState(false);
+  // const [userDetailsModalOpen, setUserDetailsModalOpen] = useState(false);
   const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
   const [toggleStatusConfirmModalOpen, setToggleStatusConfirmModalOpen] =
     useState(false);
@@ -221,9 +225,17 @@ export const AdminStaffSection: React.FC = () => {
     setSearchTerm(e.target.value);
   };
   // Gestionnaire de détails utilisateur
-  const handleViewUserDetails = (user: StaffUser) => {
-    logger.debug("Voir détails utilisateur:", user);
-    // TODO: Implémenter le modal de détails utilisateur
+  // const handleViewUserDetails = (user: StaffUser) => {
+  //   setSelectedUser(user);
+  //   setUserDetailsModalOpen(true);
+  //   logger.debug("Ouverture du modal de détails utilisateur:", user);
+  // };
+
+  // Gestionnaire de modification utilisateur
+  const handleEditUser = (user: StaffUser) => {
+    setSelectedUser(user);
+    setEditStaffModalOpen(true);
+    logger.debug("Ouverture de la modification utilisateur:", user);
   };
   // Gestionnaire du modal de code d'accès
   const handleViewAccessCode = (user: StaffUser) => {
@@ -238,6 +250,11 @@ export const AdminStaffSection: React.FC = () => {
 
   // Gestionnaire de succès après ajout d'un utilisateur
   const handleAddStaffSuccess = () => {
+    refetch(); // Actualiser la liste des utilisateurs
+  };
+
+  // Gestionnaire de succès après modification d'un utilisateur
+  const handleEditStaffSuccess = () => {
     refetch(); // Actualiser la liste des utilisateurs
   };
   // Gestionnaire de suppression d'utilisateur
@@ -727,12 +744,12 @@ export const AdminStaffSection: React.FC = () => {
                                 </Button>
                               </DropdownMenuTrigger>{" "}
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem
+                                {/* <DropdownMenuItem
                                   onClick={() => handleViewUserDetails(user)}
                                 >
                                   <EyeIcon className="h-4 w-4 mr-2" />
                                   Voir détails
-                                </DropdownMenuItem>
+                                </DropdownMenuItem> */}
                                 {user.role !== "ADMIN" && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewAccessCode(user)}
@@ -741,7 +758,9 @@ export const AdminStaffSection: React.FC = () => {
                                     Code d'accès
                                   </DropdownMenuItem>
                                 )}{" "}
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleEditUser(user)}
+                                >
                                   <PencilSimple className="h-4 w-4 mr-2" />
                                   Modifier
                                 </DropdownMenuItem>{" "}
@@ -828,7 +847,7 @@ export const AdminStaffSection: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-                          <Button
+                          {/* <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewUserDetails(user)}
@@ -836,7 +855,7 @@ export const AdminStaffSection: React.FC = () => {
                           >
                             <EyeIcon className="h-4 w-4 mr-1" />
                             Détails
-                          </Button>
+                          </Button> */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="outline" size="sm">
@@ -911,7 +930,26 @@ export const AdminStaffSection: React.FC = () => {
         isOpen={addStaffModalOpen}
         onClose={() => setAddStaffModalOpen(false)}
         onSuccess={handleAddStaffSuccess}
-      />{" "}
+      />
+      {/* Modal de modification de staff */}
+      <EditStaffModal
+        isOpen={editStaffModalOpen}
+        onClose={() => {
+          setEditStaffModalOpen(false);
+          setSelectedUser(null);
+        }}
+        onSuccess={handleEditStaffSuccess}
+        user={selectedUser}
+      />
+      {/* Modal de détails utilisateur */}
+      {/* <UserDetailsModal
+        isOpen={userDetailsModalOpen}
+        onClose={() => {
+          setUserDetailsModalOpen(false);
+          setSelectedUser(null);
+        }}
+        user={selectedUser}
+      />{" "} */}
       {/* Modal de confirmation de suppression */}
       <ConfirmationModal
         isOpen={deleteConfirmModalOpen}

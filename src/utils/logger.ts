@@ -62,7 +62,7 @@ export const logger = {
    */
   error: (...args: any[]) => {
     if (shouldLog("error")) {
-      logger.error("[ERROR]", ...args);
+      console.error("[ERROR]", ...args);
     }
   },
 

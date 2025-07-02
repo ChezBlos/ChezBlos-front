@@ -152,7 +152,11 @@ export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
         {/* Left: Date and greeting */}
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-            Bonjour {user?.prenom}
+            {user?.role
+              ? user.role.charAt(0).toUpperCase() +
+                user.role.slice(1).toLowerCase()
+              : "Utilisateur"}{" "}
+            {user?.prenom}
           </h1>
           <p className="text-sm lg:text-base text-gray-600">
             {formattedDate} • {formattedTime}

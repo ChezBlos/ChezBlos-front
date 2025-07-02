@@ -12,6 +12,7 @@ export const MenuSection = (): JSX.Element => {
     { id: "all", label: "Tous" },
     { id: "menus", label: "Menus" },
     { id: "boissons", label: "Boissons" },
+    { id: "accompagnements", label: "Accompagnements" },
     { id: "desserts", label: "Desserts" },
   ];
   return (

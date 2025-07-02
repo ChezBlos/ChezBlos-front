@@ -165,7 +165,11 @@ export const AdminHeaderSection: React.FC<AdminHeaderSectionProps> = ({
         <div className="flex items-center justify-start px-4 py-4 border-b border-slate-200">
           <div className="flex flex-col items-start gap-1">
             <h1 className="font-gilroy font-bold text-[#181818] text-2xl">
-              Bonjour {user?.prenom}
+              {user?.role
+                ? user.role.charAt(0).toUpperCase() +
+                  user.role.slice(1).toLowerCase()
+                : "Utilisateur"}{" "}
+              {user?.prenom}
             </h1>
             <p className="font-title-t5-medium text-slate-400 text-sm">
               {formattedDate} - {formattedTime}
@@ -178,7 +182,11 @@ export const AdminHeaderSection: React.FC<AdminHeaderSectionProps> = ({
       <div className="hidden lg:flex items-center justify-between px-3 md:px-6 lg:px-12 py-6 w-full bg-white border-b border-slate-200">
         <div className="flex flex-col items-start gap-1">
           <h1 className="font-gilroy font-bold text-4xl text-[#181818]">
-            Bonjour {user?.prenom}
+            {user?.role
+              ? user.role.charAt(0).toUpperCase() +
+                user.role.slice(1).toLowerCase()
+              : "Utilisateur"}{" "}
+            {user?.prenom}
           </h1>
           <p className="font-title-t5-medium text-slate-400 text-[length:var(--title-t5-medium-font-size)] tracking-[var(--title-t5-medium-letter-spacing)] leading-[var(--title-t5-medium-line-height)]">
             {formattedDate} - {formattedTime}

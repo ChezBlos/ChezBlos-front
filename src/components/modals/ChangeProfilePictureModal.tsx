@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Upload, X } from "lucide-react";
 import { ProfileService } from "../../services/profileService";
 import { useNotifications } from "../../hooks/useNotifications";
+import { logger } from "../../utils/logger";
 
 interface ChangeProfilePictureModalProps {
   isOpen: boolean;
@@ -116,7 +117,7 @@ export const ChangeProfilePictureModal: React.FC<
       showSuccess("Photo de profil mise à jour avec succès !");
       handleClose();
     } catch (error: any) {
-      console.error("Erreur lors de l'upload:", error);
+      logger.error("Erreur lors de l'upload:", error);
       showError(
         error.message || "Erreur lors de la mise à jour de la photo de profil"
       );

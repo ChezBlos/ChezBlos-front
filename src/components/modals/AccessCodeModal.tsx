@@ -21,6 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import { useUserAccessCode } from "../../hooks/useUserAPI";
 import { ConfirmationModal } from "./ConfirmationModal";
+import { logger } from "../../utils/logger";
 
 interface StaffUser {
   _id: string;
@@ -93,7 +94,7 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Erreur lors de la copie:", error);
+      logger.error("Erreur lors de la copie:", error);
     }
   };
   const handleGenerateNewCode = async () => {

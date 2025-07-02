@@ -1,6 +1,7 @@
 import React from "react";
 import { UserAvatar } from "../components/UserAvatar";
 import { generateInitialsAvatar } from "../services/imageService";
+import { logger } from "../utils/logger";
 
 /**
  * Composant de test pour vérifier la robustesse du service d'images
@@ -16,18 +17,18 @@ export const ImageServiceTest: React.FC = () => {
     { nom: "Très-Long-Nom", prenom: "Très-Long-Prénom", photo: null },
   ];
 
-  console.log("=== Test du service d'images ===");
+  logger.debug("=== Test du service d'images ===");
 
   // Test de la fonction generateInitialsAvatar avec différents cas
   testCases.forEach((testCase, index) => {
     try {
       const result = generateInitialsAvatar(testCase.nom, testCase.prenom);
-      console.log(`Test ${index + 1}:`, {
+      logger.debug(`Test ${index + 1}:`, {
         input: testCase,
         output: result,
       });
     } catch (error) {
-      console.error(`Erreur dans le test ${index + 1}:`, error);
+      logger.error(`Erreur dans le test ${index + 1}:`, error);
     }
   });
 

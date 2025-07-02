@@ -43,6 +43,7 @@ import { AddStaffModal } from "../../../../components/modals/AddStaffModal";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
 import { ExportService } from "../../../../services/exportService";
 import { useAlert } from "../../../../contexts/AlertContext";
+import { logger } from "../../../../utils/logger";
 
 // Interface pour les types utilisateur (utilise StaffUser du service)
 interface StaffUser {
@@ -221,7 +222,7 @@ export const AdminStaffSection: React.FC = () => {
   };
   // Gestionnaire de détails utilisateur
   const handleViewUserDetails = (user: StaffUser) => {
-    console.log("Voir détails utilisateur:", user);
+    logger.debug("Voir détails utilisateur:", user);
     // TODO: Implémenter le modal de détails utilisateur
   };
   // Gestionnaire du modal de code d'accès
@@ -293,7 +294,7 @@ export const AdminStaffSection: React.FC = () => {
         `Export Excel terminé avec succès ! ${filteredUsers.length} utilisateurs exportés.`
       );
     } catch (error) {
-      console.error("Erreur lors de l'export Excel:", error);
+      logger.error("Erreur lors de l'export Excel:", error);
       showAlert("error", "Erreur lors de l'export Excel. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
@@ -319,7 +320,7 @@ export const AdminStaffSection: React.FC = () => {
         `Export PDF terminé avec succès ! ${filteredUsers.length} utilisateurs exportés.`
       );
     } catch (error) {
-      console.error("Erreur lors de l'export PDF:", error);
+      logger.error("Erreur lors de l'export PDF:", error);
       showAlert("error", "Erreur lors de l'export PDF. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
@@ -345,7 +346,7 @@ export const AdminStaffSection: React.FC = () => {
         `Export des statistiques terminé avec succès ! ${users.length} utilisateurs analysés.`
       );
     } catch (error) {
-      console.error("Erreur lors de l'export des statistiques:", error);
+      logger.error("Erreur lors de l'export des statistiques:", error);
       showAlert(
         "error",
         "Erreur lors de l'export des statistiques. Veuillez réessayer."

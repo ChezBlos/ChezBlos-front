@@ -35,7 +35,7 @@ export const useDashboardStats = (): UseDashboardStatsReturn => {
       setDashboardStats(dashboardData);
       setUserStats(userData);
     } catch (err) {
-      console.error("Erreur lors de la récupération des statistiques:", err);
+      logger.error("Erreur lors de la récupération des statistiques:", err);
       setError("Erreur lors du chargement des statistiques");
     } finally {
       setLoading(false);
@@ -91,7 +91,7 @@ export const useAdminStats = (): UseAdminStatsReturn => {
       setPaymentStats(paymentData);
       setTopSellingItems(topSellingData);
     } catch (err) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des statistiques détaillées:",
         err
       );

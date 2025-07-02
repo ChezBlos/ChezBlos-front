@@ -17,7 +17,7 @@ export const useSchedulerStatus = (autoRefresh: boolean = true) => {
       setError(
         err.message || "Erreur lors du chargement du statut du scheduler"
       );
-      console.error("Erreur useSchedulerStatus:", err);
+      logger.error("Erreur useSchedulerStatus:", err);
     } finally {
       setLoading(false);
     }
@@ -142,7 +142,7 @@ export const useSchedulerLogs = (
       setData(result);
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement des logs");
-      console.error("Erreur useSchedulerLogs:", err);
+      logger.error("Erreur useSchedulerLogs:", err);
     } finally {
       setLoading(false);
     }
@@ -181,7 +181,7 @@ export const useSchedulerExecutionStats = (autoRefresh: boolean = true) => {
       setError(
         err.message || "Erreur lors du chargement des statistiques d'exécution"
       );
-      console.error("Erreur useSchedulerExecutionStats:", err);
+      logger.error("Erreur useSchedulerExecutionStats:", err);
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@ import {
   StaffUser,
   CreateUserRequest,
 } from "../services/userService";
+import { logger } from "../utils/logger";
 
 // Hook pour récupérer les utilisateurs/staff
 export const useUsers = () => {
@@ -49,7 +50,7 @@ export const useCreateUser = () => {
         const result = await UserService.createUser(userData);
         return result;
       } catch (err: any) {
-        console.error("Erreur complète:", err);
+        logger.error("Erreur complète:", err);
 
         let errorMessage = "Erreur lors de la création";
 

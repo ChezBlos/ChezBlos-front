@@ -36,6 +36,7 @@ import { AdminOrderDetailsModal } from "./AdminOrderDetailsModal";
 import { DateFilterModal } from "./DateFilterModal";
 import { Order } from "../../../../types/order";
 import { useAlert } from "../../../../contexts/AlertContext";
+import { logger } from "../../../../utils/logger";
 
 export const AdminHistoriqueSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -281,7 +282,7 @@ export const AdminHistoriqueSection: React.FC = () => {
         `Export Excel terminé avec succès ! ${filteredOrders.length} commandes exportées.`
       );
     } catch (error) {
-      console.error("Erreur lors de l'export Excel:", error);
+      logger.error("Erreur lors de l'export Excel:", error);
       showAlert("error", "Erreur lors de l'export Excel. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
@@ -305,7 +306,7 @@ export const AdminHistoriqueSection: React.FC = () => {
         `Export PDF terminé avec succès ! ${filteredOrders.length} commandes exportées.`
       );
     } catch (error) {
-      console.error("Erreur lors de l'export PDF:", error);
+      logger.error("Erreur lors de l'export PDF:", error);
       showAlert("error", "Erreur lors de l'export PDF. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
@@ -330,7 +331,7 @@ export const AdminHistoriqueSection: React.FC = () => {
         `Export des statistiques terminé avec succès ! ${filteredOrders.length} commandes analysées.`
       );
     } catch (error) {
-      console.error("Erreur lors de l'export des statistiques:", error);
+      logger.error("Erreur lors de l'export des statistiques:", error);
       showAlert(
         "error",
         "Erreur lors de l'export des statistiques. Veuillez réessayer."

@@ -1,4 +1,5 @@
 import api from "./api";
+import { logger } from "../utils/logger";
 
 // Types pour les statistiques admin
 export interface DashboardStats {
@@ -52,7 +53,7 @@ export class AdminStatsService {
       const response = await api.get("/stats/dashboard");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des statistiques du dashboard:",
         error
       );
@@ -66,7 +67,7 @@ export class AdminStatsService {
       const response = await api.get("/users/stats");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des statistiques utilisateurs:",
         error
       );
@@ -84,7 +85,7 @@ export class AdminStatsService {
       const response = await api.get("/stats/sales", { params });
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des statistiques de ventes:",
         error
       );
@@ -98,7 +99,7 @@ export class AdminStatsService {
       const response = await api.get("/payments/stats");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des statistiques de paiements:",
         error
       );
@@ -112,7 +113,7 @@ export class AdminStatsService {
       const response = await api.get("/menu/stats");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des statistiques du menu:",
         error
       );
@@ -126,7 +127,7 @@ export class AdminStatsService {
       const response = await api.get(`/stats/top-selling?limit=${limit}`);
       return response.data.data;
     } catch (error) {
-      console.error("Erreur lors de la récupération du top des ventes:", error);
+      logger.error("Erreur lors de la récupération du top des ventes:", error);
       throw error;
     }
   }

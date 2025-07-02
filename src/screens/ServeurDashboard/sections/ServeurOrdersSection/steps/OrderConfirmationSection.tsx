@@ -26,39 +26,44 @@ export const OrderConfirmationSection = ({
 
   // Fonction pour créer la commande (appelée uniquement par le bouton)
   const handleCreateOrder = async () => {
-    console.log("🎯 [OrderConfirmationSection] handleCreateOrder appelé");
+    logger.debug("🎯 [OrderConfirmationSection] handleCreateOrder appelé");
 
     if (orderItems.length === 0) {
-      console.log(
+      logger.debug(
         "❌ [OrderConfirmationSection] Aucun article dans la commande"
       );
       setCreationError("Aucun article dans la commande");
       return;
     }
 
-    console.log("🔄 [OrderConfirmationSection] Début de la création...");
+    logger.debug("🔄 [OrderConfirmationSection] Début de la création...");
     setIsCreating(true);
     setCreationError(null);
 
     try {
-      console.log("🔥 [OrderConfirmationSection] Appel de createOrder()");
+      logger.debug("🔥 [OrderConfirmationSection] Appel de createOrder()");
       const order = await createOrder();
-      console.log("📥 [OrderConfirmationSection] Résultat createOrder:", order);
+      logger.debug(
+        "📥 [OrderConfirmationSection] Résultat createOrder:",
+        order
+      );
 
       if (order) {
-        console.log("✅ [OrderConfirmationSection] Commande créée avec succès");
+        logger.debug(
+          "✅ [OrderConfirmationSection] Commande créée avec succès"
+        );
         setCreatedOrder(order);
       } else {
-        console.log(
+        logger.debug(
           "❌ [OrderConfirmationSection] createOrder a retourné null"
         );
         setCreationError(error || "Erreur lors de la création de la commande");
       }
     } catch (err) {
-      console.log("❌ [OrderConfirmationSection] Exception capturée:", err);
+      logger.debug("❌ [OrderConfirmationSection] Exception capturée:", err);
       setCreationError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
-      console.log("🏁 [OrderConfirmationSection] Fin de la création");
+      logger.debug("🏁 [OrderConfirmationSection] Fin de la création");
       setIsCreating(false);
     }
   };

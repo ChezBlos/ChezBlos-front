@@ -420,7 +420,7 @@ export const MobileOrderFlow: React.FC<MobileOrderFlowProps> = ({
             setIsCreatingOrder(true);
             setOrderError(null);
 
-            console.log("🎯 Début création commande mobile - Données:", {
+            logger.debug("🎯 Début création commande mobile - Données:", {
               nombreArticles: orderItems.length,
               montantTotal: getTotalAmount(),
               articles: orderItems.map((item) => ({
@@ -434,7 +434,7 @@ export const MobileOrderFlow: React.FC<MobileOrderFlowProps> = ({
             // Utiliser la méthode createOrder du contexte
             const createdOrder = await createOrder();
             if (createdOrder) {
-              console.log("✅ Commande créée avec succès:", createdOrder);
+              logger.debug("✅ Commande créée avec succès:", createdOrder);
 
               // Feedback haptic sur mobile (si supporté)
               if ("vibrate" in navigator) {
@@ -461,7 +461,7 @@ export const MobileOrderFlow: React.FC<MobileOrderFlowProps> = ({
               }
             }
           } catch (error) {
-            console.error("❌ Erreur lors de la création de commande:", error);
+            logger.error("❌ Erreur lors de la création de commande:", error);
             const errorMessage =
               error instanceof Error
                 ? error.message

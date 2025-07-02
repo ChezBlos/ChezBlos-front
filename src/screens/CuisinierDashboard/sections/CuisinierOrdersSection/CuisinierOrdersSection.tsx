@@ -30,6 +30,7 @@ import { ProfileService } from "../../../../services/profileService";
 import { getOrderItemImage } from "../../../../services/imageService";
 import { OrderDetailsModal } from "../../../ServeurDashboard/sections/ServeurOrdersSection/OrderDetailsModal";
 import { Eye, DotsThreeVertical, CookingPot, User } from "phosphor-react";
+import { logger } from "../../../../utils/logger";
 
 export const CuisinierOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -293,7 +294,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
       refetch();
       refetchStats();
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut:", error);
+      logger.error("Erreur lors de la mise à jour du statut:", error);
     }
   };
   // Fonction pour marquer une commande comme prête (EN_PREPARATION → TERMINE)
@@ -303,7 +304,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
       refetch();
       refetchStats();
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut:", error);
+      logger.error("Erreur lors de la mise à jour du statut:", error);
     }
   };
 

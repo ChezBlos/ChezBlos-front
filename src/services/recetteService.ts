@@ -1,5 +1,6 @@
 import api from "./api";
 import { DateFilterValue } from "../components/filters/DateFilter";
+import { logger} from "../utils/logger";
 
 export interface RecetteDay {
   _id: { year: number; month: number; day?: number };
@@ -34,7 +35,7 @@ export async function getRecettes(
     const res = await api.get<RecetteResponse>(url, { params });
     return res.data.data;
   } catch (error) {
-    console.error("[recetteService] Erreur API:", error);
+    logger.error("[recetteService] Erreur API:", error);
     throw error;
   }
 }

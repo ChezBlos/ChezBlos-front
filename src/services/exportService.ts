@@ -2,6 +2,7 @@ import * as XLSX from "xlsx";
 import * as pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { LOGO_BASE64, LOGO_CONFIG } from "../utils/logoBase64";
+import { logger} from "../utils/logger";
 
 // Configuration des polices pour pdfMake
 try {
@@ -23,7 +24,7 @@ try {
     },
   };
 } catch (error) {
-  console.warn("Erreur lors du chargement des polices pdfMake:", error);
+  logger.warn("Erreur lors du chargement des polices pdfMake:", error);
 }
 
 export interface ExportableOrder {
@@ -159,7 +160,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'export Excel:", error);
+      logger.error("Erreur lors de l'export Excel:", error);
       throw new Error("Erreur lors de l'export Excel");
     }
   }
@@ -391,7 +392,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'export PDF:", error);
+      logger.error("Erreur lors de l'export PDF:", error);
       throw new Error("Erreur lors de l'export PDF");
     }
   }
@@ -496,7 +497,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'export des statistiques:", error);
+      logger.error("Erreur lors de l'export des statistiques:", error);
       throw new Error("Erreur lors de l'export des statistiques");
     }
   }
@@ -596,7 +597,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'export Excel des utilisateurs:", error);
+      logger.error("Erreur lors de l'export Excel des utilisateurs:", error);
       throw new Error("Erreur lors de l'export Excel des utilisateurs");
     }
   }
@@ -795,7 +796,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'export PDF des utilisateurs:", error);
+      logger.error("Erreur lors de l'export PDF des utilisateurs:", error);
       throw new Error("Erreur lors de l'export PDF des utilisateurs");
     }
   }
@@ -895,7 +896,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de l'export des statistiques utilisateurs:",
         error
       );
@@ -982,7 +983,7 @@ export class ExportService {
       XLSX.writeFile(workbook, filename || defaultFilename);
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'export Excel du stock:", error);
+      logger.error("Erreur lors de l'export Excel du stock:", error);
       throw new Error("Erreur lors de l'export Excel du stock");
     }
   }
@@ -1184,7 +1185,7 @@ export class ExportService {
         .download(filename || defaultFilename);
       return true;
     } catch (error) {
-      console.error("Erreur lors de l'export PDF du stock:", error);
+      logger.error("Erreur lors de l'export PDF du stock:", error);
       throw new Error("Erreur lors de l'export PDF du stock");
     }
   }
@@ -1251,10 +1252,7 @@ export class ExportService {
       );
       return true;
     } catch (error) {
-      console.error(
-        "Erreur lors de l'export des statistiques du stock:",
-        error
-      );
+      logger.error("Erreur lors de l'export des statistiques du stock:", error);
       throw new Error("Erreur lors de l'export des statistiques du stock");
     }
   }

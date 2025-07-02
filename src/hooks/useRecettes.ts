@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { DateFilterValue } from "../components/filters/DateFilter";
 import { getRecettes, RecetteDay } from "../services/recetteService";
+import { logger } from "../utils/logger";
 
 // Cache simple en mémoire pour éviter les requêtes répétées
 const recettesCache = new Map<
@@ -70,7 +71,7 @@ export function useRecettes(
       .catch((err) => {
         if (!cancelled) {
           setError(err?.message || "Erreur lors du chargement des recettes");
-          console.error("[useRecettes] Erreur:", err);
+          logger.error("[useRecettes] Erreur:", err);
         }
       })
       .finally(() => {

@@ -17,6 +17,7 @@ import {
   usePersonnelStats,
 } from "../../../../hooks/useAdvancedStats";
 import { ComparisonModal } from "../../../../components/modals/ComparisonModal/ComparisonModal";
+import { logger } from "../../../../utils/logger";
 // import { useAlert } from "../../../../contexts/AlertContext";
 import PersonnelStatsSection from "./PersonnelStatsSection";
 import CommandesRecettesStatsSection from "./CommandesStatsSection";
@@ -117,7 +118,7 @@ export const AdminStatistiquesSection: React.FC = () => {
       const change = ((today - yesterday) / yesterday) * 100;
       return { value: Math.abs(change), isPositive: change >= 0 };
     } catch (error) {
-      console.error("Erreur dans le calcul todayVsYesterday:", error);
+      logger.error("Erreur dans le calcul todayVsYesterday:", error);
       return { value: 0, isPositive: true };
     }
   }, [advancedStats]);
@@ -136,7 +137,7 @@ export const AdminStatistiquesSection: React.FC = () => {
       const change = ((today - yesterday) / yesterday) * 100;
       return { value: Math.abs(change), isPositive: change >= 0 };
     } catch (error) {
-      console.error("Erreur dans le calcul revenueChange:", error);
+      logger.error("Erreur dans le calcul revenueChange:", error);
       return { value: 0, isPositive: true };
     }
   }, [advancedStats]);

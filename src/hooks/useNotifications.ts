@@ -1,32 +1,32 @@
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from "../contexts/ToastContext";
 
 export const useNotifications = () => {
   let addToast: any = null;
-  
+
   try {
     const toastContext = useToast();
     addToast = toastContext.addToast;
   } catch {
     // ToastContext pas disponible, utiliser console
     addToast = (toast: any) => {
-      console.log(`[${toast.type.toUpperCase()}]: ${toast.message}`);
+      logger.debug(`[${toast.type.toUpperCase()}]: ${toast.message}`);
     };
   }
 
   const showSuccess = (message: string) => {
-    addToast({ type: 'success', message });
+    addToast({ type: "success", message });
   };
 
   const showError = (message: string) => {
-    addToast({ type: 'error', message });
+    addToast({ type: "error", message });
   };
 
   const showWarning = (message: string) => {
-    addToast({ type: 'warning', message });
+    addToast({ type: "warning", message });
   };
 
   const showInfo = (message: string) => {
-    addToast({ type: 'info', message });
+    addToast({ type: "info", message });
   };
 
   return {

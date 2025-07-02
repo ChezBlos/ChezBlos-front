@@ -1,4 +1,5 @@
 import api from "./api";
+import { logger } from "../utils/logger";
 
 export interface StockItem {
   _id: string;
@@ -99,25 +100,25 @@ export class StockService {
   // Créer un nouvel article de stock (JSON)
   static async createStockItem(data: any): Promise<StockItem> {
     try {
-      console.log(
+      logger.debug(
         "[StockService] Données envoyées à l’API (createStockItem):",
         data
       );
       const response = await api.post("/stock", data);
-      console.log(
+      logger.debug(
         "[StockService] Réponse API (createStockItem):",
         response.data
       );
       return response.data.data;
     } catch (error: any) {
       if (error.response) {
-        console.error(
+        logger.error(
           "[StockService] Erreur API (createStockItem):",
           error.response.status,
           error.response.data
         );
       } else {
-        console.error(
+        logger.error(
           "[StockService] Erreur inconnue (createStockItem):",
           error
         );
@@ -132,31 +133,31 @@ export class StockService {
   // Mettre à jour un article de stock (JSON)
   static async updateStockItem(id: string, data: any): Promise<StockItem> {
     try {
-      console.log(
+      logger.debug(
         "[StockService] Données envoyées à l’API (updateStockItem):",
         data
       );
       const response = await api.put(`/stock/${id}`, data);
-      console.log(
+      logger.debug(
         "[StockService] Réponse API (updateStockItem):",
         response.data
       );
       return response.data.data;
     } catch (error: any) {
       if (error.response) {
-        console.error(
+        logger.error(
           "[StockService] Erreur API (updateStockItem):",
           error.response.status,
           error.response.data
         );
         if (error.response.data && error.response.data.details) {
-          console.error(
+          logger.error(
             "[StockService] Détails de l’erreur de validation:",
             error.response.data.details
           );
         }
       } else {
-        console.error(
+        logger.error(
           "[StockService] Erreur inconnue (updateStockItem):",
           error
         );

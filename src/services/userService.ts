@@ -1,4 +1,5 @@
 import api from "./api";
+import { logger } from "../utils/logger";
 
 export interface StaffUser {
   _id: string;
@@ -43,7 +44,7 @@ export class UserService {
   }
   static async createUser(userData: CreateUserRequest): Promise<StaffUser> {
     // Utiliser l'endpoint spécialisé pour créer du staff
-    console.log("Données envoyées au backend:", userData);
+    logger.debug("Données envoyées au backend:", userData);
     const response = await api.post("/users/staff", userData);
     return response.data.data;
   }

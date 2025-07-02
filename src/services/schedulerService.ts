@@ -1,4 +1,5 @@
 import api from "./api";
+import { logger } from "../utils/logger";
 
 // Types pour le scheduler
 export interface ScheduledTask {
@@ -23,7 +24,7 @@ export class SchedulerService {
       const response = await api.get("/scheduler/status");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération du statut des tâches:",
         error
       );
@@ -36,7 +37,7 @@ export class SchedulerService {
     try {
       await api.post("/scheduler/start");
     } catch (error) {
-      console.error("Erreur lors du démarrage des tâches:", error);
+      logger.error("Erreur lors du démarrage des tâches:", error);
       throw error;
     }
   }
@@ -46,7 +47,7 @@ export class SchedulerService {
     try {
       await api.post("/scheduler/stop");
     } catch (error) {
-      console.error("Erreur lors de l'arrêt des tâches:", error);
+      logger.error("Erreur lors de l'arrêt des tâches:", error);
       throw error;
     }
   }
@@ -56,7 +57,7 @@ export class SchedulerService {
     try {
       await api.post(`/scheduler/start/${taskName}`);
     } catch (error) {
-      console.error(`Erreur lors du démarrage de la tâche ${taskName}:`, error);
+      logger.error(`Erreur lors du démarrage de la tâche ${taskName}:`, error);
       throw error;
     }
   }
@@ -66,7 +67,7 @@ export class SchedulerService {
     try {
       await api.post(`/scheduler/stop/${taskName}`);
     } catch (error) {
-      console.error(`Erreur lors de l'arrêt de la tâche ${taskName}:`, error);
+      logger.error(`Erreur lors de l'arrêt de la tâche ${taskName}:`, error);
       throw error;
     }
   }
@@ -76,7 +77,7 @@ export class SchedulerService {
     try {
       await api.post(`/scheduler/run/${taskName}`);
     } catch (error) {
-      console.error(
+      logger.error(
         `Erreur lors de l'exécution de la tâche ${taskName}:`,
         error
       );
@@ -90,7 +91,7 @@ export class SchedulerService {
       const response = await api.get(`/scheduler/logs?limit=${limit}`);
       return response.data.data;
     } catch (error) {
-      console.error("Erreur lors de la récupération des logs:", error);
+      logger.error("Erreur lors de la récupération des logs:", error);
       throw error;
     }
   }
@@ -101,7 +102,7 @@ export class SchedulerService {
       const response = await api.get("/scheduler/execution-stats");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des stats d'exécution:",
         error
       );

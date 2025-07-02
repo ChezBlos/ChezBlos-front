@@ -8,6 +8,7 @@ import {
   PaymentStat,
   clearCaisseCache,
 } from "../services/caisseStatsService";
+import { logger } from "../utils/logger";
 
 interface CaisseStatsParams {
   startDate?: string | null;
@@ -57,7 +58,7 @@ export function useCaisseStats(params: CaisseStatsParams) {
       setPaymentStats(paymentData);
     } catch (err: any) {
       setError(err?.message || "Erreur lors du chargement des données");
-      console.error("[useCaisseStats] Erreur:", err);
+      logger.error("[useCaisseStats] Erreur:", err);
     } finally {
       setLoading(false);
     }

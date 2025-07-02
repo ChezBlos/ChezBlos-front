@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useStatsPeriodSync } from "../hooks/useOrderAPI";
 import { useRecettes } from "../hooks/useRecettes";
 import { usePersonnelStats } from "../hooks/useAdvancedStats";
+import { logger } from "../utils/logger";
 
 /**
  * Exemple d'utilisation de l'utilitaire de synchronisation de périodes
@@ -26,7 +27,7 @@ export const useSynchronizedStats = (
     setPeriodParams(params);
 
     // Log pour débogage
-    console.log(
+    logger.debug(
       `📅 [useSynchronizedStats] Période ${periodType} sélectionnée:`,
       params
     );
@@ -91,7 +92,7 @@ export const useSynchronizedStats = (
       // Vous pourriez utiliser l'analyse pour afficher des alertes à l'utilisateur
       // ou pour ajuster automatiquement la période si nécessaire
       if (analysis.issues.length > 0) {
-        console.warn(
+        logger.warn(
           `⚠️ [useSynchronizedStats] ${analysis.issues.length} problème(s) détecté(s)`
         );
       }

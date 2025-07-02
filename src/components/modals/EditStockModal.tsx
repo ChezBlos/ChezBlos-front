@@ -166,12 +166,12 @@ const EditStockModal: React.FC<EditStockModalProps> = ({
     if (formData.datePeremption && formData.datePeremption.trim() !== "") {
       data.datePeremption = formData.datePeremption;
     }
-    console.log("[EditStockModal] Données envoyées à onSubmit:", data);
+    logger.debug("[EditStockModal] Données envoyées à onSubmit:", data);
     try {
       await onSubmit(stockItem._id, data);
-      console.log("[EditStockModal] Modification réussie");
+      logger.debug("[EditStockModal] Modification réussie");
     } catch (err) {
-      console.error("[EditStockModal] Erreur lors de la modification:", err);
+      logger.error("[EditStockModal] Erreur lors de la modification:", err);
     }
   };
 

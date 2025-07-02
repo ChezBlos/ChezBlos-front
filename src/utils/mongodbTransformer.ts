@@ -1,5 +1,5 @@
 // Utilitaire pour transformer les données MongoDB en format JavaScript standard
-
+import { logger } from "../utils/logger";
 /**
  * Transforme un ObjectId MongoDB { "$oid": "..." } en string
  */
@@ -57,7 +57,7 @@ function transformMongoObject(obj: any): any {
  */
 export function transformMongoOrderData(rawOrders: any[]): any[] {
   if (!Array.isArray(rawOrders)) {
-    console.warn("Expected array of orders, got:", typeof rawOrders);
+    logger.warn("Expected array of orders, got:", typeof rawOrders);
     return [];
   }
 
@@ -110,7 +110,7 @@ export function transformMongoOrderData(rawOrders: any[]): any[] {
 
       return transformed;
     } catch (error) {
-      console.error("Error transforming order:", error);
+      logger.error("Error transforming order:", error);
       return order; // Retourner l'ordre original en cas d'erreur
     }
   });

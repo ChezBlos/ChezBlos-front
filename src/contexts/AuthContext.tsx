@@ -6,6 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { loginApi, getUserProfile } from "../services/api";
+import { logger } from "../utils/logger";
 
 export interface User {
   id: string;
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             userData.role = userData.role.toLowerCase();
           setUser(userData); // Corriger l'accès aux données
         } catch (error) {
-          console.error("Erreur lors de la récupération du profil:", error);
+          logger.error("Erreur lors de la récupération du profil:", error);
           localStorage.removeItem("token");
           setToken(null);
         }
@@ -92,7 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(authToken);
       localStorage.setItem("token", authToken);
     } catch (error) {
-      console.error("Erreur de connexion:", error);
+      logger.error("Erreur de connexion:", error);
       throw error;
     } finally {
       setIsLoading(false);

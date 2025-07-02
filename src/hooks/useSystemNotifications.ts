@@ -4,6 +4,7 @@ import {
   Notification,
   NotificationStats,
 } from "../services/notificationService";
+import { logger } from "../utils/logger";
 
 // Hook pour récupérer les notifications système
 export const useSystemNotifications = (
@@ -31,7 +32,7 @@ export const useSystemNotifications = (
       setData(result);
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement des notifications");
-      console.error("Erreur useSystemNotifications:", err);
+      logger.error("Erreur useSystemNotifications:", err);
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ export const useNotificationStats = (autoRefresh: boolean = true) => {
       setData(result);
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement des statistiques");
-      console.error("Erreur useNotificationStats:", err);
+      logger.error("Erreur useNotificationStats:", err);
     } finally {
       setLoading(false);
     }

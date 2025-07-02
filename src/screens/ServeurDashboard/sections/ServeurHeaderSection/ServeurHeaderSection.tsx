@@ -14,6 +14,7 @@ import {
 import { ChangeProfilePictureModal } from "../../../../components/modals/ChangeProfilePictureModal";
 import { ProfileService } from "../../../../services/profileService";
 import NewOrderModal from "../ServeurOrdersSection/NewOrderModal";
+import { logger } from "../../../../utils/logger";
 
 interface ServeurHeaderSectionProps {
   onOrdersRefresh?: () => void;
@@ -248,7 +249,7 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
             try {
               await Promise.all([onOrdersRefresh?.(), onStatsRefresh?.()]);
             } catch (error) {
-              console.error("Erreur lors du rafraîchissement:", error);
+              logger.error("Erreur lors du rafraîchissement:", error);
             } finally {
               setIsRefreshing(false);
             }

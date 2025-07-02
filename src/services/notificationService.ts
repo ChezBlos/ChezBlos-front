@@ -1,4 +1,5 @@
 import api from "./api";
+import { logger } from "../utils/logger";
 
 // Types pour les notifications
 export interface Notification {
@@ -45,7 +46,7 @@ export class NotificationService {
       const response = await api.get(`/notifications?${params.toString()}`);
       return response.data.data;
     } catch (error) {
-      console.error("Erreur lors de la récupération des notifications:", error);
+      logger.error("Erreur lors de la récupération des notifications:", error);
       throw error;
     }
   }
@@ -55,7 +56,7 @@ export class NotificationService {
     try {
       await api.patch(`/notifications/${notificationId}/read`);
     } catch (error) {
-      console.error("Erreur lors du marquage de la notification:", error);
+      logger.error("Erreur lors du marquage de la notification:", error);
       throw error;
     }
   }
@@ -65,7 +66,7 @@ export class NotificationService {
     try {
       await api.patch("/notifications/mark-all-read");
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors du marquage de toutes les notifications:",
         error
       );
@@ -78,7 +79,7 @@ export class NotificationService {
     try {
       await api.delete(`/notifications/${notificationId}`);
     } catch (error) {
-      console.error("Erreur lors de la suppression de la notification:", error);
+      logger.error("Erreur lors de la suppression de la notification:", error);
       throw error;
     }
   }
@@ -89,7 +90,7 @@ export class NotificationService {
       const response = await api.get("/notifications/stats");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des stats notifications:",
         error
       );
@@ -111,7 +112,7 @@ export class NotificationService {
       const response = await api.post("/notifications", notification);
       return response.data.data;
     } catch (error) {
-      console.error("Erreur lors de la création de la notification:", error);
+      logger.error("Erreur lors de la création de la notification:", error);
       throw error;
     }
   }
@@ -121,7 +122,7 @@ export class NotificationService {
     try {
       await api.post("/notifications/trigger-checks");
     } catch (error) {
-      console.error("Erreur lors du déclenchement des vérifications:", error);
+      logger.error("Erreur lors du déclenchement des vérifications:", error);
       throw error;
     }
   }
@@ -136,7 +137,7 @@ export class NotificationService {
       });
       return response.data.data;
     } catch (error) {
-      console.error("Erreur lors du nettoyage des notifications:", error);
+      logger.error("Erreur lors du nettoyage des notifications:", error);
       throw error;
     }
   }
@@ -151,7 +152,7 @@ export class NotificationService {
     try {
       await api.put("/notifications/config/thresholds", thresholds);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour des seuils:", error);
+      logger.error("Erreur lors de la mise à jour des seuils:", error);
       throw error;
     }
   }
@@ -162,7 +163,7 @@ export class NotificationService {
       const response = await api.get("/notifications/config");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération de la configuration:",
         error
       );

@@ -17,6 +17,7 @@ import {
   PersonnelStatsResponse,
 } from "../services/advancedStatsService";
 import type { PeriodSelection } from "../services/advancedStatsService";
+import { logger } from "../utils/logger";
 
 // Système de limitation des appels API pour éviter le spam
 class ApiLimiter {
@@ -30,7 +31,7 @@ class ApiLimiter {
     const currentCount = this.requests.get(key) || 0;
 
     if (currentCount >= this.maxRequestsPerMinute) {
-      console.warn(
+      logger.warn(
         `Limite d'API atteinte pour ${endpoint}. Veuillez patienter.`
       );
       return false;
@@ -76,7 +77,7 @@ export const useAdvancedDashboardStats = () => {
       const stats = await AdvancedStatsService.getDashboardStats();
       setData(stats);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des statistiques:", err);
+      logger.error("Erreur lors de la récupération des statistiques:", err);
       if (err.response?.status === 429) {
         setError(
           "Trop de requêtes simultanées. Veuillez patienter et actualiser la page."
@@ -119,7 +120,7 @@ export const useSalesStats = (period: string = "30days") => {
       const stats = await AdvancedStatsService.getSalesStats(period);
       setData(stats);
     } catch (err) {
-      console.error("Erreur lors de la récupération des stats de ventes:", err);
+      logger.error("Erreur lors de la récupération des stats de ventes:", err);
       setError("Erreur lors du chargement des statistiques de ventes");
     } finally {
       setLoading(false);
@@ -151,7 +152,7 @@ export const useTopSellingItems = (limit: number = 10) => {
       const stats = await AdvancedStatsService.getTopSellingItems(limit);
       setData(stats);
     } catch (err) {
-      console.error("Erreur lors de la récupération du top des plats:", err);
+      logger.error("Erreur lors de la récupération du top des plats:", err);
       setError("Erreur lors du chargement du top des plats");
     } finally {
       setLoading(false);
@@ -183,7 +184,7 @@ export const useServerPerformance = () => {
       const stats = await AdvancedStatsService.getServerStats();
       setData(stats);
     } catch (err) {
-      console.error("Erreur lors de la récupération des stats serveurs:", err);
+      logger.error("Erreur lors de la récupération des stats serveurs:", err);
       setError("Erreur lors du chargement des performances des serveurs");
     } finally {
       setLoading(false);
@@ -215,7 +216,7 @@ export const usePaymentMethodStats = () => {
       const stats = await AdvancedStatsService.getPaymentMethodStats();
       setData(stats);
     } catch (err) {
-      console.error("Erreur lors de la récupération des stats paiements:", err);
+      logger.error("Erreur lors de la récupération des stats paiements:", err);
       setError("Erreur lors du chargement des statistiques de paiement");
     } finally {
       setLoading(false);
@@ -247,7 +248,7 @@ export const usePreparationTimeStats = () => {
       const stats = await AdvancedStatsService.getPreparationTimeStats();
       setData(stats);
     } catch (err) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des temps de préparation:",
         err
       );
@@ -303,7 +304,7 @@ export const useComparisonStats = (
       );
       setData(stats);
     } catch (err) {
-      console.error("Erreur lors de la comparaison des périodes:", err);
+      logger.error("Erreur lors de la comparaison des périodes:", err);
       setError("Erreur lors du chargement de la comparaison");
     } finally {
       setLoading(false);
@@ -341,7 +342,7 @@ export const useGeneralStats = () => {
       const stats = await AdvancedStatsService.getGeneralStats();
       setData(stats);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des stats générales:", err);
+      logger.error("Erreur lors de la récupération des stats générales:", err);
       if (err.response?.status === 429) {
         setError(
           "Trop de requêtes simultanées. Veuillez patienter et actualiser la page."
@@ -382,7 +383,7 @@ export const useExportStats = () => {
       setError(null);
       await AdvancedStatsService.exportData(format);
     } catch (err) {
-      console.error("Erreur lors de l'export:", err);
+      logger.error("Erreur lors de l'export:", err);
       setError("Erreur lors de l'export des données");
       throw err;
     } finally {
@@ -418,7 +419,7 @@ export const useStockStats = () => {
       const stats = await AdvancedStatsService.getStockStats();
       setData(stats);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des stats stock:", err);
+      logger.error("Erreur lors de la récupération des stats stock:", err);
       setError("Erreur lors du chargement des statistiques stock");
     } finally {
       setLoading(false);
@@ -454,7 +455,7 @@ export const useStockAlerts = () => {
       const alerts = await AdvancedStatsService.getStockAlerts();
       setData(alerts);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des alertes stock:", err);
+      logger.error("Erreur lors de la récupération des alertes stock:", err);
       setError("Erreur lors du chargement des alertes stock");
     } finally {
       setLoading(false);
@@ -490,7 +491,7 @@ export const useStockItems = () => {
       const items = await AdvancedStatsService.getStockItems();
       setData(items);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des articles stock:", err);
+      logger.error("Erreur lors de la récupération des articles stock:", err);
       setError("Erreur lors du chargement des articles stock");
     } finally {
       setLoading(false);
@@ -526,10 +527,7 @@ export const useStockMovements = (limit = 10) => {
       const movements = await AdvancedStatsService.getStockMovements(limit);
       setData(movements);
     } catch (err: any) {
-      console.error(
-        "Erreur lors de la récupération des mouvements stock:",
-        err
-      );
+      logger.error("Erreur lors de la récupération des mouvements stock:", err);
       setError("Erreur lors du chargement des mouvements stock");
     } finally {
       setLoading(false);
@@ -565,7 +563,7 @@ export const useExpenseStats = (period = "30days") => {
       const stats = await AdvancedStatsService.getExpenseStats(period);
       setData(stats);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des stats dépenses:", err);
+      logger.error("Erreur lors de la récupération des stats dépenses:", err);
       setError("Erreur lors du chargement des statistiques dépenses");
     } finally {
       setLoading(false);
@@ -598,7 +596,7 @@ export const usePersonnelStats = (
     async (bypassLimiter: boolean = false) => {
       // Bypass du limiter pour les refreshs manuels
       if (!bypassLimiter && !apiLimiter.canMakeRequest("personnel-stats")) {
-        console.warn("Limite d'API atteinte pour personnel-stats");
+        logger.warn("Limite d'API atteinte pour personnel-stats");
         return;
       }
 
@@ -615,16 +613,16 @@ export const usePersonnelStats = (
         const statsAny = stats as any;
         const employeeCount =
           statsAny?.data?.data?.detailsPersonnel?.length || 0;
-        console.log(`📊 Personnel stats: ${employeeCount} employés récupérés`);
+        logger.debug(`📊 Personnel stats: ${employeeCount} employés récupérés`);
 
         setData(stats);
         setLastUpdate(new Date());
       } catch (err: any) {
-        console.error(
+        logger.error(
           "Erreur lors de la récupération des stats personnel:",
           err
         );
-        console.error("Détails erreur:", {
+        logger.error("Détails erreur:", {
           status: err.response?.status,
           data: err.response?.data,
           message: err.message,
@@ -718,7 +716,7 @@ export const useRealTimeMetrics = (autoRefresh: boolean = true) => {
       const metrics = await AdvancedStatsService.getRealTimeMetrics();
       setData(metrics);
     } catch (err: any) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des métriques temps réel:",
         err
       );
@@ -763,7 +761,7 @@ export const useAdvancedStatsWithFilters = (
       const stats = await AdvancedStatsService.getAdvancedStats(filters);
       setData(stats);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des stats avancées:", err);
+      logger.error("Erreur lors de la récupération des stats avancées:", err);
       setError("Erreur lors du chargement des statistiques avancées");
     } finally {
       setLoading(false);
@@ -793,7 +791,7 @@ export const useClearStatsCache = () => {
       setError(null);
       await AdvancedStatsService.clearStatsCache();
     } catch (err: any) {
-      console.error("Erreur lors de la suppression du cache:", err);
+      logger.error("Erreur lors de la suppression du cache:", err);
       setError("Erreur lors de la suppression du cache");
       throw err;
     } finally {
@@ -810,7 +808,10 @@ export const useClearStatsCache = () => {
 
 // Hook pour les statistiques de la semaine calendaire
 export const useCurrentWeekStats = () => {
-  const [data, setData] = useState<{ commandes: number; recettes: number } | null>(null);
+  const [data, setData] = useState<{
+    commandes: number;
+    recettes: number;
+  } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -827,7 +828,10 @@ export const useCurrentWeekStats = () => {
       const stats = await AdvancedStatsService.getCurrentWeekStats();
       setData(stats);
     } catch (err: any) {
-      console.error("Erreur lors de la récupération des statistiques de la semaine:", err);
+      logger.error(
+        "Erreur lors de la récupération des statistiques de la semaine:",
+        err
+      );
       setError("Erreur lors du chargement des statistiques de la semaine");
     } finally {
       setLoading(false);

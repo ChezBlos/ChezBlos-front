@@ -148,7 +148,7 @@ const AddStockModal: React.FC<AddStockModalProps> = ({
     if (formData.datePeremption && formData.datePeremption.trim() !== "") {
       data.datePeremption = formData.datePeremption;
     }
-    console.log("[AddStockModal] Données envoyées à onSubmit:", data);
+    logger.debug("[AddStockModal] Données envoyées à onSubmit:", data);
     await onSubmit(data);
   };
 

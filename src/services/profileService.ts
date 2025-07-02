@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logger } from "../utils/logger";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://chezblos-back.onrender.com/api";
@@ -46,7 +47,7 @@ export class ProfileService {
   // Récupérer l'URL complète d'une photo de profil
   // DEPRECATED: Utiliser getUserAvatarUrl du imageService à la place
   static getProfilePictureUrl(photoProfil?: string): string {
-    console.warn(
+    logger.warn(
       "ProfileService.getProfilePictureUrl est déprécié. Utilisez getUserAvatarUrl du imageService."
     );
 

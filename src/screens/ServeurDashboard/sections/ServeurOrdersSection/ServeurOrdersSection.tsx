@@ -55,6 +55,7 @@ import {
   DotsThreeVertical,
 } from "phosphor-react";
 import { getOrderItemImage } from "../../../../services/imageService";
+import { logger } from "../../../../utils/logger";
 
 // Utilisation du service d'images centralisé au lieu de la définition locale
 // const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
@@ -399,7 +400,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
     try {
       await Promise.all([refetch(), refetchStats()]);
     } catch (error) {
-      console.error("Erreur lors du rafraîchissement:", error);
+      logger.error("Erreur lors du rafraîchissement:", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -426,7 +427,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      console.error("Erreur lors de l'annulation:", error);
+      logger.error("Erreur lors de l'annulation:", error);
     }
   };
   const handleSendToKitchen = async (orderId: string) => {
@@ -435,7 +436,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      console.error("Erreur lors de l'envoi en cuisine:", error);
+      logger.error("Erreur lors de l'envoi en cuisine:", error);
     }
   };
   const handleCompleteOrder = async (orderId: string) => {
@@ -444,7 +445,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      console.error("Erreur lors de la finalisation de la commande:", error);
+      logger.error("Erreur lors de la finalisation de la commande:", error);
     }
   };
 
@@ -483,7 +484,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      console.error("Erreur lors du traitement du paiement:", error);
+      logger.error("Erreur lors du traitement du paiement:", error);
     }
   }; // Fonction pour ouvrir le bottom sheet mobile
   const handleMobileCardClick = (order: Order) => {

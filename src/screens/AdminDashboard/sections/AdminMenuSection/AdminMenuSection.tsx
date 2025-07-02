@@ -36,6 +36,7 @@ import { useAlert } from "../../../../contexts/AlertContext";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
 import { AddMenuItemModal } from "../../../../components/modals/AddMenuItemModal";
 import { EditMenuItemModal } from "../../../../components/modals/EditMenuItemModal";
+import { logger } from "../../../../utils/logger";
 
 interface AdminMenuSectionProps {
   onSectionSelect?: (
@@ -94,7 +95,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
 
   // Log des changements dans menuItems
   React.useEffect(() => {
-    console.log("🔄 [ADMIN MENU] MenuItems changés:", {
+    logger.debug("🔄 [ADMIN MENU] MenuItems changés:", {
       count: menuItems?.length || 0,
       items:
         menuItems?.slice(0, 3).map((item) => ({
@@ -109,7 +110,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
 
   // Log des changements d'état
   React.useEffect(() => {
-    console.log("📊 [ADMIN MENU] État:", {
+    logger.debug("📊 [ADMIN MENU] État:", {
       loading,
       error,
       menuItemsCount: menuItems?.length || 0,
@@ -151,10 +152,10 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   }, [menuItems]);
   // Calculs de statistiques
   const stats = useMemo(() => {
-    console.log("📊 [ADMIN MENU] Calcul des stats avec:", menuItems);
+    logger.debug("📊 [ADMIN MENU] Calcul des stats avec:", menuItems);
 
     if (!menuItems || !Array.isArray(menuItems)) {
-      console.log("⚠️ [ADMIN MENU] MenuItems invalide:", {
+      logger.debug("⚠️ [ADMIN MENU] MenuItems invalide:", {
         menuItems,
         isArray: Array.isArray(menuItems),
       });
@@ -183,7 +184,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
       totalRevenue,
     };
 
-    console.log("📊 [ADMIN MENU] Stats calculées:", calculatedStats);
+    logger.debug("📊 [ADMIN MENU] Stats calculées:", calculatedStats);
 
     return calculatedStats;
   }, [menuItems]);
@@ -200,10 +201,10 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   const handleCreateMenuItem = async (formData: FormData) => {
     setIsCreating(true);
     try {
-      console.log("➕ [ADMIN MENU] Début de la création via nouveau modal");
+      logger.debug("➕ [ADMIN MENU] Début de la création via nouveau modal");
 
       const newItem = await createMenuItem(formData);
-      console.log("✅ [ADMIN MENU] Article créé:", newItem);
+      logger.debug("✅ [ADMIN MENU] Article créé:", newItem);
 
       setIsCreateModalOpen(false);
       await refreshMenu();
@@ -211,7 +212,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
-      console.error("❌ [ADMIN MENU] Erreur création:", errorMessage);
+      logger.error("❌ [ADMIN MENU] Erreur création:", errorMessage);
       showAlert("error", `Erreur lors de la création: ${errorMessage}`);
     } finally {
       setIsCreating(false);
@@ -221,13 +222,13 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   const handleEditMenuItem = async (id: string, formData: FormData) => {
     setIsEditing(true);
     try {
-      console.log(
+      logger.debug(
         "✏️ [ADMIN MENU] Début de la modification via nouveau modal:",
         id
       );
 
       const updatedItem = await updateMenuItem(id, formData);
-      console.log("✅ [ADMIN MENU] Article modifié:", updatedItem);
+      logger.debug("✅ [ADMIN MENU] Article modifié:", updatedItem);
 
       setIsEditModalOpen(false);
       setSelectedItem(null);
@@ -239,7 +240,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
-      console.error("❌ [ADMIN MENU] Erreur modification:", errorMessage);
+      logger.error("❌ [ADMIN MENU] Erreur modification:", errorMessage);
       showAlert("error", `Erreur lors de la modification: ${errorMessage}`);
     } finally {
       setIsEditing(false);

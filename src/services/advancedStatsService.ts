@@ -1,4 +1,5 @@
 import api from "./api";
+import { logger} from "../utils/logger";
 // import axios from "axios";
 
 // Types pour les statistiques avancées
@@ -280,9 +281,7 @@ export class AdvancedStatsService {
       return await fn();
     } catch (error: any) {
       if (retries > 0 && error.response?.status === 429) {
-        console.warn(
-          `Retry après ${delay}ms. Tentatives restantes: ${retries}`
-        );
+        logger.warn(`Retry après ${delay}ms. Tentatives restantes: ${retries}`);
         await new Promise((resolve) => setTimeout(resolve, delay));
         return this.retryWithDelay(fn, retries - 1, delay * 2);
       }
@@ -307,7 +306,7 @@ export class AdvancedStatsService {
           week: currentWeekStats,
         };
       } catch (error) {
-        console.error(
+        logger.error(
           "Erreur lors de la récupération des stats dashboard:",
           error
         );
@@ -322,7 +321,7 @@ export class AdvancedStatsService {
         const response = await api.get(`/stats/sales?periode=${period}`);
         return response.data.data;
       } catch (error) {
-        console.error(
+        logger.error(
           "Erreur lors de la récupération des stats de ventes:",
           error
         );
@@ -340,10 +339,7 @@ export class AdvancedStatsService {
         const response = await api.get(`/stats/top-selling?limit=${limit}`);
         return response.data.data;
       } catch (error) {
-        console.error(
-          "Erreur lors de la récupération du top des plats:",
-          error
-        );
+        logger.error("Erreur lors de la récupération du top des plats:", error);
         throw error;
       }
     });
@@ -355,10 +351,7 @@ export class AdvancedStatsService {
       const response = await api.get("/stats/performance-complete");
       return response.data.data.detailsPersonnel || [];
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des stats serveurs:",
-        error
-      );
+      logger.error("Erreur lors de la récupération des stats serveurs:", error);
       throw error;
     }
   }
@@ -369,7 +362,7 @@ export class AdvancedStatsService {
       const response = await api.get("/stats/payment-methods");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des stats paiements:",
         error
       );
@@ -382,7 +375,7 @@ export class AdvancedStatsService {
       const response = await api.get("/stats/preparation-time");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des temps de préparation:",
         error
       );
@@ -398,7 +391,7 @@ export class AdvancedStatsService {
     }`;
 
     // Log de débogage
-    console.log("🔍 [advancedStatsService.getPersonnelStats] Paramètres:", {
+    logger.debug("🔍 [advancedStatsService.getPersonnelStats] Paramètres:", {
       dateDebut,
       dateFin,
       cacheKey,
@@ -436,7 +429,7 @@ export class AdvancedStatsService {
           }
 
           // Log de la période et des paramètres
-          console.log(
+          logger.debug(
             "🔍 [advancedStatsService.getPersonnelStats] Requête API:",
             {
               url,
@@ -451,12 +444,12 @@ export class AdvancedStatsService {
           const response = await api.get(url);
           return response.data;
         } catch (error) {
-          console.error(
+          logger.error(
             "Erreur lors de la récupération des stats du personnel:",
             error
           );
           // Données de démonstration pour développement
-          console.log(
+          logger.debug(
             "Utilisation des données de démonstration pour le personnel"
           );
           return {
@@ -595,7 +588,7 @@ export class AdvancedStatsService {
       );
       return response.data?.data || response.data;
     } catch (error) {
-      console.error("Erreur lors de la comparaison des périodes:", error);
+      logger.error("Erreur lors de la comparaison des périodes:", error);
       throw error;
     }
   }
@@ -624,7 +617,7 @@ export class AdvancedStatsService {
           .length,
       };
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des stats générales:",
         error
       );
@@ -645,7 +638,7 @@ export class AdvancedStatsService {
       const response = await api.get("/stats/stock");
       return response.data.data;
     } catch (error) {
-      console.error("Erreur lors de la récupération des stats stock:", error);
+      logger.error("Erreur lors de la récupération des stats stock:", error);
       // Retourner des données par défaut en cas d'erreur
       return {
         totalArticles: 0,
@@ -664,7 +657,7 @@ export class AdvancedStatsService {
       const response = await api.get("/stock/alerts");
       return Array.isArray(response.data.data) ? response.data.data : [];
     } catch (error) {
-      console.error("Erreur lors de la récupération des alertes stock:", error);
+      logger.error("Erreur lors de la récupération des alertes stock:", error);
       return [];
     }
   }
@@ -675,10 +668,7 @@ export class AdvancedStatsService {
       const response = await api.get("/stock");
       return Array.isArray(response.data.data) ? response.data.data : [];
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des articles stock:",
-        error
-      );
+      logger.error("Erreur lors de la récupération des articles stock:", error);
       return [];
     }
   }
@@ -691,7 +681,7 @@ export class AdvancedStatsService {
       const movements = response.data.data || [];
       return Array.isArray(movements) ? movements : [];
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des mouvements stock:",
         error
       );
@@ -705,10 +695,7 @@ export class AdvancedStatsService {
       const response = await api.get(`/stats/expenses?period=${period}`);
       return response.data;
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des stats dépenses:",
-        error
-      );
+      logger.error("Erreur lors de la récupération des stats dépenses:", error);
       // Retourner des données par défaut en cas d'erreur
       return {
         totalDepenses: 0,
@@ -743,7 +730,7 @@ export class AdvancedStatsService {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Erreur lors de l'export des données:", error);
+      logger.error("Erreur lors de l'export des données:", error);
       throw error;
     }
   }
@@ -756,7 +743,7 @@ export class AdvancedStatsService {
       const response = await api.get("/stats/realtime");
       return response.data.data;
     } catch (error) {
-      console.error(
+      logger.error(
         "Erreur lors de la récupération des métriques temps réel:",
         error
       );
@@ -771,7 +758,7 @@ export class AdvancedStatsService {
       // Aussi vider le cache local
       this.cache.clear();
     } catch (error) {
-      console.error("Erreur lors de la suppression du cache:", error);
+      logger.error("Erreur lors de la suppression du cache:", error);
       throw error;
     }
   }
@@ -791,10 +778,7 @@ export class AdvancedStatsService {
       const response = await api.get(`/stats/advanced?${params.toString()}`);
       return response.data.data;
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des stats avancées:",
-        error
-      );
+      logger.error("Erreur lors de la récupération des stats avancées:", error);
       throw error;
     }
   }
@@ -824,7 +808,7 @@ export class AdvancedStatsService {
         const dateDebut = mondayOfThisWeek.toISOString().split("T")[0];
         const dateFin = sundayOfThisWeek.toISOString().split("T")[0];
 
-        console.log(
+        logger.debug(
           `[getCurrentWeekStats] Semaine calendaire: ${dateDebut} au ${dateFin}`
         );
 
@@ -839,7 +823,7 @@ export class AdvancedStatsService {
           recettes: data.totalRecettes || 0,
         };
       } catch (error) {
-        console.error(
+        logger.error(
           "Erreur lors de la récupération des stats de la semaine calendaire:",
           error
         );

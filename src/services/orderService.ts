@@ -1,5 +1,6 @@
 import { Order, CreateOrderRequest, OrderStats } from "../types/order";
 import api from "./api";
+import { logger, logApiResponse, logApiError } from "../utils/logger";
 
 export interface OrderFilters {
   statut?: string;
@@ -17,20 +18,20 @@ export interface OrderFilters {
 export class OrderService {
   // Créer une nouvelle commande
   static async createOrder(data: CreateOrderRequest): Promise<Order> {
-    console.log("🌐 [OrderService] Début de createOrder");
-    console.log("📤 [OrderService] URL:", `/orders`);
-    console.log("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
+    logger.debug("🌐 [OrderService] Début de createOrder");
+    logger.debug("📤 [OrderService] URL:", `/orders`);
+    logger.debug("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
 
     try {
       const response = await api.post("/orders", data);
 
-      console.log("📡 [OrderService] Statut de la réponse:", response.status);
-      console.log("✅ [OrderService] Résultat du backend:", response.data);
-      console.log("🏁 [OrderService] Fin de createOrder");
+      logger.debug("📡 [OrderService] Statut de la réponse:", response.status);
+      logApiResponse("/orders", response.data);
+      logger.debug("🏁 [OrderService] Fin de createOrder");
 
       return response.data.data;
     } catch (error: any) {
-      console.log("❌ [OrderService] Erreur du backend:", error.response?.data);
+      logApiError("/orders", error.response?.data);
       throw new Error(
         error.response?.data?.message ||
           "Erreur lors de la création de la commande"
@@ -50,7 +51,7 @@ export class OrderService {
     totalOrders: number;
   }> {
     try {
-      console.log("🔍 [OrderService] Récupération des commandes:", {
+      logger.debug("🔍 [OrderService] Récupération des commandes:", {
         page,
         limit,
         filters,
@@ -82,7 +83,7 @@ export class OrderService {
 
       const response = await api.get("/orders", { params });
 
-      console.log("✅ [OrderService] Commandes récupérées:", response.data);
+      logger.debug("✅ [OrderService] Commandes récupérées:", response.data);
 
       return {
         orders: response.data.data.orders || [],
@@ -91,7 +92,7 @@ export class OrderService {
         totalOrders: response.data.data.totalOrders || 0,
       };
     } catch (error: any) {
-      console.error(
+      logger.error(
         "❌ [OrderService] Erreur lors de la récupération des commandes:",
         error
       );
@@ -103,17 +104,17 @@ export class OrderService {
   static async getAllOrders(): Promise<Order[]> {
     try {
       const response = await api.get("/orders");
-      console.log("📦 [OrderService] API response complet:", response.data);
+      logger.debug("📦 [OrderService] API response complet:", response.data);
 
       // S'assurer qu'on retourne toujours un tableau
       const data = response.data.data;
-      console.log("📦 [OrderService] Data extrait:", data);
+      logger.debug("📦 [OrderService] Data extrait:", data);
 
       // Vérifier la structure de la réponse
       if (data && typeof data === "object") {
         // Si la structure est { orders: [], totalPages: ..., etc }
         if (Array.isArray(data.orders)) {
-          console.log(
+          logger.debug(
             "✅ [OrderService] Structure avec data.orders trouvée, nombre de commandes:",
             data.orders.length
           );
@@ -121,7 +122,7 @@ export class OrderService {
         }
         // Si c'est directement un tableau
         else if (Array.isArray(data)) {
-          console.log(
+          logger.debug(
             "✅ [OrderService] Structure tableau direct trouvée, nombre de commandes:",
             data.length
           );
@@ -130,10 +131,10 @@ export class OrderService {
       }
 
       // Fallback : retourner un tableau vide si la structure est inattendue
-      console.warn("⚠️ [OrderService] Format de données inattendu:", data);
+      logger.warn("⚠️ [OrderService] Format de données inattendu:", data);
       return [];
     } catch (error: any) {
-      console.error(
+      logger.error(
         "❌ [OrderService] Erreur lors de la récupération des commandes:",
         error
       );
@@ -229,20 +230,23 @@ export class OrderService {
     id: string,
     data: CreateOrderRequest
   ): Promise<Order> {
-    console.log("🌐 [OrderService] Début de updateOrderComplete");
-    console.log("📤 [OrderService] URL:", `/orders/${id}/complete`);
-    console.log("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
+    logger.debug("🌐 [OrderService] Début de updateOrderComplete");
+    logger.debug("📤 [OrderService] URL:", `/orders/${id}/complete`);
+    logger.debug("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
 
     try {
       const response = await api.put(`/orders/${id}/complete`, data);
 
-      console.log("📡 [OrderService] Statut de la réponse:", response.status);
-      console.log("✅ [OrderService] Résultat du backend:", response.data);
-      console.log("🏁 [OrderService] Fin de updateOrderComplete");
+      logger.debug("📡 [OrderService] Statut de la réponse:", response.status);
+      logger.debug("✅ [OrderService] Résultat du backend:", response.data);
+      logger.debug("🏁 [OrderService] Fin de updateOrderComplete");
 
       return response.data.data;
     } catch (error: any) {
-      console.log("❌ [OrderService] Erreur du backend:", error.response?.data);
+      logger.debug(
+        "❌ [OrderService] Erreur du backend:",
+        error.response?.data
+      );
       throw new Error(
         error.response?.data?.error ||
           error.response?.data?.message ||

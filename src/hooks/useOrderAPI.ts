@@ -7,6 +7,7 @@ import {
   OrderStats,
   KitchenOrder,
 } from "../types/order";
+import { logger } from "../utils/logger";
 
 // Hook pour récupérer les commandes
 export const useOrders = () => {
@@ -20,7 +21,7 @@ export const useOrders = () => {
       setError(null);
 
       // Log de débogage pour tracer l'authentification
-      console.log("🔍 [useOrders] Vérification du token");
+      logger.debug("🔍 [useOrders] Vérification du token");
 
       // Assurer qu'on a un token valide
       const token = localStorage.getItem("token");
@@ -33,7 +34,7 @@ export const useOrders = () => {
 
         if (response.status === 200) {
           localStorage.setItem("token", response.data.data.token);
-          console.log("✅ [useOrders] Authentification automatique réussie");
+          logger.debug("✅ [useOrders] Authentification automatique réussie");
         }
       }
       const result = await OrderService.getAllOrders();
@@ -43,7 +44,7 @@ export const useOrders = () => {
       if (err.response?.status === 401) {
         // Token expiré, reconnecter
         try {
-          console.log(
+          logger.debug(
             "🔄 [useOrders] Tentative de reconnexion après token expiré"
           );
           const response = await api.post("/auth/login", {
@@ -52,7 +53,7 @@ export const useOrders = () => {
           });
           if (response.status === 200) {
             localStorage.setItem("token", response.data.data.token);
-            console.log(
+            logger.debug(
               "✅ [useOrders] Reconnexion réussie, récupération des commandes"
             );
             const result = await OrderService.getAllOrders();
@@ -61,7 +62,7 @@ export const useOrders = () => {
             return;
           }
         } catch (authErr) {
-          console.error("Erreur d'authentification:", authErr);
+          logger.error("Erreur d'authentification:", authErr);
         }
 
         setData([]);
@@ -311,7 +312,7 @@ export const useStatsPeriodSync = () => {
     const now = new Date();
 
     // Log de débogage
-    console.log(
+    logger.debug(
       `🔍 [useStatsPeriodSync] Génération paramètres pour période: ${type}`
     );
 
@@ -401,7 +402,7 @@ export const useStatsPeriodSync = () => {
       case "custom": {
         // Période personnalisée
         if (!customDates) {
-          console.error(
+          logger.error(
             "❌ [useStatsPeriodSync] Dates personnalisées requises pour type=custom"
           );
           return null;
@@ -436,7 +437,7 @@ export const useStatsPeriodSync = () => {
     },
     personnelData?: { detailsPersonnel?: any[] }
   ) => {
-    console.log(
+    logger.debug(
       "🔍 [useStatsPeriodSync] Analyse de cohérence des données de recettes"
     );
 
@@ -547,7 +548,7 @@ export const useStatsPeriodSync = () => {
 
     if (analysis.issues.length > 0) {
       console.group("⚠️ Problèmes détectés");
-      analysis.issues.forEach((issue) => console.warn(`- ${issue}`));
+      analysis.issues.forEach((issue) => logger.warn(`- ${issue}`));
       console.groupEnd();
     }
 

@@ -128,7 +128,7 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
       submitData.motDePasse = formData.motDePasse.trim();
     }
 
-    console.log("Données à envoyer:", submitData);
+    logger.debug("Données à envoyer:", submitData);
 
     const result = await createUser(submitData);
 

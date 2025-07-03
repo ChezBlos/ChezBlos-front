@@ -1,3 +1,4 @@
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -11,26 +12,330 @@ import {
   ChartBar,
   ChartPie,
 } from "@phosphor-icons/react";
+import { FilterIcon } from "lucide-react";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../../../components/ui/dialog";
 import {
   SalesBarChart,
   TrendLineChart,
   PaymentMethodChart,
   ComparisonChart,
 } from "../../../../components/charts";
+//import { AdvancedStatsService } from "../../../../services/advancedStatsService";
+import api from "../../../../services/api";
+import { SpinnerMedium } from "../../../../components/ui/spinner";
 
 const CommandesRecettesStatsSection = ({
   advancedStats,
   dashboardStats,
   todayVsYesterday,
   // revenueChange,
-  monthlyRevenueData,
-  weeklyTrendData,
-  trendTitle = "Tendance des Commandes",
+  // monthlyRevenueData,
+  // weeklyTrendData,
+  // trendTitle = "Tendance des Commandes",
   paymentStats,
   topItems,
   comparisonData,
   formatPrice,
 }: any) => {
+  // États pour les filtres des courbes
+  const [typeCourbeTendance, setTypeCourbeTendance] = useState<
+    "hebdomadaire" | "mensuelle"
+  >("hebdomadaire");
+  const [typeCourbeVentes, setTypeCourbeVentes] = useState<
+    "hebdomadaire" | "mensuelle"
+  >("mensuelle");
+
+  const [semaineCourbeTendance, setSemaineCourbeTendance] = useState(() => {
+    // Calculer la date de début de la semaine actuelle (lundi)
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Si dimanche (0), aller au lundi précédent
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+    return monday.toISOString().split("T")[0];
+  });
+  const [moisCourbeTendance, setMoisCourbeTendance] = useState(
+    new Date().toISOString().slice(0, 7) // YYYY-MM
+  );
+
+  const [semaineCourbeVentes, setSemaineCourbeVentes] = useState(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+    return monday.toISOString().split("T")[0];
+  });
+  const [moisCourbeVentes, setMoisCourbeVentes] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
+
+  // États pour les données et chargement
+  const [donneesCourbeTendance, setDonneesCourbeTendance] = useState<any[]>([]);
+  const [donneesCourbeVentes, setDonneesCourbeVentes] = useState<any[]>([]);
+  const [loadingTendance, setLoadingTendance] = useState(false);
+  const [loadingVentes, setLoadingVentes] = useState(false);
+  const [errorTendance, setErrorTendance] = useState<string | null>(null);
+  const [errorVentes, setErrorVentes] = useState<string | null>(null);
+
+  // États pour les modals
+  const [modalOuvert, setModalOuvert] = useState<string | null>(null);
+  const [valeursTemporaires, setValeursTemporaires] = useState({
+    typeCourbeTendance: typeCourbeTendance,
+    typeCourbeVentes: typeCourbeVentes,
+    semaineCourbeTendance: semaineCourbeTendance,
+    moisCourbeTendance: moisCourbeTendance,
+    semaineCourbeVentes: semaineCourbeVentes,
+    moisCourbeVentes: moisCourbeVentes,
+  });
+
+  // Fonctions pour gérer les modals
+  const ouvrirModal = (type: string) => {
+    setModalOuvert(type);
+    setValeursTemporaires({
+      typeCourbeTendance,
+      typeCourbeVentes,
+      semaineCourbeTendance,
+      moisCourbeTendance,
+      semaineCourbeVentes,
+      moisCourbeVentes,
+    });
+  };
+
+  const fermerModal = () => {
+    setModalOuvert(null);
+  };
+
+  const appliquerFiltre = () => {
+    if (modalOuvert === "tendance") {
+      setTypeCourbeTendance(valeursTemporaires.typeCourbeTendance);
+      setSemaineCourbeTendance(valeursTemporaires.semaineCourbeTendance);
+      setMoisCourbeTendance(valeursTemporaires.moisCourbeTendance);
+    } else if (modalOuvert === "ventes") {
+      setTypeCourbeVentes(valeursTemporaires.typeCourbeVentes);
+      setSemaineCourbeVentes(valeursTemporaires.semaineCourbeVentes);
+      setMoisCourbeVentes(valeursTemporaires.moisCourbeVentes);
+    }
+    fermerModal();
+  };
+
+  // Fonction pour récupérer les données de commandes (tendance)
+  const chargerDonneesCommandes = async (
+    type: string,
+    semaine: string,
+    mois: string
+  ) => {
+    try {
+      setLoadingTendance(true);
+      setErrorTendance(null);
+
+      let periode = "7days";
+      let groupBy = "day";
+      let dateDebut = "";
+      let dateFin = "";
+
+      if (type === "hebdomadaire") {
+        const startDate = new Date(semaine);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+
+        periode = "7days";
+        groupBy = "day";
+        dateDebut = startDate.toISOString().split("T")[0];
+        dateFin = endDate.toISOString().split("T")[0];
+      } else {
+        const year = parseInt(mois.split("-")[0]);
+        const month = parseInt(mois.split("-")[1]);
+        const endDay = new Date(year, month, 0).getDate();
+
+        periode = "30days";
+        groupBy = "day";
+        dateDebut = `${mois}-01`;
+        dateFin = `${mois}-${endDay.toString().padStart(2, "0")}`;
+      }
+
+      console.log(
+        `[chargerDonneesCommandes] Chargement: ${type}, ${dateDebut} à ${dateFin}`
+      );
+
+      // Utiliser l'API des statistiques de ventes pour les commandes avec authentification
+      const response = await api.get(
+        `/stats/sales?periode=${periode}&groupBy=${groupBy}&dateDebut=${dateDebut}&dateFin=${dateFin}`
+      );
+      const data = response.data;
+
+      console.log(`[chargerDonneesCommandes] Réponse reçue:`, data);
+
+      if (data.success && data.data?.data) {
+        const donneesFormatees = data.data.data.map((item: any) => ({
+          date: `${item._id.day}/${item._id.month}`,
+          value: Number(item.commandes) || 0,
+        }));
+        console.log(
+          `[chargerDonneesCommandes] Données formatées:`,
+          donneesFormatees
+        );
+        setDonneesCourbeTendance(donneesFormatees);
+      } else {
+        console.log(`[chargerDonneesCommandes] Aucune donnée trouvée`);
+        setDonneesCourbeTendance([]);
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement des données de commandes:",
+        error
+      );
+      setErrorTendance("Erreur lors du chargement des données");
+      setDonneesCourbeTendance([]);
+    } finally {
+      setLoadingTendance(false);
+    }
+  };
+
+  // Fonction pour récupérer les données de ventes (utilise l'endpoint /api/recettes)
+  const chargerDonneesVentes = async (
+    type: string,
+    semaine: string,
+    mois: string
+  ) => {
+    try {
+      setLoadingVentes(true);
+      setErrorVentes(null);
+
+      let startDate = "";
+      let endDate = "";
+      let groupBy = "day";
+
+      if (type === "hebdomadaire") {
+        const start = new Date(semaine);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+
+        startDate = start.toISOString().split("T")[0];
+        endDate = end.toISOString().split("T")[0];
+        groupBy = "day";
+      } else {
+        const year = parseInt(mois.split("-")[0]);
+        const month = parseInt(mois.split("-")[1]);
+        const endDay = new Date(year, month, 0).getDate();
+
+        startDate = `${mois}-01`;
+        endDate = `${mois}-${endDay.toString().padStart(2, "0")}`;
+        groupBy = "day";
+      }
+
+      console.log(
+        `[chargerDonneesVentes] Chargement: ${type}, ${startDate} à ${endDate}`
+      );
+
+      const response = await api.get(
+        `/recettes?startDate=${startDate}&endDate=${endDate}&groupBy=${groupBy}`
+      );
+      const data = response.data;
+
+      console.log(`[chargerDonneesVentes] Réponse reçue:`, data);
+
+      if (data.data && Array.isArray(data.data)) {
+        const donneesFormatees = data.data.map((item: any) => ({
+          date: `${item._id.day}/${item._id.month}`,
+          commandes: Number(item.commandes) || 0,
+          recettes: Number(item.recettes) || 0,
+        }));
+        console.log(
+          `[chargerDonneesVentes] Données formatées:`,
+          donneesFormatees
+        );
+        setDonneesCourbeVentes(donneesFormatees);
+      } else {
+        console.log(`[chargerDonneesVentes] Aucune donnée trouvée`);
+        setDonneesCourbeVentes([]);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des données de ventes:", error);
+      setErrorVentes("Erreur lors du chargement des données");
+      setDonneesCourbeVentes([]);
+    } finally {
+      setLoadingVentes(false);
+    }
+  };
+
+  // Charger les données au montage et quand les filtres changent
+  useEffect(() => {
+    chargerDonneesCommandes(
+      typeCourbeTendance,
+      semaineCourbeTendance,
+      moisCourbeTendance
+    );
+  }, [typeCourbeTendance, semaineCourbeTendance, moisCourbeTendance]);
+
+  useEffect(() => {
+    chargerDonneesVentes(
+      typeCourbeVentes,
+      semaineCourbeVentes,
+      moisCourbeVentes
+    );
+  }, [typeCourbeVentes, semaineCourbeVentes, moisCourbeVentes]);
+
+  // Titres dynamiques pour les courbes
+  const titreDynamiqueCourbeTendance = useMemo(() => {
+    if (typeCourbeTendance === "hebdomadaire") {
+      return `Commandes - Semaine du ${new Date(
+        semaineCourbeTendance
+      ).toLocaleDateString("fr-FR")}`;
+    } else {
+      const [year, month] = moisCourbeTendance.split("-");
+      const monthNames = [
+        "Jan",
+        "Fév",
+        "Mar",
+        "Avr",
+        "Mai",
+        "Jun",
+        "Jul",
+        "Aoû",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Déc",
+      ];
+      return `Commandes - ${monthNames[parseInt(month) - 1]} ${year}`;
+    }
+  }, [typeCourbeTendance, semaineCourbeTendance, moisCourbeTendance]);
+
+  const titreDynamiqueCourbeVentes = useMemo(() => {
+    if (typeCourbeVentes === "hebdomadaire") {
+      return `Évolution des Ventes - Semaine du ${new Date(
+        semaineCourbeVentes
+      ).toLocaleDateString("fr-FR")}`;
+    } else {
+      const [year, month] = moisCourbeVentes.split("-");
+      const monthNames = [
+        "Jan",
+        "Fév",
+        "Mar",
+        "Avr",
+        "Mai",
+        "Jun",
+        "Jul",
+        "Aoû",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Déc",
+      ];
+      return `Évolution des Ventes - ${
+        monthNames[parseInt(month) - 1]
+      } ${year}`;
+    }
+  }, [typeCourbeVentes, semaineCourbeVentes, moisCourbeVentes]);
+
   // Fonction pour formater les noms des modes de paiement
   function formatPaymentMethodName(mode: string): string {
     const formatMap: { [key: string]: string } = {
@@ -53,18 +358,6 @@ const CommandesRecettesStatsSection = ({
         .replace(/\b\w/g, (l) => l.toUpperCase())
     );
   }
-
-  // Générer des titres dynamiques basés sur la période
-  const getRevenueTitle = () => {
-    const periodLabels: { [key: string]: string } = {
-      "7days": "Évolution des Ventes (7 jours)",
-      "30days": "Évolution des Ventes (30 jours)",
-      "3months": "Évolution des Ventes (3 mois)",
-      "6months": "Évolution des Ventes (6 mois)",
-      "1year": "Évolution des Ventes (12 mois)",
-    };
-    return periodLabels["7days"] || "Évolution des Ventes";
-  };
 
   // Transformer les données de paiement pour le graphique
   const transformedPaymentData =
@@ -194,11 +487,32 @@ const CommandesRecettesStatsSection = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>{getRevenueTitle()}</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>{titreDynamiqueCourbeVentes}</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => ouvrirModal("ventes")}
+                className="h-8 gap-2"
+              >
+                <FilterIcon className="h-4 w-4" />
+                {typeCourbeVentes === "hebdomadaire"
+                  ? "Hebdomadaire"
+                  : "Mensuelle"}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            {monthlyRevenueData && monthlyRevenueData.length > 0 ? (
-              <SalesBarChart data={monthlyRevenueData} height={350} />
+            {loadingVentes ? (
+              <div className="h-80 flex items-center justify-center text-gray-500">
+                <SpinnerMedium />
+              </div>
+            ) : errorVentes ? (
+              <div className="h-80 flex items-center justify-center text-red-500">
+                Erreur: {errorVentes}
+              </div>
+            ) : donneesCourbeVentes && donneesCourbeVentes.length > 0 ? (
+              <SalesBarChart data={donneesCourbeVentes} height={350} />
             ) : (
               <div className="h-80 flex items-center justify-center text-gray-500">
                 Aucune donnée disponible
@@ -208,13 +522,34 @@ const CommandesRecettesStatsSection = ({
         </Card>
         <Card className="rounded-3xl">
           <CardHeader>
-            <CardTitle>{trendTitle}</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>{titreDynamiqueCourbeTendance}</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => ouvrirModal("tendance")}
+                className="h-8 gap-2"
+              >
+                <FilterIcon className="h-4 w-4" />
+                {typeCourbeTendance === "hebdomadaire"
+                  ? "Hebdomadaire"
+                  : "Mensuelle"}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            {weeklyTrendData && weeklyTrendData.length > 0 ? (
+            {loadingTendance ? (
+              <div className="h-80 flex items-center justify-center text-gray-500">
+                <SpinnerMedium />
+              </div>
+            ) : errorTendance ? (
+              <div className="h-80 flex items-center justify-center text-red-500">
+                Erreur: {errorTendance}
+              </div>
+            ) : donneesCourbeTendance && donneesCourbeTendance.length > 0 ? (
               <TrendLineChart
-                data={weeklyTrendData}
-                title={trendTitle}
+                data={donneesCourbeTendance}
+                title={titreDynamiqueCourbeTendance}
                 color="#f97316"
                 height={350}
               />
@@ -392,6 +727,150 @@ const CommandesRecettesStatsSection = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de filtre pour la courbe de tendance des commandes */}
+      <Dialog open={modalOuvert === "tendance"} onOpenChange={fermerModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filtrer la courbe des commandes</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Type de période
+              </label>
+              <select
+                value={valeursTemporaires.typeCourbeTendance}
+                onChange={(e) =>
+                  setValeursTemporaires({
+                    ...valeursTemporaires,
+                    typeCourbeTendance: e.target.value as
+                      | "hebdomadaire"
+                      | "mensuelle",
+                  })
+                }
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="hebdomadaire">Hebdomadaire (7 jours)</option>
+                <option value="mensuelle">Mensuelle (par jour)</option>
+              </select>
+            </div>
+
+            {valeursTemporaires.typeCourbeTendance === "hebdomadaire" && (
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Début de semaine
+                </label>
+                <Input
+                  type="date"
+                  value={valeursTemporaires.semaineCourbeTendance}
+                  onChange={(e) =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      semaineCourbeTendance: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            )}
+
+            {valeursTemporaires.typeCourbeTendance === "mensuelle" && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Mois</label>
+                <Input
+                  type="month"
+                  value={valeursTemporaires.moisCourbeTendance}
+                  onChange={(e) =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      moisCourbeTendance: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={fermerModal}>
+                Annuler
+              </Button>
+              <Button onClick={appliquerFiltre}>Appliquer</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de filtre pour la courbe des ventes */}
+      <Dialog open={modalOuvert === "ventes"} onOpenChange={fermerModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filtrer le diagramme des ventes</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Type de période
+              </label>
+              <select
+                value={valeursTemporaires.typeCourbeVentes}
+                onChange={(e) =>
+                  setValeursTemporaires({
+                    ...valeursTemporaires,
+                    typeCourbeVentes: e.target.value as
+                      | "hebdomadaire"
+                      | "mensuelle",
+                  })
+                }
+                className="w-full p-2 border rounded-md"
+              >
+                <option value="hebdomadaire">Hebdomadaire (7 jours)</option>
+                <option value="mensuelle">Mensuelle (par jour)</option>
+              </select>
+            </div>
+
+            {valeursTemporaires.typeCourbeVentes === "hebdomadaire" && (
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Début de semaine
+                </label>
+                <Input
+                  type="date"
+                  value={valeursTemporaires.semaineCourbeVentes}
+                  onChange={(e) =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      semaineCourbeVentes: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            )}
+
+            {valeursTemporaires.typeCourbeVentes === "mensuelle" && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Mois</label>
+                <Input
+                  type="month"
+                  value={valeursTemporaires.moisCourbeVentes}
+                  onChange={(e) =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      moisCourbeVentes: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={fermerModal}>
+                Annuler
+              </Button>
+              <Button onClick={appliquerFiltre}>Appliquer</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

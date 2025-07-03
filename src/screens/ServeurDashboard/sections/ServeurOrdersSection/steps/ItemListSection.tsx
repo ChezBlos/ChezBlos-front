@@ -4,6 +4,7 @@ import { Card, CardContent } from "../../../../../components/ui/card";
 import { ScrollArea } from "../../../../../components/ui/scroll-area";
 import { useOrder } from "../../../../../contexts/OrderContext";
 import { useMenu } from "../../../../../contexts/MenuContext";
+import { SpinnerMedium } from "../../../../../components/ui/spinner";
 
 export const ItemListSection = (): JSX.Element => {
   const { addItem, removeItem, orderItems } = useOrder();
@@ -21,15 +22,15 @@ export const ItemListSection = (): JSX.Element => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-40">
-        <div className="text-gray-500">Chargement du menu...</div>
+      <div className="flex items-center justify-center h-full">
+        <SpinnerMedium />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-40">
+      <div className="flex items-center justify-center h-full">
         <div className="text-red-500">Erreur: {error}</div>
       </div>
     );

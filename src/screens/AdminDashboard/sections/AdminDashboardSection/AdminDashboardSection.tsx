@@ -257,13 +257,13 @@ export const AdminDashboardSection: React.FC<AdminDashboardSectionProps> = (
           dashboardStats.today.commandesTermineesParServeur.length === 0
         ) {
           return (
-            <div className="mb-8 bg-white rounded-2xl shadow p-6 text-center text-gray-500">
+            <div className="bg-white rounded-2xl shadow p-6 text-center text-gray-500">
               Aucune donnée de commandes terminées par serveur pour aujourd'hui.
             </div>
           );
         }
         return (
-          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Diagramme circulaire */}
             <div className="bg-white rounded-2xl shadow p-4 flex flex-col items-center justify-center min-h-[320px]">
               <h4 className="text-md font-semibold text-gray-900 mb-4">

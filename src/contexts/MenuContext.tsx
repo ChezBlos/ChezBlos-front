@@ -2,7 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { MenuItemResponse, MenuCategory } from "../types/menu";
 import { useMenuByCategory } from "../hooks/useMenuAPI";
 
-type CategoryType = "all" | "menus" | "boissons" | "desserts";
+type CategoryType =
+  | "all"
+  | "menus"
+  | "boissons"
+  | "accompagnements"
+  | "desserts";
 
 interface MenuContextType {
   searchTerm: string;
@@ -25,6 +30,8 @@ const mapCategoryToBackend = (category: CategoryType): MenuCategory | null => {
       return MenuCategory.PLAT_PRINCIPAL;
     case "boissons":
       return MenuCategory.BOISSON;
+    case "accompagnements":
+      return MenuCategory.ACCOMPAGNEMENT;
     case "desserts":
       return MenuCategory.DESSERT;
     default:
@@ -75,6 +82,12 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({
         filtered = filtered.filter(
           (item) => item.categorie === backendCategory
         );
+
+        // Log pour debug (à supprimer en production)
+        console.log(
+          `Filtrage par catégorie: ${selectedCategory} -> ${backendCategory}`
+        );
+        console.log(`Items filtrés: ${filtered.length}/${menuItems.length}`);
       }
     }
 

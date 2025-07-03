@@ -11,6 +11,7 @@ import {
 } from "../../../../components/ui/dialog";
 import { TrendLineChart } from "../../../../components/charts";
 import { useRecettes } from "../../../../hooks/useRecettes";
+import { SpinnerMedium } from "../../../../components/ui/spinner";
 
 export const CaisseStatsSection: React.FC = () => {
   // États pour les filtres spécifiques de chaque card
@@ -188,7 +189,7 @@ export const CaisseStatsSection: React.FC = () => {
     if (typeCourbe === "mensuelle") {
       // Affichage jour/mois/année pour la courbe mensuelle
       return {
-        date: `${row._id.day}/${row._id.month}/${row._id.year}`,
+        date: `${row._id.day}/${row._id.month}`,
         value: row.recettes,
       };
     } else {
@@ -213,6 +214,14 @@ export const CaisseStatsSection: React.FC = () => {
       };
     }
   });
+
+  // Log temporaire pour debug de la courbe
+  console.log("🔍 [CaisseStatsSection] Données brutes reçues:", dataCourbe);
+  console.log(
+    "🔍 [CaisseStatsSection] Données transformées pour la courbe:",
+    courbeDonnees
+  );
+  console.log("🔍 [CaisseStatsSection] Paramètres courbe:", parametresCourbe);
 
   // Fonction pour formater les montants
   const formatMontant = (montant: number) => {
@@ -282,7 +291,7 @@ export const CaisseStatsSection: React.FC = () => {
               {/* Contenu de la card */}
               {card.loading ? (
                 <div className="text-center text-gray-400 py-4 w-full">
-                  Chargement...
+                  <SpinnerMedium />
                 </div>
               ) : card.error ? (
                 <div className="text-center text-red-500 py-4 w-full text-sm">
@@ -333,7 +342,7 @@ export const CaisseStatsSection: React.FC = () => {
           <div className="w-full">
             {loadingCourbe ? (
               <div className="flex items-center justify-center h-40 text-gray-400">
-                Chargement...
+                <SpinnerMedium />
               </div>
             ) : errorCourbe ? (
               <div className="flex items-center justify-center h-40 text-red-500">

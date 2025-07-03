@@ -656,7 +656,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   <TableRow>
                     <TableCell colSpan={8} className="h-80 text-center">
                       <div className="flex flex-col items-center justify-center gap-4 py-8">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
                           <PlusIcon className="w-8 h-8 text-gray-400" />
                         </div>
                         <div className="flex flex-col gap-2">

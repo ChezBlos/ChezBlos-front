@@ -20,7 +20,7 @@ export function useRecettes(
   const [data, setData] = useState<RecetteDay[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Ref pour éviter les mises à jour après démontage
   const isMountedRef = useRef(true);
 
@@ -71,12 +71,16 @@ export function useRecettes(
     setError(null);
 
     // Log de debug pour traquer les requêtes multiples
-    logger.debug(`🔍 [useRecettes] Démarrage requête avec cacheKey: ${cacheKey}`);
+    logger.debug(
+      `🔍 [useRecettes] Démarrage requête avec cacheKey: ${cacheKey}`
+    );
 
     // Vérifier le cache d'abord
     const cachedData = getCachedData(cacheKey);
     if (cachedData) {
-      logger.debug(`💾 [useRecettes] Données trouvées en cache pour: ${cacheKey}`);
+      logger.debug(
+        `💾 [useRecettes] Données trouvées en cache pour: ${cacheKey}`
+      );
       if (isMountedRef.current) {
         setData(cachedData);
         setLoading(false);
@@ -88,12 +92,19 @@ export function useRecettes(
     ongoingRequests.add(cacheKey);
 
     // Si pas de cache, faire l'appel API
-    logger.debug(`📡 [useRecettes] Appel API pour: ${cacheKey}`, { filter, groupBy });
-    
+    logger.debug(`📡 [useRecettes] Appel API pour: ${cacheKey}`, {
+      filter,
+      groupBy,
+    });
+
     getRecettes(filter, groupBy)
       .then((res) => {
         if (isMountedRef.current) {
-          logger.debug(`✅ [useRecettes] Réponse reçue pour: ${cacheKey}`, res.length, "éléments");
+          logger.debug(
+            `✅ [useRecettes] Réponse reçue pour: ${cacheKey}`,
+            res.length,
+            "éléments"
+          );
           setData(res);
           setCachedData(cacheKey, res);
         }

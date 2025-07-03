@@ -6,6 +6,6 @@ import "./index.css";
 createRoot(document.getElementById("app") as HTMLElement).render(
   // StrictMode désactivé temporairement pour éviter les requêtes doublées en dev
   // <StrictMode>
-    <App />
+  <App />
   // </StrictMode>,
 );

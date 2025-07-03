@@ -40,9 +40,25 @@ export const Login: React.FC = () => {
       showSuccess("Connexion réussie !");
     } catch (error: any) {
       const errorMessage =
-        error.response?.data?.message || "Erreur de connexion";
-      setError(errorMessage);
-      showError(errorMessage);
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Erreur de connexion";
+
+      // Vérifier si c'est une erreur de compte désactivé
+      if (
+        errorMessage.includes("désactivé") ||
+        errorMessage.includes("désactive")
+      ) {
+        setError(
+          "Votre compte a été désactivé. Veuillez contacter l'administrateur."
+        );
+        showError(
+          "Votre compte a été désactivé. Veuillez contacter l'administrateur."
+        );
+      } else {
+        setError(errorMessage);
+        showError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,9 +73,25 @@ export const Login: React.FC = () => {
       showSuccess("Connexion réussie !");
     } catch (error: any) {
       const errorMessage =
-        error.response?.data?.message || "Téléphone ou code d'accès invalide";
-      setError(errorMessage);
-      showError(errorMessage);
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Téléphone ou code d'accès invalide";
+
+      // Vérifier si c'est une erreur de compte désactivé
+      if (
+        errorMessage.includes("désactivé") ||
+        errorMessage.includes("désactive")
+      ) {
+        setError(
+          "Votre compte a été désactivé. Veuillez contacter l'administrateur."
+        );
+        showError(
+          "Votre compte a été désactivé. Veuillez contacter l'administrateur."
+        );
+      } else {
+        setError(errorMessage);
+        showError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

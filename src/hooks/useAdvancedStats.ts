@@ -97,7 +97,7 @@ export const useAdvancedDashboardStats = () => {
     }, 100);
 
     return () => clearTimeout(timeout);
-  }, [fetchStats]);
+  }, []); // Pas de dépendance fetchStats pour éviter la boucle infinie
 
   return {
     data,

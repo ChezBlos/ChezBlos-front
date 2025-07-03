@@ -1,14 +1,17 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { DateFilterValue } from "../components/filters/DateFilter";
 import { getRecettes, RecetteDay } from "../services/recetteService";
 import { logger } from "../utils/logger";
 
-// Cache simple en mémoire pour éviter les requêtes répétées
-const recettesCache = new Map<
+// Cache global persistant (survit aux remontages de composants)
+const globalRecettesCache = new Map<
   string,
   { data: RecetteDay[]; timestamp: number }
 >();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Set pour tracker les requêtes en cours et éviter les doublons
+const ongoingRequests = new Set<string>();
 
 export function useRecettes(
   filter: DateFilterValue,
@@ -17,6 +20,16 @@ export function useRecettes(
   const [data, setData] = useState<RecetteDay[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Ref pour éviter les mises à jour après démontage
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Créer une clé de cache stable basée sur les paramètres
   const cacheKey = useMemo(() => {
@@ -35,7 +48,7 @@ export function useRecettes(
 
   // Fonction pour vérifier et utiliser le cache
   const getCachedData = useCallback((key: string) => {
-    const cached = recettesCache.get(key);
+    const cached = globalRecettesCache.get(key);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       return cached.data;
     }
@@ -44,48 +57,66 @@ export function useRecettes(
 
   // Fonction pour mettre en cache
   const setCachedData = useCallback((key: string, data: RecetteDay[]) => {
-    recettesCache.set(key, { data, timestamp: Date.now() });
+    globalRecettesCache.set(key, { data, timestamp: Date.now() });
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    // Vérifier d'abord si une requête est déjà en cours pour cette clé
+    if (ongoingRequests.has(cacheKey)) {
+      logger.debug(`⏳ [useRecettes] Requête déjà en cours pour: ${cacheKey}`);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+
+    // Log de debug pour traquer les requêtes multiples
+    logger.debug(`🔍 [useRecettes] Démarrage requête avec cacheKey: ${cacheKey}`);
 
     // Vérifier le cache d'abord
     const cachedData = getCachedData(cacheKey);
     if (cachedData) {
-      setData(cachedData);
-      setLoading(false);
+      logger.debug(`💾 [useRecettes] Données trouvées en cache pour: ${cacheKey}`);
+      if (isMountedRef.current) {
+        setData(cachedData);
+        setLoading(false);
+      }
       return;
     }
 
+    // Marquer la requête comme en cours
+    ongoingRequests.add(cacheKey);
+
     // Si pas de cache, faire l'appel API
+    logger.debug(`📡 [useRecettes] Appel API pour: ${cacheKey}`, { filter, groupBy });
+    
     getRecettes(filter, groupBy)
       .then((res) => {
-        if (!cancelled) {
+        if (isMountedRef.current) {
+          logger.debug(`✅ [useRecettes] Réponse reçue pour: ${cacheKey}`, res.length, "éléments");
           setData(res);
           setCachedData(cacheKey, res);
         }
       })
       .catch((err) => {
-        if (!cancelled) {
+        if (isMountedRef.current) {
           setError(err?.message || "Erreur lors du chargement des recettes");
           logger.error("[useRecettes] Erreur:", err);
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        // Retirer la requête de la liste des requêtes en cours
+        ongoingRequests.delete(cacheKey);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [cacheKey, filter, groupBy, getCachedData, setCachedData]);
+  }, [cacheKey, getCachedData, setCachedData, filter, groupBy]);
 
   // Fonction pour vider le cache si nécessaire
   const clearCache = useCallback(() => {
-    recettesCache.clear();
+    globalRecettesCache.clear();
+    ongoingRequests.clear();
   }, []);
 
   return { data, loading, error, clearCache };

@@ -1,6 +1,6 @@
 import api from "./api";
 import { DateFilterValue } from "../components/filters/DateFilter";
-import { logger} from "../utils/logger";
+import { logger } from "../utils/logger";
 
 export interface RecetteDay {
   _id: { year: number; month: number; day?: number };

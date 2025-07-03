@@ -814,13 +814,13 @@ export class AdvancedStatsService {
 
         // Appeler l'API avec les dates spécifiques
         const response = await api.get(
-          `/stats/recettes-periode?dateDebut=${dateDebut}&dateFin=${dateFin}`
+          `/stats/sales?dateDebut=${dateDebut}&dateFin=${dateFin}&groupBy=day`
         );
         const data = response.data.data;
 
         return {
-          commandes: data.totalCommandes || 0,
-          recettes: data.totalRecettes || 0,
+          commandes: data.global?.totalCommandes || 0,
+          recettes: data.global?.totalRecettes || 0,
         };
       } catch (error) {
         logger.error(

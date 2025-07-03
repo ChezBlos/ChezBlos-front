@@ -1,6 +1,7 @@
 # 📝 Guide de Logging - Désactivation des Logs en Production
 
 ## 🎯 Objectif
+
 Désactiver automatiquement les logs de débogage en production tout en gardant les erreurs importantes.
 
 ## 🚀 Configuration
@@ -8,16 +9,19 @@ Désactiver automatiquement les logs de débogage en production tout en gardant 
 ### Variables d'environnement
 
 #### Développement (`.env`)
+
 ```env
 VITE_LOG_LEVEL=debug  # Tous les logs activés
 ```
 
 #### Production (`.env.production`)
+
 ```env
 VITE_LOG_LEVEL=error  # Seulement les erreurs
 ```
 
 ### Niveaux disponibles
+
 - `debug` : Tous les logs (développement)
 - `info` : Info + warn + error
 - `warn` : Avertissements + erreurs
@@ -27,13 +31,20 @@ VITE_LOG_LEVEL=error  # Seulement les erreurs
 ## 🔧 Utilisation du Logger
 
 ### Import
+
 ```typescript
-import { logger, logApiResponse, logApiError, logUserAction } from "../utils/logger";
+import {
+  logger,
+  logApiResponse,
+  logApiError,
+  logUserAction,
+} from "../utils/logger";
 ```
 
 ### Remplacement des console.log
 
 #### AVANT ❌
+
 ```typescript
 console.log("Données de l'utilisateur:", userData);
 console.error("Erreur API:", error);
@@ -41,6 +52,7 @@ console.warn("Attention:", message);
 ```
 
 #### APRÈS ✅
+
 ```typescript
 logger.debug("Données de l'utilisateur:", userData);
 logger.error("Erreur API:", error);
@@ -48,6 +60,7 @@ logger.warn("Attention:", message);
 ```
 
 ### Helpers spécialisés
+
 ```typescript
 // Pour les réponses API
 logApiResponse("/orders", response.data);
@@ -61,19 +74,20 @@ logUserAction("login", { userId: user.id });
 
 ## 📦 Méthodes disponibles
 
-| Méthode | Niveau | Production | Description |
-|---------|--------|------------|-------------|
-| `logger.debug()` | debug | ❌ | Debugging détaillé |
-| `logger.info()` | info | ❌ | Informations générales |
-| `logger.warn()` | warn | ✅ | Avertissements |
-| `logger.error()` | error | ✅ | Erreurs critiques |
-| `logger.devOnly()` | - | ❌ | Développement uniquement |
-| `logger.table()` | debug | ❌ | Affichage tableau |
-| `logger.group()` | debug | ❌ | Groupement de logs |
+| Méthode            | Niveau | Production | Description              |
+| ------------------ | ------ | ---------- | ------------------------ |
+| `logger.debug()`   | debug  | ❌         | Debugging détaillé       |
+| `logger.info()`    | info   | ❌         | Informations générales   |
+| `logger.warn()`    | warn   | ✅         | Avertissements           |
+| `logger.error()`   | error  | ✅         | Erreurs critiques        |
+| `logger.devOnly()` | -      | ❌         | Développement uniquement |
+| `logger.table()`   | debug  | ❌         | Affichage tableau        |
+| `logger.group()`   | debug  | ❌         | Groupement de logs       |
 
 ## 🏭 Comportement en Production
 
 ### Avec `VITE_LOG_LEVEL=error`
+
 - ✅ `logger.error()` → Affiché
 - ❌ `logger.warn()` → Masqué
 - ❌ `logger.info()` → Masqué
@@ -81,6 +95,7 @@ logUserAction("login", { userId: user.id });
 - ❌ `console.log()` → Toujours affiché (à éviter !)
 
 ### Avantages
+
 1. **Performance** : Pas de logs inutiles en production
 2. **Sécurité** : Pas d'exposition de données sensibles
 3. **Propreté** : Console propre pour les utilisateurs
@@ -89,12 +104,14 @@ logUserAction("login", { userId: user.id });
 ## 🔄 Migration des fichiers existants
 
 ### Fichiers prioritaires à migrer
+
 1. `src/services/orderService.ts` ✅ (fait)
 2. `src/services/advancedStatsService.ts`
 3. `src/hooks/useAdvancedStats.ts`
 4. `src/screens/AdminDashboard/sections/AdminMenuSection/AdminMenuSection.tsx`
 
 ### Pattern de remplacement
+
 ```bash
 # Rechercher tous les console.log
 grep -r "console\.log" src/
@@ -108,12 +125,14 @@ grep -r "console\.log" src/
 ## 🧪 Test
 
 ### En développement
+
 ```bash
 npm run dev
 # Tous les logs sont visibles
 ```
 
 ### En production
+
 ```bash
 npm run build
 npm run preview

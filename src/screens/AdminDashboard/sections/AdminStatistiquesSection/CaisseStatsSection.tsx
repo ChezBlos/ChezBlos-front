@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { Input } from "../../../../components/ui/input";
 import { Button } from "../../../../components/ui/button";
@@ -26,7 +26,7 @@ export const CaisseStatsSection: React.FC = () => {
 
   // État pour le type de courbe et ses paramètres
   const [typeCourbe, setTypeCourbe] = useState<"mensuelle" | "annuelle">(
-    "mensuelle"
+    "annuelle"
   );
   const [moisCourbe, setMoisCourbe] = useState(
     new Date().toISOString().slice(0, 7) // YYYY-MM pour la courbe mensuelle
@@ -79,6 +79,61 @@ export const CaisseStatsSection: React.FC = () => {
     fermerModal();
   };
 
+  // Mémorisation des paramètres calculés pour éviter les recalculs inutiles
+  const filtreMois = useMemo(() => {
+    const endDate = `${dateMois}-${new Date(
+      parseInt(dateMois.split("-")[0]),
+      parseInt(dateMois.split("-")[1]),
+      0
+    )
+      .getDate()
+      .toString()
+      .padStart(2, "0")}`;
+
+    return {
+      mode: "period" as const,
+      startDate: `${dateMois}-01`,
+      endDate,
+    };
+  }, [dateMois]);
+
+  const filtreAnnee = useMemo(
+    () => ({
+      mode: "period" as const,
+      startDate: `${dateAnnee}-01-01`,
+      endDate: `${dateAnnee}-12-31`,
+    }),
+    [dateAnnee]
+  );
+
+  // Calcul des paramètres pour la courbe selon le type
+  const parametresCourbe = useMemo(() => {
+    if (typeCourbe === "mensuelle") {
+      const endDate = `${moisCourbe}-${new Date(
+        parseInt(moisCourbe.split("-")[0]),
+        parseInt(moisCourbe.split("-")[1]),
+        0
+      )
+        .getDate()
+        .toString()
+        .padStart(2, "0")}`;
+
+      return {
+        // Courbe mensuelle : afficher les jours du mois sélectionné
+        startDate: `${moisCourbe}-01`,
+        endDate,
+        groupBy: "day" as const,
+      };
+    } else {
+      return {
+        // Courbe annuelle : afficher les mois de l'année sélectionnée
+        startDate: `${anneeCourbe}-01-01`,
+        endDate: `${anneeCourbe}-12-31`,
+        groupBy: "month" as const,
+      };
+    }
+  }, [typeCourbe, moisCourbe, anneeCourbe]);
+
   // Chargement des données pour chaque filtre
   const {
     data: dataJour,
@@ -93,51 +148,13 @@ export const CaisseStatsSection: React.FC = () => {
     data: dataMois,
     loading: loadingMois,
     error: errorMois,
-  } = useRecettes({
-    mode: "period",
-    startDate: `${dateMois}-01`,
-    endDate: `${dateMois}-${new Date(
-      parseInt(dateMois.split("-")[0]),
-      parseInt(dateMois.split("-")[1]),
-      0
-    )
-      .getDate()
-      .toString()
-      .padStart(2, "0")}`,
-  });
+  } = useRecettes(filtreMois);
 
   const {
     data: dataAnnee,
     loading: loadingAnnee,
     error: errorAnnee,
-  } = useRecettes({
-    mode: "period",
-    startDate: `${dateAnnee}-01-01`,
-    endDate: `${dateAnnee}-12-31`,
-  });
-
-  // Calcul des paramètres pour la courbe selon le type
-  const parametresCourbe =
-    typeCourbe === "mensuelle"
-      ? {
-          // Courbe mensuelle : afficher les jours du mois sélectionné
-          startDate: `${moisCourbe}-01`,
-          endDate: `${moisCourbe}-${new Date(
-            parseInt(moisCourbe.split("-")[0]),
-            parseInt(moisCourbe.split("-")[1]),
-            0
-          )
-            .getDate()
-            .toString()
-            .padStart(2, "0")}`,
-          groupBy: "day" as const,
-        }
-      : {
-          // Courbe annuelle : afficher les mois de l'année sélectionnée
-          startDate: `${anneeCourbe}-01-01`,
-          endDate: `${anneeCourbe}-12-31`,
-          groupBy: "month" as const,
-        };
+  } = useRecettes(filtreAnnee);
 
   const {
     data: dataCourbe,

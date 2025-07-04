@@ -31,26 +31,29 @@ export const ServeurOrdersHistorySection: React.FC = () => {
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  // Filtrer uniquement les commandes des jours passés ET du serveur connecté
+  // Filtrer toutes les commandes du serveur connecté (y compris celles d'aujourd'hui)
   const pastOrders = useMemo(() => {
-    if (!allOrders || !Array.isArray(allOrders) || !user) return [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return allOrders.filter((order) => {
-      const orderDate = new Date(order.dateCreation);
-      // Correction typage serveurId
+    if (!allOrders || !Array.isArray(allOrders) || !user) {
+      return [];
+    }
+
+    const filtered = allOrders.filter((order) => {
       const serveurId = order.serveur?._id;
-      return (
-        orderDate < today &&
-        serveurId &&
-        (serveurId === user._id || serveurId === user.id)
-      );
+
+      // Seul critère : appartient au serveur connecté
+      const isFromUser =
+        serveurId && (serveurId === user._id || serveurId === user.id);
+
+      return isFromUser;
     });
+
+    return filtered;
   }, [allOrders, user]);
 
   // Recherche et filtre par statut
   const filteredOrders = useMemo(() => {
     let filtered = pastOrders;
+
     if (searchTerm) {
       filtered = filtered.filter(
         (order) =>
@@ -70,9 +73,11 @@ export const ServeurOrdersHistorySection: React.FC = () => {
           })
       );
     }
+
     if (selectedStatus !== "TOUTES") {
       filtered = filtered.filter((order) => order.statut === selectedStatus);
     }
+
     return filtered;
   }, [pastOrders, searchTerm, selectedStatus]);
 

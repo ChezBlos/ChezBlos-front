@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { useOrders } from "../../hooks/useOrderAPI";
-import { useAuth } from "../../contexts/AuthContext";
-import { Card, CardContent } from "../../components/ui/card";
+import { useOrders } from "../../../../hooks/useOrderAPI";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { Card, CardContent } from "../../../../components/ui/card";
 import {
   Table,
   TableBody,
@@ -9,13 +9,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import { Input } from "../../components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { SpinnerMedium } from "../../components/ui/spinner";
-import { OrderStatusBadge } from "../../components/ui/order-status-badge";
+} from "../../../../components/ui/table";
+import { Input } from "../../../../components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
+import { SpinnerMedium } from "../../../../components/ui/spinner";
+import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
 import { CreditCard, Money } from "phosphor-react";
 import { SearchIcon, EyeIcon } from "lucide-react";
+import { Order } from "../../../../types/order";
+import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
 // import { getMenuImageUrl } from "../../utils/menuImageUtils";
 // import MenuItemImage from "../../components/MenuItemImage";
 
@@ -24,6 +26,10 @@ export const ServeurOrdersHistorySection: React.FC = () => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("TOUTES");
+
+  // États pour le modal de détails de commande
+  const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   // Filtrer uniquement les commandes des jours passés ET du serveur connecté
   const pastOrders = useMemo(() => {
@@ -120,7 +126,7 @@ export const ServeurOrdersHistorySection: React.FC = () => {
       case "especes":
         return (
           <div
-            className={`flex ${containerSize} text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
+            className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
           >
             <Money {...iconProps} />
           </div>
@@ -129,7 +135,7 @@ export const ServeurOrdersHistorySection: React.FC = () => {
       case "carte":
         return (
           <div
-            className={`flex ${containerSize} text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
+            className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
           >
             <CreditCard {...iconProps} />
           </div>
@@ -197,6 +203,12 @@ export const ServeurOrdersHistorySection: React.FC = () => {
       default:
         return modePaiement;
     }
+  };
+
+  // Fonction pour ouvrir le modal de détails de commande
+  const handleViewOrderDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsOrderDetailsModalOpen(true);
   };
 
   // UI
@@ -451,7 +463,10 @@ export const ServeurOrdersHistorySection: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell className="py-4 px-4 lg:px-6 text-right">
-                        <button className="flex items-center gap-1 text-orange-600 hover:underline text-sm font-medium">
+                        <button
+                          className="flex items-center gap-1 text-orange-600 hover:underline text-sm font-medium"
+                          onClick={() => handleViewOrderDetails(order)}
+                        >
                           <EyeIcon className="h-4 w-4" /> Voir détails
                         </button>
                       </TableCell>
@@ -463,6 +478,16 @@ export const ServeurOrdersHistorySection: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Modal de détails de commande */}
+      <OrderDetailsModal
+        isOpen={isOrderDetailsModalOpen}
+        onClose={() => {
+          setIsOrderDetailsModalOpen(false);
+          setSelectedOrder(null);
+        }}
+        order={selectedOrder}
+      />
     </section>
   );
 };

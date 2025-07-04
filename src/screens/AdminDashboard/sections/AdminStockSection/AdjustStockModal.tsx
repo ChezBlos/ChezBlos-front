@@ -1,2 +1,2 @@
-import { AdjustStockModal as BaseAdjustStockModal } from "../../../CuisinierDashboard/sections/StockSection/AdjustStockModal";
+import { AdjustStockModal as BaseAdjustStockModal } from "../../../../components/modals/AdjustStockModal";
 export default BaseAdjustStockModal;

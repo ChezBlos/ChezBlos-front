@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "../../../../components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../../../../components/ui/dialog";
-import { StockItem, StockAdjustment } from "../../../../services/stockService";
-import { useStockAdjustment } from "../../../../hooks/useStockAPI";
-import { ButtonSpinner } from "../../../../components/ui/spinner";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { StockItem, StockAdjustment } from "../../services/stockService";
+import { useStockAdjustment } from "../../hooks/useStockAPI";
+import { ButtonSpinner } from "../ui/spinner";
 import { Minus, Plus, X } from "lucide-react";
-import { formatUnite } from "../../../../utils/uniteUtils";
+import { formatUnite } from "../../utils/uniteUtils";
 
 interface AdjustStockModalProps {
   isOpen: boolean;

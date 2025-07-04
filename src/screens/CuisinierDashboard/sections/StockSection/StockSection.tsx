@@ -15,11 +15,12 @@ import { Badge } from "../../../../components/ui/badge";
 import { SearchIcon } from "lucide-react";
 import { useStockItems, useStockStats } from "../../../../hooks/useStockAPI";
 import { StockItem } from "../../../../services/stockService";
-import { AdjustStockModal } from "./AdjustStockModal";
+import { AdjustStockModal } from "../../../../components/modals/AdjustStockModal";
 import {
   formatUnite,
   formatUniteAbreviation,
 } from "../../../../utils/uniteUtils";
+import { SpinnerMedium } from "../../../../components/ui/spinner";
 
 export const StockSection = (): JSX.Element => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -117,7 +118,7 @@ export const StockSection = (): JSX.Element => {
   if (itemsLoading || statsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary-500"></div>
+        <SpinnerMedium />
       </div>
     );
   }

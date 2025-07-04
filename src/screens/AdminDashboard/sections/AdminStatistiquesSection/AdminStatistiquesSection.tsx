@@ -16,7 +16,7 @@ import {
   useExpenseStats,
   usePersonnelStats,
 } from "../../../../hooks/useAdvancedStats";
-import { ComparisonModal } from "../../../../components/modals/ComparisonModal/ComparisonModal";
+import { ComparisonModal } from "../../../../components/modals/ComparisonModal";
 import { logger } from "../../../../utils/logger";
 // import { useAlert } from "../../../../contexts/AlertContext";
 import PersonnelStatsSection from "./PersonnelStatsSection";

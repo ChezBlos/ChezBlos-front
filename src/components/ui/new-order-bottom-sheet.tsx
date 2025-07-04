@@ -3,7 +3,7 @@ import { PlusIcon } from "lucide-react";
 import { Button } from "./button";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
 import { MobileOrderFlow } from "./mobile-order-flow";
-import NewOrderModal from "../../screens/ServeurDashboard/sections/ServeurOrdersSection/NewOrderModal";
+import NewOrderModal from "../modals/NewOrderModal";
 import { Order } from "../../types/order";
 import { OrderProvider } from "../../contexts/OrderContext";
 import { MenuProvider } from "../../contexts/MenuContext";

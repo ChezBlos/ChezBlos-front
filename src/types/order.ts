@@ -44,6 +44,7 @@ export interface Order {
     | "ANNULE";
   numeroTable?: number; // Changé de "table" à "numeroTable"
   notes?: string;
+  motifAnnulation?: string; // Nouveau champ pour le motif d'annulation
   modePaiement?: string;
   serveur: {
     _id: string;

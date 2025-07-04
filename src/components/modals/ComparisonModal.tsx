@@ -1,11 +1,6 @@
 import React, { useState } from "react";
-import { Button } from "../../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../../ui/dialog";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { X, Calendar } from "@phosphor-icons/react";
 
 interface ComparisonModalProps {

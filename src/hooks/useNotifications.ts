@@ -1,4 +1,5 @@
 import { useToast } from "../contexts/ToastContext";
+import { logger } from "../utils/logger";
 
 export const useNotifications = () => {
   let addToast: any = null;

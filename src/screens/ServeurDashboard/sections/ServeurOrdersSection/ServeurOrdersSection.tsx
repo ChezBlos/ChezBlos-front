@@ -1,5 +1,5 @@
 import { SearchIcon, PlusIcon, RefreshCw } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
 import { Button } from "../../../../components/ui/button";
@@ -39,9 +39,9 @@ import {
 import { useOrders, useOrderStats } from "../../../../hooks/useOrderAPI";
 import { Order } from "../../../../types/order";
 import { OrderService } from "../../../../services/orderService";
-import { ProfileService } from "../../../../services/profileService";
-import NewOrderModal from "./NewOrderModal";
-import { OrderDetailsModal } from "./OrderDetailsModal";
+import NewOrderModal from "../../../../components/modals/NewOrderModal";
+import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
+import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
 import { useAuth } from "../../../../contexts/AuthContext";
 import {
   Eye,
@@ -50,15 +50,81 @@ import {
   PaperPlaneTilt,
   CreditCard,
   Money,
-  User,
   CheckCircle,
   DotsThreeVertical,
 } from "phosphor-react";
-import { getOrderItemImage } from "../../../../services/imageService";
-import { logger } from "../../../../utils/logger";
+import {
+  getOrderItemImage,
+  handleImageError,
+} from "../../../../services/imageService";
+import { UserAvatar } from "../../../../components/UserAvatar";
 
-// Utilisation du service d'images centralisé au lieu de la définition locale
-// const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+// Composant mémorisé pour éviter les re-rendus inutiles des images avec gestion locale du fallback
+const MemoizedOrderImage = React.memo(
+  ({
+    imagePath,
+    altText,
+    className = "w-full h-full object-cover",
+  }: {
+    imagePath?: string;
+    altText: string;
+    className?: string;
+  }) => {
+    const initialImageUrl = imagePath
+      ? getOrderItemImage(imagePath)
+      : "/img/plat_petit.png";
+
+    // État local pour gérer le fallback et éviter les boucles
+    const [currentSrc, setCurrentSrc] = useState(initialImageUrl);
+    const [hasErrored, setHasErrored] = useState(false);
+
+    // Réinitialiser quand l'imagePath change
+    useEffect(() => {
+      const newUrl = imagePath
+        ? getOrderItemImage(imagePath)
+        : "/img/plat_petit.png";
+      setCurrentSrc(newUrl);
+      setHasErrored(false);
+    }, [imagePath]);
+
+    const handleError = useCallback(
+      (e: React.SyntheticEvent<HTMLImageElement>) => {
+        if (!hasErrored) {
+          setHasErrored(true);
+          handleImageError(e);
+          const fallbackUrl = "/img/plat_petit.png";
+          setCurrentSrc(fallbackUrl);
+        }
+      },
+      [hasErrored]
+    );
+
+    const handleLoad = useCallback(() => {
+      // Image chargée avec succès
+    }, []);
+
+    return (
+      <img
+        src={currentSrc}
+        alt={altText}
+        className={className}
+        onError={handleError}
+        onLoad={handleLoad}
+        loading="lazy"
+      />
+    );
+  },
+  // Comparaison personnalisée pour éviter les re-rendus inutiles
+  (prevProps, nextProps) => {
+    return (
+      prevProps.imagePath === nextProps.imagePath &&
+      prevProps.altText === nextProps.altText &&
+      prevProps.className === nextProps.className
+    );
+  }
+);
+
+MemoizedOrderImage.displayName = "MemoizedOrderImage";
 
 export const ServeurOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -82,6 +148,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
   const [orderToPay, setOrderToPay] = useState<Order | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("");
+
+  // États pour la gestion de l'annulation avec motif
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Récupération de l'utilisateur connecté
   const { user } = useAuth();
@@ -250,7 +321,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       case "especes":
         return (
           <>
-            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0">
+            <div className="flex w-10 h-10 bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0">
               <Money {...iconProps} />
             </div>
           </>
@@ -260,7 +331,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       case "carte":
         return (
           <>
-            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-centerrounded-full flex-shrink-0">
+            <div className="flex w-10 h-10 bg-orange-100 text-brand-primary-500 items-center justify-centerrounded-full flex-shrink-0">
               <CreditCard {...iconProps} />
             </div>
           </>
@@ -335,55 +406,44 @@ export const ServeurOrdersSection = (): JSX.Element => {
   // Fonction pour formater le prix
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
-  }; // Fonction pour rendre les images empilées
-  const renderStackedImages = (
-    items: any[],
-    maxImages: number = 3,
-    isMobile: boolean = false
-  ) => {
-    const imagesToShow = items.slice(0, maxImages);
-    const size = isMobile ? "w-12 h-12" : "w-10 h-10";
-    const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
-    const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
-
-    return (
-      <div className={`relative ${size} flex-shrink-0`}>
-        {imagesToShow.map((item, index) => {
-          const imageUrl =
-            item.menuItem &&
-            typeof item.menuItem === "object" &&
-            item.menuItem.image
-              ? getOrderItemImage(item.menuItem.image)
-              : "/img/plat_petit.png";
-
-          // Classes pour le décalage et la transparence
-          const positionClasses = [
-            "translate-x-0 translate-y-0 opacity-100 z-30", // Premier élément
-            `${translateClass} translate-y-0.5 opacity-70 z-20`, // Deuxième élément
-            `${translateClass2} translate-y-1 opacity-40 z-10`, // Troisième élément
-          ];
-
-          return (
-            <div
-              key={index}
-              className={`absolute ${size} rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden border-2 border-white shadow-sm ${
-                positionClasses[index] || ""
-              }`}
-            >
-              <img
-                src={imageUrl}
-                alt={item.nom || "Plat"}
-                className="w-full h-full mr-4 object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/img/plat_petit.png";
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-    );
   };
+
+  // Fonction simple pour rendre les images empilées avec mémorisation des URLs
+  const renderStackedImages = useMemo(() => {
+    return (items: any[], maxImages: number = 3, isMobile: boolean = false) => {
+      const imagesToShow = items.slice(0, maxImages);
+      const size = isMobile ? "w-12 h-12" : "w-10 h-10";
+      const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
+      const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
+
+      return (
+        <div className={`relative ${size} flex-shrink-0`}>
+          {imagesToShow.map((item, index) => {
+            const positionClasses = [
+              "translate-x-0 translate-y-0 opacity-100 z-30",
+              `${translateClass} translate-y-0.5 opacity-70 z-20`,
+              `${translateClass2} translate-y-1 opacity-40 z-10`,
+            ];
+
+            return (
+              <div
+                key={`${item._id || item.nom || "item"}-${index}`}
+                className={`absolute ${size} rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden border-2 border-white shadow-sm ${
+                  positionClasses[index] || ""
+                }`}
+              >
+                <MemoizedOrderImage
+                  imagePath={item.menuItem?.image}
+                  altText={item.nom || "Plat"}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+  }, []); // Fonction mémorisée, ne se recréée jamais
 
   // Gestionnaire de changement d'onglet
   const handleTabChange = (value: string) => {
@@ -400,7 +460,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
     try {
       await Promise.all([refetch(), refetchStats()]);
     } catch (error) {
-      logger.error("Erreur lors du rafraîchissement:", error);
+      // Erreur silencieuse pour éviter les logs répétitifs
     } finally {
       setIsRefreshing(false);
     }
@@ -421,13 +481,25 @@ export const ServeurOrdersSection = (): JSX.Element => {
   }, [selectedStatus, searchTerm]);
 
   // Gestion des actions sur les commandes
-  const handleCancelOrder = async (orderId: string) => {
+  const handleCancelOrder = (order: Order) => {
+    setOrderToCancel(order);
+    setIsCancelDialogOpen(true);
+    setActiveDropdown(null); // Fermer le dropdown
+  };
+
+  const handleConfirmCancelOrder = async (motifAnnulation: string) => {
+    if (!orderToCancel) return;
+
+    setIsCancelling(true);
     try {
-      await OrderService.cancelOrder(orderId);
+      await OrderService.cancelOrder(orderToCancel._id, motifAnnulation);
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      logger.error("Erreur lors de l'annulation:", error);
+      // Erreur silencieuse
+    } finally {
+      setIsCancelling(false);
+      setOrderToCancel(null);
     }
   };
   const handleSendToKitchen = async (orderId: string) => {
@@ -436,7 +508,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      logger.error("Erreur lors de l'envoi en cuisine:", error);
+      // Erreur silencieuse
     }
   };
   const handleCompleteOrder = async (orderId: string) => {
@@ -445,7 +517,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      logger.error("Erreur lors de la finalisation de la commande:", error);
+      // Erreur silencieuse
     }
   };
 
@@ -484,7 +556,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      logger.error("Erreur lors du traitement du paiement:", error);
+      // Erreur silencieuse
     }
   }; // Fonction pour ouvrir le bottom sheet mobile
   const handleMobileCardClick = (order: Order) => {
@@ -542,7 +614,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
         <Card className="rounded-t-2xl border-b-0 rounded-b-none shadow-none md:shadow md:rounded-3xl overflow-hidden w-full">
           {/* Header and SearchIcon - Responsive */}
           <div className="flex flex-col border-b bg-white border-slate-200">
-            {" "}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-3 md:px-4 lg:px-6 pt-4 pb-3 gap-3 lg:gap-4">
               <h2 className="font-bold text-lg md:text-xl lg:text-2xl text-gray-900 flex-shrink-0">
                 Liste des commandes
@@ -599,11 +670,10 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </TabsList>
               </Tabs>
             </div>
-          </div>{" "}
+          </div>
           {/* Desktop Table - Hidden on mobile/tablet */}
           <div className="hidden lg:block w-full overflow-x-auto">
             <Table className="w-full table-auto min-w-0">
-              {" "}
               <TableHeader className="bg-gray-5">
                 <TableRow>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
@@ -633,7 +703,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {" "}
                 {ordersLoading ? (
                   <TableRow>
                     <TableCell colSpan={8} className="h-40 text-center">
@@ -691,11 +760,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
                       key={order._id}
                       className="h-20 border-b bg-white hover:bg-gray-10 border-slate-200"
                     >
-                      {" "}
                       <TableCell className="px-4 py-3">
                         {/* Dish Column */}
                         <div className="flex items-center gap-3 min-w-0">
-                          {" "}
                           {/* Images empilées pour commandes multiples */}
                           {order.items.length > 1 ? (
                             <div className="w-14 h-10 flex-shrink-0">
@@ -706,16 +773,10 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {order.items?.[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
-                                <img
-                                  src={getOrderItemImage(
-                                    order.items[0].menuItem.image
-                                  )}
-                                  alt={order.items[0]?.nom || "Plat"}
+                                <MemoizedOrderImage
+                                  imagePath={order.items[0].menuItem.image}
+                                  altText={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "/img/plat_petit.png";
-                                  }}
                                 />
                               ) : (
                                 <img
@@ -734,7 +795,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {order.items.length > 1 &&
                                 `+${order.items.length - 1} autres éléments`}
                             </div>
-                          </div>{" "}
+                          </div>
                         </div>
                       </TableCell>
                       {/* N° Table Column */}
@@ -754,38 +815,18 @@ export const ServeurOrdersSection = (): JSX.Element => {
                           <div className="font-medium text-sm text-gray-500">
                             {order._id.slice(-6).toUpperCase()}
                           </div>
-                        </div>{" "}
-                      </TableCell>{" "}
+                        </div>
+                      </TableCell>
                       {/* Serveur Column */}
                       <TableCell className="px-4 py-3">
-                        {" "}
                         <div className="flex items-center gap-3">
                           {/* Photo de profil du serveur */}
-                          <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                            {order.serveur?.photoProfil ? (
-                              <img
-                                src={ProfileService.getProfilePictureUrl(
-                                  order.serveur.photoProfil
-                                )}
-                                alt={order.serveur?.prenom || "Serveur"}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = "none";
-                                  // Remplacer par l'icône User de Phosphor
-                                  const iconElement =
-                                    document.createElement("div");
-                                  iconElement.innerHTML =
-                                    '<div class="w-5 h-5 text-gray-600"><svg fill="currentColor" viewBox="0 0 256 256"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg></div>';
-                                  target.parentElement!.appendChild(
-                                    iconElement.firstChild!
-                                  );
-                                }}
-                              />
-                            ) : (
-                              <User size={20} className="text-gray-600" />
-                            )}
-                          </div>
+                          <UserAvatar
+                            photo={order.serveur?.photoProfil}
+                            nom={order.serveur?.nom}
+                            prenom={order.serveur?.prenom}
+                            size="md"
+                          />
                           <div className="flex flex-col min-w-0">
                             <div className="font-semibold text-base text-gray-900">
                               {order.serveur
@@ -803,7 +844,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        {" "}
                         {/* Payment Type Column */}
                         <div className="flex items-center gap-3 min-w-0">
                           {getPaymentIcon(order.modePaiement || "especes")}
@@ -816,11 +856,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                         {/* Amount Column */}
                         <div className="font-semibold text-base">
                           <span className="text-gray-900">
-                            {formatPrice(order.montantTotal)}{" "}
+                            {formatPrice(order.montantTotal)}
                           </span>
                           <span className="text-gray-400">XOF</span>
                         </div>
-                      </TableCell>{" "}
+                      </TableCell>
                       {/* Status Column */}
                       <TableCell className="px-4 py-3">
                         <OrderStatusBadge statut={order.statut} />
@@ -876,7 +916,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                 </>
-                              )}{" "}
+                              )}
                               <DropdownMenuItem
                                 className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
                                 onClick={() => handleViewOrderDetails(order)}
@@ -885,7 +925,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 <span className="text-gray-700">
                                   Voir détails
                                 </span>
-                              </DropdownMenuItem>{" "}
+                              </DropdownMenuItem>
                               {/* Option Paiement pour toutes les commandes sauf annulées */}
                               {order.statut !== "ANNULE" && (
                                 <>
@@ -900,7 +940,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                     </span>
                                   </DropdownMenuItem>
                                 </>
-                              )}{" "}
+                              )}
                               {/* Option Marquer comme terminée pour les commandes prêtes */}
                               {order.statut === "PRET" && (
                                 <>
@@ -918,12 +958,15 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   </DropdownMenuItem>
                                 </>
                               )}
-                              {order.statut === "EN_ATTENTE" && (
+                              {/* Option Annuler pour EN_ATTENTE, EN_COURS et EN_PREPARATION */}
+                              {(order.statut === "EN_ATTENTE" ||
+                                order.statut === "EN_COURS" ||
+                                order.statut === "EN_PREPARATION") && (
                                 <>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                   <DropdownMenuItem
                                     className="flex items-center gap-2.5 px-4 py-2.5 text-red-600 cursor-pointer font-medium text-sm"
-                                    onClick={() => handleCancelOrder(order._id)}
+                                    onClick={() => handleCancelOrder(order)}
                                   >
                                     <X size={20} />
                                     <span className="text-red-600">
@@ -997,7 +1040,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   >
                     <CardContent className="p-3 md:p-4">
                       <div className="flex items-start justify-between gap-3">
-                        {/* Left side: Product info */}{" "}
+                        {/* Left side: Product info */}
                         <div className="flex items-center gap-3 flex-1 overflow-hidden">
                           {/* Product image */}
                           {order.items.length > 1 ? (
@@ -1009,16 +1052,10 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {order.items?.[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
-                                <img
-                                  src={getOrderItemImage(
-                                    order.items[0].menuItem.image
-                                  )}
-                                  alt={order.items[0]?.nom || "Plat"}
+                                <MemoizedOrderImage
+                                  imagePath={order.items[0].menuItem.image}
+                                  altText={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "/img/plat_petit.png";
-                                  }}
                                 />
                               ) : (
                                 <img
@@ -1028,11 +1065,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 />
                               )}
                             </div>
-                          )}{" "}
-                          {/* Product info */}{" "}
+                          )}
+                          {/* Product info */}
                           <div className="flex flex-col gap-1 overflow-hidden flex-1">
                             <div className="font-semibold text-base text-gray-900 truncate">
-                              {order.items[0]?.nom || "Commande"}{" "}
+                              {order.items[0]?.nom || "Commande"}
                               {order.items.length > 1 && (
                                 <span className="font-medium text-sm text-gray-500">
                                   + {order.items.length - 1} autres
@@ -1051,34 +1088,14 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             <div className="flex items-center gap-2 mt-1">
                               <span className="font-medium text-sm text-orange-600">
                                 Serveur:
-                              </span>{" "}
+                              </span>
                               {/* Photo de profil du serveur */}
-                              <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                {order.serveur?.photoProfil ? (
-                                  <img
-                                    src={ProfileService.getProfilePictureUrl(
-                                      order.serveur.photoProfil
-                                    )}
-                                    alt={order.serveur?.prenom || "Serveur"}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      const target =
-                                        e.target as HTMLImageElement;
-                                      target.style.display = "none";
-                                      // Remplacer par l'icône User de Phosphor
-                                      const iconElement =
-                                        document.createElement("div");
-                                      iconElement.innerHTML =
-                                        '<div class="w-3 h-3 text-gray-600"><svg fill="currentColor" viewBox="0 0 256 256"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg></div>';
-                                      target.parentElement!.appendChild(
-                                        iconElement.firstChild!
-                                      );
-                                    }}
-                                  />
-                                ) : (
-                                  <User size={12} className="text-gray-600" />
-                                )}
-                              </div>
+                              <UserAvatar
+                                photo={order.serveur?.photoProfil}
+                                nom={order.serveur?.nom}
+                                prenom={order.serveur?.prenom}
+                                size="sm"
+                              />
                               <span className="font-medium text-sm text-orange-600">
                                 {order.serveur
                                   ? user &&
@@ -1099,12 +1116,12 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             </span>
                           </div> */}
                           </div>
-                        </div>{" "}
+                        </div>
                         {/* Right side: Status badge only */}
                         <div className="flex flex-col items-end gap-2 flex-shrink-0">
                           <OrderStatusBadge statut={order.statut} />
                           <span className="font-semibold text-sm text-gray-900 truncate">
-                            {formatPrice(order.montantTotal)}{" "}
+                            {formatPrice(order.montantTotal)}
                             <span className="text-gray-500">XOF</span>
                           </span>
                         </div>
@@ -1124,7 +1141,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       >
         {selectedOrderForActions && (
           <>
-            {/* Order Info Header */}{" "}
+            {/* Order Info Header */}
             <div className="flex items-center gap-3 mb-6">
               {selectedOrderForActions.items.length > 1 ? (
                 <div className="w-20 h-14 flex-shrink-0">
@@ -1136,16 +1153,12 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   typeof selectedOrderForActions.items[0].menuItem ===
                     "object" &&
                   selectedOrderForActions.items[0].menuItem.image ? (
-                    <img
-                      src={getOrderItemImage(
+                    <MemoizedOrderImage
+                      imagePath={
                         selectedOrderForActions.items[0].menuItem.image
-                      )}
-                      alt={selectedOrderForActions.items[0]?.nom || "Plat"}
+                      }
+                      altText={selectedOrderForActions.items[0]?.nom || "Plat"}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "/img/plat_petit.png";
-                      }}
                     />
                   ) : (
                     <img
@@ -1155,7 +1168,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     />
                   )}
                 </div>
-              )}{" "}
+              )}
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900">
                   {selectedOrderForActions.items[0]?.nom || "Commande"}
@@ -1166,7 +1179,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {formatPrice(selectedOrderForActions.montantTotal)} XOF
-                </p>{" "}
+                </p>
               </div>
               <OrderStatusBadge statut={selectedOrderForActions.statut} />
             </div>
@@ -1208,7 +1221,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     variant="primary"
                   />
                 </>
-              )}{" "}
+              )}
               {/* Paiement - disponible pour toutes les commandes sauf annulées */}
               {selectedOrderForActions.statut !== "ANNULE" && (
                 <BottomSheetAction
@@ -1221,7 +1234,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   description="Choisir le mode de paiement"
                   variant="primary"
                 />
-              )}{" "}
+              )}
               {/* Marquer comme terminée - disponible pour les commandes PRET */}
               {selectedOrderForActions.statut === "PRET" && (
                 <BottomSheetAction
@@ -1235,12 +1248,13 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   variant="primary"
                 />
               )}
-              {/* Annuler - disponible pour EN_ATTENTE et EN_PREPARATION */}
+              {/* Annuler - disponible pour EN_ATTENTE, EN_COURS et EN_PREPARATION */}
               {(selectedOrderForActions.statut === "EN_ATTENTE" ||
+                selectedOrderForActions.statut === "EN_COURS" ||
                 selectedOrderForActions.statut === "EN_PREPARATION") && (
                 <BottomSheetAction
                   onClick={() => {
-                    handleCancelOrder(selectedOrderForActions._id);
+                    handleCancelOrder(selectedOrderForActions);
                     handleCloseBottomSheet();
                   }}
                   icon={<X size={24} />}
@@ -1275,7 +1289,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
         }}
         orderToEdit={orderToEdit}
         isEditMode={true}
-      />{" "}
+      />
       {/* Modal pour les détails de commande */}
       <OrderDetailsModal
         isOpen={isOrderDetailsModalOpen}
@@ -1284,7 +1298,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
           setSelectedOrder(null);
         }}
         order={selectedOrder}
-      />{" "}
+      />
       {/* Modal pour le mode de paiement */}
       <Dialog
         open={isPaymentModalOpen}
@@ -1538,6 +1552,16 @@ export const ServeurOrdersSection = (): JSX.Element => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog pour l'annulation avec motif */}
+      <CancelOrderDialog
+        isOpen={isCancelDialogOpen}
+        onClose={() => setIsCancelDialogOpen(false)}
+        onConfirm={handleConfirmCancelOrder}
+        orderNumber={orderToCancel?.numeroCommande}
+        isLoading={isCancelling}
+      />
+
       {/* Barre mobile fixe pour nouvelle commande */}
       <MobileNewOrderBar
         onClick={() => setIsNewOrderBottomSheetOpen(true)}

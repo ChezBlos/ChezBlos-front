@@ -1,16 +1,16 @@
 import { XIcon } from "lucide-react";
 import { useEffect } from "react";
-import { Button } from "../../../../components/ui/button";
-import { Card } from "../../../../components/ui/card";
-import { MenuSection } from "./steps/MenuSection";
-import { ItemListSection } from "./steps/ItemListSection";
-import { OrderSummarySection } from "./steps/OrderSummarySection";
-import { OrderRecapSection } from "./steps/OrderRecapSection";
-import { OrderConfirmationSection } from "./steps/OrderConfirmationSection";
-import { OrderProvider, useOrder } from "../../../../contexts/OrderContext";
-import { MenuProvider } from "../../../../contexts/MenuContext";
-import { TabProvider, useTab } from "../../../../contexts/TabContext";
-import { Order } from "../../../../types/order";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
+import { MenuSection } from "../../screens/ServeurDashboard/sections/ServeurOrdersSection/steps/MenuSection";
+import { ItemListSection } from "../../screens/ServeurDashboard/sections/ServeurOrdersSection/steps/ItemListSection";
+import { OrderSummarySection } from "../../screens/ServeurDashboard/sections/ServeurOrdersSection/steps/OrderSummarySection";
+import { OrderRecapSection } from "../../screens/ServeurDashboard/sections/ServeurOrdersSection/steps/OrderRecapSection";
+import { OrderConfirmationSection } from "../../screens/ServeurDashboard/sections/ServeurOrdersSection/steps/OrderConfirmationSection";
+import { OrderProvider, useOrder } from "../../contexts/OrderContext";
+import { MenuProvider } from "../../contexts/MenuContext";
+import { TabProvider, useTab } from "../../contexts/TabContext";
+import { Order } from "../../types/order";
 
 interface NewOrderModalProps {
   isOpen: boolean;

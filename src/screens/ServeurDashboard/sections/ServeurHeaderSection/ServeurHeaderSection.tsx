@@ -13,7 +13,7 @@ import {
 } from "../../../../components/ui/dropdown-menu";
 import { ChangeProfilePictureModal } from "../../../../components/modals/ChangeProfilePictureModal";
 import { ProfileService } from "../../../../services/profileService";
-import NewOrderModal from "../ServeurOrdersSection/NewOrderModal";
+import NewOrderModal from "../../../../components/modals/NewOrderModal";
 import { logger } from "../../../../utils/logger";
 
 interface ServeurHeaderSectionProps {

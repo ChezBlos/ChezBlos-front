@@ -77,11 +77,11 @@ export function getUserAvatarUrl(
     ) {
       imageUrl = `${API_BASE_URL}/auth/profile/photo/${photoPath
         .split("/")
-        .pop()}?t=${Date.now()}`;
+        .pop()}`;
     }
     // Si c'est juste un nom de fichier
     else {
-      imageUrl = `${API_BASE_URL}/auth/profile/photo/${photoPath}?t=${Date.now()}`;
+      imageUrl = `${API_BASE_URL}/auth/profile/photo/${photoPath}`;
     }
 
     return { type: "image", url: imageUrl };
@@ -94,26 +94,39 @@ export function getUserAvatarUrl(
   };
 }
 
+// Set pour tracker les images qui ont échoué (évite les requêtes répétées)
+const failedImages = new Set<string>();
+
 /**
- * Obtient l'URL d'une image de menu avec fallback
+ * Obtient l'URL d'une image de menu avec fallback et cache des échecs
  */
 export function getMenuImageUrl(imagePath?: string | null): string {
   if (!imagePath) {
     return DEFAULT_IMAGES.menuItem;
   }
 
+  // Construire l'URL finale
+  let finalUrl: string;
+
   // Si c'est déjà une URL complète
   if (imagePath.startsWith("http")) {
-    return imagePath;
+    finalUrl = imagePath;
   }
-
   // Si c'est un chemin avec /uploads/
-  if (imagePath.startsWith("/uploads/")) {
-    return `${IMAGE_BASE_URL}${imagePath}?t=${Date.now()}`;
+  else if (imagePath.startsWith("/uploads/")) {
+    finalUrl = `${IMAGE_BASE_URL}${imagePath}`;
+  }
+  // Sinon, construire l'URL depuis le dossier menu
+  else {
+    finalUrl = `${IMAGE_BASE_URL}/uploads/menu/${imagePath}`;
   }
 
-  // Sinon, construire l'URL depuis le dossier menu
-  return `${IMAGE_BASE_URL}/uploads/menu/${imagePath}?t=${Date.now()}`;
+  // Si cette image a déjà échoué, retourner directement l'image par défaut
+  if (failedImages.has(finalUrl)) {
+    return DEFAULT_IMAGES.menuItem;
+  }
+
+  return finalUrl;
 }
 
 /**
@@ -143,9 +156,25 @@ export function handleImageError(
   fallbackSrc: string = DEFAULT_IMAGES.menuItem
 ): void {
   const target = event.target as HTMLImageElement;
-  if (target.src !== fallbackSrc) {
+  const currentSrc = target.src;
+
+  // Marquer cette image comme échouée pour éviter les requêtes futures
+  if (!currentSrc.includes("plat_petit.png")) {
+    failedImages.add(currentSrc);
+  }
+
+  // Basculer vers l'image de fallback seulement si ce n'est pas déjà fait
+  if (!currentSrc.includes("plat_petit.png")) {
     target.src = fallbackSrc;
   }
+}
+
+/**
+ * Fonction utilitaire pour réinitialiser le cache des images échouées
+ * (utile pour les tests ou si des images sont re-uploadées)
+ */
+export function clearFailedImagesCache(): void {
+  failedImages.clear();
 }
 
 /**

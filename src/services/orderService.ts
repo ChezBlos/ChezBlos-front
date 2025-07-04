@@ -256,9 +256,14 @@ export class OrderService {
   }
 
   // Annuler une commande
-  static async cancelOrder(id: string): Promise<void> {
+  static async cancelOrder(
+    id: string,
+    motifAnnulation?: string
+  ): Promise<void> {
     try {
-      await api.delete(`/orders/${id}`);
+      await api.delete(`/orders/${id}`, {
+        data: { motifAnnulation },
+      });
     } catch (error: any) {
       throw new Error("Erreur lors de l'annulation de la commande");
     }

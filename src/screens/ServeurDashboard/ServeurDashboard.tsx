@@ -4,7 +4,7 @@ import { useToast } from "../../hooks/useToast";
 import { Sidebar } from "./Sidebar";
 import { ServeurHeaderSection } from "./sections/ServeurHeaderSection";
 import { ServeurOrdersSection } from "./sections/ServeurOrdersSection";
-import { ServeurOrdersHistorySection } from "./ServeurOrdersHistorySection";
+import { ServeurOrdersHistorySection } from "./sections/ServeurOrdersHistorySection/ServeurOrdersHistorySection";
 import ToastContainer from "../../components/ui/toast-container";
 
 export const ServeurDashboard: React.FC = () => {

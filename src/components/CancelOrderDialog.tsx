@@ -23,11 +23,15 @@ interface CancelOrderDialogProps {
 const CANCEL_REASONS = [
   "Client absent lors de la livraison",
   "Problème de paiement",
-  "Rupture de stock d'un ingrédient",
+  "Produit ou ingrédient indisponible",
+  "Erreur de commande",
+  "Retard de livraison ou de préparation",
   "Demande spéciale du client",
+  "Changement d’avis du client",
   "Problème technique",
   "Autre",
 ];
+
 
 export const CancelOrderDialog: React.FC<CancelOrderDialogProps> = ({
   isOpen,

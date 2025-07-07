@@ -15,7 +15,6 @@ import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { Button } from "../../../../components/ui/button";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
-import { CreditCard, Money } from "phosphor-react";
 import { SearchIcon, EyeIcon, CalendarIcon } from "lucide-react";
 import { Order } from "../../../../types/order";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
@@ -160,103 +159,45 @@ export const CuisinierHistorySection: React.FC = () => {
   // Formatters
   const formatPrice = (price: number): string =>
     new Intl.NumberFormat("fr-FR").format(price);
-  const formatDateTime = (dateString: string): string =>
-    new Date(dateString).toLocaleString("fr-FR", {
+
+  // Fonction pour calculer le temps de préparation
+  const calculatePreparationTime = (order: Order): string => {
+    // Si la commande n'est pas terminée, pas de temps de préparation calculable
+    if (order.statut !== "TERMINE") {
+      return "En cours...";
+    }
+
+    // Pour le calcul réel, nous aurions besoin de :
+    // - dateEnvoiCuisine (quand le serveur envoie la commande en cuisine)
+    // - dateMarquePret (quand le cuisinier marque comme prêt)
+    //
+    // En attendant ces champs, on utilise une approximation :
+    // Si updatedAt existe et est différent de createdAt, on l'utilise comme fin
+    const startDate = new Date(order.dateCreation);
+    const endDate = order.updatedAt ? new Date(order.updatedAt) : new Date();
+
+    // Calcul de la différence en minutes
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+
+    // Si le temps calculé semble réaliste (entre 1 minute et 4 heures)
+    if (diffMinutes >= 1 && diffMinutes <= 240) {
+      return `${diffMinutes} min`;
+    }
+
+    // Sinon, afficher un placeholder en attendant les vrais champs
+    return "À calculer";
+  };
+
+  // Fonction pour obtenir la date d'envoi en cuisine (pour le moment = dateCreation)
+  const getKitchenSentDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleString("fr-FR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
-  const getPaymentIcon = (modePaiement: string, size: "sm" | "md" = "md") => {
-    const iconProps = {
-      size: size === "sm" ? 16 : 20,
-      strokeweigh: "1.5",
-      color: "#F97316" as const,
-    };
-    const containerSize = size === "sm" ? "w-6 h-6" : "w-10 h-10";
-    const imageSize = size === "sm" ? "w-6 h-6" : "w-10 h-10";
-    switch ((modePaiement || "").toLowerCase()) {
-      case "especes":
-        return (
-          <div
-            className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
-          >
-            <Money {...iconProps} />
-          </div>
-        );
-      case "carte_bancaire":
-      case "carte":
-        return (
-          <div
-            className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
-          >
-            <CreditCard {...iconProps} />
-          </div>
-        );
-      case "wave":
-        return (
-          <img
-            src="/img/wave.jpg"
-            alt="Wave"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      case "mtn_money":
-        return (
-          <img
-            src="/img/mtn_money.jpg"
-            alt="MTN Money"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      case "orange_money":
-        return (
-          <img
-            src="/img/orange_money.jpg"
-            alt="Orange Money"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      case "moov_money":
-        return (
-          <img
-            src="/img/moov_money.jpg"
-            alt="Moov Money"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      default:
-        return (
-          <div
-            className={`flex ${containerSize} items-center justify-center px-2 py-2 bg-orange-100 rounded-full flex-shrink-0`}
-          >
-            <Money {...iconProps} />
-          </div>
-        );
-    }
-  };
-  const formatPaymentMethodName = (
-    modePaiement: string | undefined
-  ): string => {
-    if (!modePaiement) return "Non défini";
-    switch (modePaiement.toUpperCase()) {
-      case "ESPECES":
-        return "Espèces";
-      case "CARTE_BANCAIRE":
-      case "CARTE":
-        return "Carte bancaire";
-      case "WAVE":
-        return "Wave";
-      case "MTN_MONEY":
-        return "MTN Money";
-      case "ORANGE_MONEY":
-        return "Orange Money";
-      case "MOOV_MONEY":
-        return "Moov Money";
-      default:
-        return modePaiement;
-    }
   };
 
   // Fonction pour ouvrir le modal de détails de commande
@@ -363,7 +304,7 @@ export const CuisinierHistorySection: React.FC = () => {
         <div className="flex flex-col rounded-t-3xl border-b bg-white rounded border-slate-200">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-3 md:px-4 lg:px-6 pt-4 pb-3 gap-3 lg:gap-4">
             <h2 className="font-bold text-lg md:text-xl lg:text-2xl text-gray-900 flex-shrink-0">
-              Historique de mes plats cuisinés
+              Historique des commandes cuisinées
             </h2>
             <div className="flex items-center gap-3">
               <div className="relative flex-1 lg:w-80">
@@ -468,25 +409,22 @@ export const CuisinierHistorySection: React.FC = () => {
                 <TableHeader>
                   <TableRow className="bg-gray-10 border-b border-slate-200">
                     <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                      N° Commande
+                      Plats
                     </TableHead>
                     <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                      Table
+                      N° Table
                     </TableHead>
                     <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                      Articles
+                      ID de commande
                     </TableHead>
                     <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                      Montant
+                      Temps de préparation
+                    </TableHead>
+                    <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                      Date envoi cuisine
                     </TableHead>
                     <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                       Statut
-                    </TableHead>
-                    <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                      Paiement
-                    </TableHead>
-                    <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                      Date
                     </TableHead>
                     <TableHead className="text-right py-4 px-4 lg:px-6 font-semibold text-gray-700">
                       Actions
@@ -499,67 +437,113 @@ export const CuisinierHistorySection: React.FC = () => {
                       key={order._id}
                       className="border-b bg-white border-slate-100 hover:bg-gray-10 transition-colors"
                     >
+                      {/* Colonne Plats avec images */}
                       <TableCell className="py-4 px-4 lg:px-6">
-                        <span className="font-medium text-gray-900">
-                          {order.numeroCommande}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 lg:px-6">
-                        <span className="font-semibold text-lg text-gray-900">
-                          {order.numeroTable || "Non définie"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 lg:px-6">
-                        <div className="flex flex-col items-left gap-2 flex-wrap">
-                          {order.items.slice(0, 1).map((item, idx) => {
-                            const menuItem =
-                              typeof item.menuItem === "object" &&
-                              item.menuItem !== null
-                                ? item.menuItem
-                                : undefined;
-                            const nomPlat = menuItem?.nom || item.nom || "Plat";
-                            return (
-                              <div
-                                key={idx}
-                                className="flex items-center gap-1"
-                              >
-                                <span className="text-gray-900 text-sm font-medium">
-                                  {nomPlat} x{item.quantite}
-                                </span>
+                        <div className="flex items-center gap-3">
+                          {/* Images des plats */}
+                          {order.items && order.items.length > 1 ? (
+                            <div className="w-16 h-12">
+                              {/* Ici on pourrait ajouter la fonction renderStackedImages si elle existe */}
+                              <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                                <img
+                                  src="/img/plat_petit.png"
+                                  alt="Plats"
+                                  className="w-full h-full object-cover"
+                                />
                               </div>
-                            );
-                          })}
-                          {order.items.length > 2 && (
-                            <span className="text-gray-500 text-xs">
-                              +{order.items.length - 2} autres...
-                            </span>
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                              {order.items?.[0]?.menuItem &&
+                              typeof order.items[0].menuItem === "object" &&
+                              order.items[0].menuItem.image ? (
+                                <img
+                                  src={`${import.meta.env.VITE_API_URL || ""}${
+                                    order.items[0].menuItem.image
+                                  }`}
+                                  alt={order.items[0]?.nom || "Plat"}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src =
+                                      "/img/plat_petit.png";
+                                  }}
+                                />
+                              ) : (
+                                <img
+                                  src="/img/plat_petit.png"
+                                  alt="Plat"
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="font-semibold text-base">
-                          <span className="text-gray-900">
-                            {formatPrice(order.montantTotal)}{" "}
-                          </span>
-                          <span className="text-gray-400">XOF</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 px-4 lg:px-6">
-                        <OrderStatusBadge statut={order.statut as any} />
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {getPaymentIcon(order.modePaiement || "especes")}
-                          <div className="font-semibold text-base text-gray-900 truncate">
-                            {formatPaymentMethodName(order.modePaiement)}
+                          {/* Noms des plats */}
+                          <div className="flex flex-col gap-1">
+                            {order.items && order.items.length > 0 ? (
+                              <>
+                                <span className="font-medium text-gray-900 text-sm">
+                                  {order.items[0]?.nom ||
+                                    (typeof order.items[0]?.menuItem ===
+                                      "object" &&
+                                      order.items[0]?.menuItem?.nom) ||
+                                    "Plat inconnu"}
+                                </span>
+                                {order.items.length > 1 && (
+                                  <span className="text-xs text-gray-500">
+                                    +{order.items.length - 1} autre(s) plat(s)
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="font-medium text-gray-900 text-sm">
+                                Aucun plat
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-500">
+                              {order.items?.length || 0} plat(s) au total
+                            </span>
                           </div>
                         </div>
                       </TableCell>
+
+                      {/* Colonne N° Table */}
                       <TableCell className="py-4 px-4 lg:px-6">
-                        <div className="text-sm text-gray-600">
-                          {formatDateTime(order.dateCreation)}
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg text-gray-900">
+                            {order.numeroTable || "Non définie"}
+                          </span>
                         </div>
                       </TableCell>
+
+                      {/* Colonne ID de commande */}
+                      <TableCell className="py-4 px-4 lg:px-6">
+                        <span className="font-normal text-sm text-gray-700">
+                          {order.numeroCommande}
+                        </span>
+                      </TableCell>
+
+                      {/* Colonne Temps de préparation */}
+                      <TableCell className="py-4 px-4 lg:px-6">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            {calculatePreparationTime(order)}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Colonne Date envoi cuisine */}
+                      <TableCell className="py-4 px-4 lg:px-6">
+                        <div className="text-sm text-gray-600">
+                          {getKitchenSentDate(order.dateCreation)}
+                        </div>
+                      </TableCell>
+
+                      {/* Colonne Statut */}
+                      <TableCell className="py-4 px-4 lg:px-6">
+                        <OrderStatusBadge statut={order.statut as any} />
+                      </TableCell>
+
+                      {/* Colonne Actions */}
                       <TableCell className="py-4 px-4 lg:px-6 text-right">
                         <button
                           className="flex items-center gap-1 text-orange-600 hover:underline text-sm font-medium"

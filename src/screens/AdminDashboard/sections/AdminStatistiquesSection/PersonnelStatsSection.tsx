@@ -416,6 +416,9 @@ const PersonnelStatsSection = ({
                           Plats Cuisinés
                         </th>
                         <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Commandes terminées
+                        </th>
+                        <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                           Temps Moyen
                         </th>
                         <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
@@ -441,6 +444,7 @@ const PersonnelStatsSection = ({
                         tempsMoyen: person.tempsMoyen,
                         recettesGenerees: person.recettesGenerees,
                         scoreEfficacite: person.scoreEfficacite,
+                        qualiteDonnees: person.qualiteDonnees,
                         toutesLesCles: Object.keys(person),
                       });
                     }
@@ -517,6 +521,11 @@ const PersonnelStatsSection = ({
                             <td className="py-4 px-4 lg:px-6">
                               <span className="font-medium text-gray-900">
                                 {person.platsCuisines || person.totalPlats || 0}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 lg:px-6">
+                              <span className="font-medium text-green-600">
+                                {person.nombreCommandes || 0}
                               </span>
                             </td>
                             <td className="py-4 px-4 lg:px-6">

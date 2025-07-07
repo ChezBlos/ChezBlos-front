@@ -1,5 +1,11 @@
 import { LogOutIcon, MenuIcon } from "lucide-react";
-import { User, ListBullets, Package, Camera, ClockCounterClockwise } from "@phosphor-icons/react";
+import {
+  User,
+  ListBullets,
+  Package,
+  Camera,
+  ClockCounterClockwise,
+} from "@phosphor-icons/react";
 import React, { useState } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { Button } from "../../../../components/ui/button";

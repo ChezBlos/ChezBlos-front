@@ -1,5 +1,5 @@
 import { SearchIcon, RefreshCw, CheckCircle, Clock, X } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
 import { Button } from "../../../../components/ui/button";
@@ -68,6 +68,16 @@ export const CuisinierOrdersSection = (): JSX.Element => {
     loading: statsLoading,
     refetch: refetchStats,
   } = useOrderStats();
+
+  // Refresh automatique toutes les minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+      refetchStats();
+    }, 60000); // 60000ms = 1 minute
+
+    return () => clearInterval(interval);
+  }, [refetch, refetchStats]);
 
   // Filtrage des commandes côté frontend
   const filteredOrders = useMemo(() => {
@@ -625,7 +635,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                             <TableCell className="py-4 px-4 lg:px-6">
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-lg text-gray-900">
-                                  {order.numeroTable}
+                                  {order.numeroTable || "Non définie"}
                                 </span>
                               </div>
                             </TableCell>
@@ -822,7 +832,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold text-gray-900 text-lg">
-                                  Table {order.numeroTable}
+                                  Table {order.numeroTable || "Non définie"}
                                 </h3>
                               </div>
                               <p className="text-sm text-gray-600 mb-1">

@@ -236,14 +236,14 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-5 rounded-lg">
                   <div className="flex items-center space-x-2">
                     {getRoleIcon(user.role)}
                     <span className="font-medium">Rôle principal</span>
                   </div>
                   <Badge variant="outline">{getRoleLabel(user.role)}</Badge>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-5 rounded-lg">
                   <div className="flex items-center space-x-2">
                     <CallBellIcon className="w-5 h-5" />
                     <span className="font-medium">Accès caisse</span>

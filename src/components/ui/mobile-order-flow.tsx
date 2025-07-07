@@ -491,7 +491,7 @@ export const MobileOrderFlow: React.FC<MobileOrderFlowProps> = ({
               </p>
             </div>{" "}
             {/* Résumé de la commande */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div className="bg-gray-5 rounded-lg p-4 space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">
                   {getTotalItems()} article{getTotalItems() > 1 ? "s" : ""}

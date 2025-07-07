@@ -2,27 +2,33 @@ import * as XLSX from "xlsx";
 import * as pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { LOGO_BASE64, LOGO_CONFIG } from "../utils/logoBase64";
-import { logger} from "../utils/logger";
+import { logger } from "../utils/logger";
 
 // Configuration des polices pour pdfMake
 try {
-  (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
+  // Utiliser une approche plus compatible avec ESM
+  const pdfMakeConfig = pdfMake as any;
+  if (!pdfMakeConfig.vfs) {
+    pdfMakeConfig.vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
+  }
 
   // Définir les polices disponibles
-  (pdfMake as any).fonts = {
-    Roboto: {
-      normal: "Roboto-Regular.ttf",
-      bold: "Roboto-Medium.ttf",
-      italics: "Roboto-Italic.ttf",
-      bolditalics: "Roboto-MediumItalic.ttf",
-    },
-    Helvetica: {
-      normal: "Helvetica",
-      bold: "Helvetica-Bold",
-      italics: "Helvetica-Oblique",
-      bolditalics: "Helvetica-BoldOblique",
-    },
-  };
+  if (!pdfMakeConfig.fonts) {
+    pdfMakeConfig.fonts = {
+      Roboto: {
+        normal: "Roboto-Regular.ttf",
+        bold: "Roboto-Medium.ttf",
+        italics: "Roboto-Italic.ttf",
+        bolditalics: "Roboto-MediumItalic.ttf",
+      },
+      Helvetica: {
+        normal: "Helvetica",
+        bold: "Helvetica-Bold",
+        italics: "Helvetica-Oblique",
+        bolditalics: "Helvetica-BoldOblique",
+      },
+    };
+  }
 } catch (error) {
   logger.warn("Erreur lors du chargement des polices pdfMake:", error);
 }

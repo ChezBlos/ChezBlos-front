@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { X, Calendar } from "@phosphor-icons/react";
+import { DatePicker } from "../ui/date-picker";
 
 interface ComparisonModalProps {
   isOpen: boolean;
@@ -16,23 +17,26 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
 }) => {
   // Mode: "single" pour filtrer une date, "compare" pour comparer deux dates
   const [mode, setMode] = useState<"single" | "compare">("single");
-  const [date1, setDate1] = useState("");
-  const [date2, setDate2] = useState("");
+  const [date1, setDate1] = useState<Date | undefined>();
+  const [date2, setDate2] = useState<Date | undefined>();
 
   const handleCompare = () => {
     if (mode === "single" && date1) {
-      onCompare(date1);
+      onCompare(date1.toISOString().split("T")[0]);
       onClose();
     } else if (mode === "compare" && date1 && date2) {
-      onCompare(date1, date2);
+      onCompare(
+        date1.toISOString().split("T")[0],
+        date2.toISOString().split("T")[0]
+      );
       onClose();
     }
   };
 
   const handleClose = () => {
     setMode("single");
-    setDate1("");
-    setDate2("");
+    setDate1(undefined);
+    setDate2(undefined);
     onClose();
   };
 
@@ -49,7 +53,7 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="h-8 w-8 p-0 hover:bg-gray-100"
+              className="h-8 w-8 p-0 hover:bg-gray-10"
             >
               <X size={16} />
             </Button>
@@ -78,11 +82,10 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
             <label className="text-sm font-medium text-gray-700">
               {mode === "single" ? "Date" : "Première date"}
             </label>
-            <input
-              type="date"
-              value={date1}
-              onChange={(e) => setDate1(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            <DatePicker
+              date={date1}
+              onSelect={setDate1}
+              placeholder="Sélectionner une date"
             />
           </div>
           {mode === "compare" && (
@@ -90,11 +93,10 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
               <label className="text-sm font-medium text-gray-700">
                 Deuxième date
               </label>
-              <input
-                type="date"
-                value={date2}
-                onChange={(e) => setDate2(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              <DatePicker
+                date={date2}
+                onSelect={setDate2}
+                placeholder="Sélectionner une date"
               />
             </div>
           )}
@@ -110,7 +112,7 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
           <Button
             onClick={handleClose}
             variant="outline"
-            className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-5"
           >
             Annuler
           </Button>

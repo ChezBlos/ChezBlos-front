@@ -165,7 +165,7 @@ export const AdjustStockModal: React.FC<AdjustStockModalProps> = ({
             variant="outline"
             onClick={handleClose}
             disabled={loading}
-            className="flex-1 py-3 text-gray-700 border-gray-300 hover:bg-gray-50"
+            className="flex-1 py-3 text-gray-700 border-gray-300 hover:bg-gray-5"
           >
             Annuler
           </Button>{" "}

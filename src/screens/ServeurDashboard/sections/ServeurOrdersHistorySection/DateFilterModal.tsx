@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "../../../../components/ui/dialog";
 import { DatePicker } from "../../../../components/ui/date-picker";
+import { format } from "date-fns";
 
 interface DateFilterModalProps {
   isOpen: boolean;
@@ -55,21 +56,15 @@ export const DateFilterModal = ({
 
   const handleApply = () => {
     if (mode === "single") {
-      const dateStr = singleDate
-        ? singleDate.toISOString().split("T")[0]
-        : undefined;
-      onApplyFilter({ mode: "single", date: dateStr });
+      onApplyFilter({
+        mode: "single",
+        date: singleDate ? format(singleDate, "yyyy-MM-dd") : undefined,
+      });
     } else {
-      const startDateStr = startDate
-        ? startDate.toISOString().split("T")[0]
-        : undefined;
-      const endDateStr = endDate
-        ? endDate.toISOString().split("T")[0]
-        : undefined;
       onApplyFilter({
         mode: "period",
-        startDate: startDateStr,
-        endDate: endDateStr,
+        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
       });
     }
     onClose();
@@ -93,11 +88,11 @@ export const DateFilterModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md mx-auto p-0 gap-0 rounded-3xl overflow-hidden">
+      <DialogContent className="max-w-sm mx-auto p-0 gap-0 rounded-3xl overflow-hidden">
         {/* Header */}
         <DialogHeader className="px-6 py-5 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <DialogTitle className="font-title-t3-semibold text-gray-900 flex items-center gap-2">
+            <DialogTitle className="font-semibold text-lg text-gray-900 flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
               Filtrer par date
             </DialogTitle>
@@ -113,43 +108,25 @@ export const DateFilterModal = ({
         </DialogHeader>
 
         {/* Toggle mode */}
-        <div className="px-6 pt-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type de filtre
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setMode("period")}
-                className={
-                  mode === "period"
-                    ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
-                    : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
-                }
-              >
-                Période
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setMode("single")}
-                className={
-                  mode === "single"
-                    ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
-                    : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
-                }
-              >
-                Date précise
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {mode === "period"
-                ? "Filtrer sur une plage de dates"
-                : "Filtrer sur une date spécifique"}
-            </p>
-          </div>
+        <div className="px-6 pt-5 flex gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              checked={mode === "period"}
+              onChange={() => setMode("period")}
+              className="text-orange-500 focus:ring-orange-500"
+            />
+            <span className="text-sm font-medium">Période</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              checked={mode === "single"}
+              onChange={() => setMode("single")}
+              className="text-orange-500 focus:ring-orange-500"
+            />
+            <span className="text-sm font-medium">Date précise</span>
+          </label>
         </div>
 
         {/* Content */}
@@ -159,32 +136,23 @@ export const DateFilterModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Start Date */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date de début
-                  </label>
                   <DatePicker
                     date={startDate}
                     onSelect={setStartDate}
-                    placeholder="Sélectionner une date"
+                    placeholder="Date de début"
                   />
                 </div>
                 {/* End Date */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date de fin
-                  </label>
                   <DatePicker
                     date={endDate}
                     onSelect={setEndDate}
-                    placeholder="Sélectionner une date"
+                    placeholder="Date de fin"
                   />
                 </div>
               </div>
             ) : (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date
-                </label>
                 <DatePicker
                   date={singleDate}
                   onSelect={setSingleDate}
@@ -202,7 +170,7 @@ export const DateFilterModal = ({
           <Button
             onClick={handleApply}
             disabled={mode === "single" ? !singleDate : !startDate || !endDate}
-            className="bg-brand-primary-500 hover:bg-brand-primary-600 text-white disabled:bg-gray-300 disabled:text-gray-500"
+            className="bg-orange-500 hover:bg-orange-600 text-white"
           >
             Appliquer
           </Button>

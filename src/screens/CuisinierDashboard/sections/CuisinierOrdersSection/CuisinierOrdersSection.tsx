@@ -918,7 +918,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
         <div className="p-4 space-y-3">
           {" "}
           <button
-            className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg"
+            className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg"
             onClick={() => {
               if (selectedOrderForActions) {
                 handleViewOrderDetails(selectedOrderForActions);
@@ -931,7 +931,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
           </button>{" "}
           {selectedOrderForActions?.statut === "EN_COURS" && (
             <button
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg text-blue-600"
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg text-blue-600"
               onClick={() => {
                 if (selectedOrderForActions?._id) {
                   handleStartPreparation(selectedOrderForActions._id);
@@ -945,7 +945,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
           )}
           {selectedOrderForActions?.statut === "EN_PREPARATION" && (
             <button
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg text-green-600"
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg text-green-600"
               onClick={() => {
                 if (selectedOrderForActions?._id) {
                   handleMarkAsReady(selectedOrderForActions._id);
@@ -962,7 +962,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             selectedOrderForActions?.statut === "EN_COURS" ||
             selectedOrderForActions?.statut === "EN_PREPARATION") && (
             <button
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg text-red-600"
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg text-red-600"
               onClick={() => {
                 if (selectedOrderForActions) {
                   handleCancelOrder(selectedOrderForActions);

@@ -14,7 +14,8 @@ import {
 } from "@phosphor-icons/react";
 import { FilterIcon } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
-import { Input } from "../../../../components/ui/input";
+import { DatePicker } from "../../../../components/ui/date-picker";
+import { MonthPicker } from "../../../../components/ui/month-picker";
 import {
   Dialog,
   DialogContent,
@@ -730,144 +731,226 @@ const CommandesRecettesStatsSection = ({
 
       {/* Modal de filtre pour la courbe de tendance des commandes */}
       <Dialog open={modalOuvert === "tendance"} onOpenChange={fermerModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filtrer la courbe des commandes</DialogTitle>
+        <DialogContent className="max-w-sm mx-auto p-0 gap-0 rounded-3xl overflow-hidden">
+          <DialogHeader className="px-6 py-5 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-semibold text-lg text-gray-900 flex items-center gap-2">
+                <ChartBar className="h-5 w-5 text-orange-500" />
+                Filtrer la courbe des commandes
+              </DialogTitle>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
+
+          <div className="px-6 py-5 space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 Type de période
               </label>
-              <select
-                value={valeursTemporaires.typeCourbeTendance}
-                onChange={(e) =>
-                  setValeursTemporaires({
-                    ...valeursTemporaires,
-                    typeCourbeTendance: e.target.value as
-                      | "hebdomadaire"
-                      | "mensuelle",
-                  })
-                }
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="hebdomadaire">Hebdomadaire (7 jours)</option>
-                <option value="mensuelle">Mensuelle (par jour)</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      typeCourbeTendance: "hebdomadaire",
+                    })
+                  }
+                  className={
+                    valeursTemporaires.typeCourbeTendance === "hebdomadaire"
+                      ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
+                      : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
+                  }
+                >
+                  Hebdomadaire
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      typeCourbeTendance: "mensuelle",
+                    })
+                  }
+                  className={
+                    valeursTemporaires.typeCourbeTendance === "mensuelle"
+                      ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
+                      : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
+                  }
+                >
+                  Mensuelle
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {valeursTemporaires.typeCourbeTendance === "hebdomadaire"
+                  ? "Évolution sur 7 jours consécutifs"
+                  : "Évolution quotidienne dans un mois"}
+              </p>
             </div>
 
             {valeursTemporaires.typeCourbeTendance === "hebdomadaire" && (
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   Début de semaine
                 </label>
-                <Input
-                  type="date"
-                  value={valeursTemporaires.semaineCourbeTendance}
-                  onChange={(e) =>
+                <DatePicker
+                  date={new Date(valeursTemporaires.semaineCourbeTendance)}
+                  onSelect={(date) =>
                     setValeursTemporaires({
                       ...valeursTemporaires,
-                      semaineCourbeTendance: e.target.value,
+                      semaineCourbeTendance: date
+                        ? date.toISOString().split("T")[0]
+                        : "",
                     })
                   }
+                  placeholder="Sélectionner une date"
                 />
               </div>
             )}
 
             {valeursTemporaires.typeCourbeTendance === "mensuelle" && (
               <div>
-                <label className="block text-sm font-medium mb-2">Mois</label>
-                <Input
-                  type="month"
-                  value={valeursTemporaires.moisCourbeTendance}
-                  onChange={(e) =>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Mois
+                </label>
+                <MonthPicker
+                  date={valeursTemporaires.moisCourbeTendance}
+                  onSelect={(month) =>
                     setValeursTemporaires({
                       ...valeursTemporaires,
-                      moisCourbeTendance: e.target.value,
+                      moisCourbeTendance: month || "",
                     })
                   }
+                  placeholder="Sélectionner un mois"
                 />
               </div>
             )}
+          </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={fermerModal}>
-                Annuler
-              </Button>
-              <Button onClick={appliquerFiltre}>Appliquer</Button>
-            </div>
+          <div className="flex justify-end gap-3 px-6 pb-5">
+            <Button variant="ghost" onClick={fermerModal}>
+              Annuler
+            </Button>
+            <Button
+              onClick={appliquerFiltre}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Appliquer
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Modal de filtre pour la courbe des ventes */}
       <Dialog open={modalOuvert === "ventes"} onOpenChange={fermerModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filtrer le diagramme des ventes</DialogTitle>
+        <DialogContent className="max-w-sm mx-auto p-0 gap-0 rounded-3xl overflow-hidden">
+          <DialogHeader className="px-6 py-5 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-semibold text-lg text-gray-900 flex items-center gap-2">
+                <ChartPie className="h-5 w-5 text-orange-500" />
+                Filtrer le diagramme des ventes
+              </DialogTitle>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
+
+          <div className="px-6 py-5 space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 Type de période
               </label>
-              <select
-                value={valeursTemporaires.typeCourbeVentes}
-                onChange={(e) =>
-                  setValeursTemporaires({
-                    ...valeursTemporaires,
-                    typeCourbeVentes: e.target.value as
-                      | "hebdomadaire"
-                      | "mensuelle",
-                  })
-                }
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="hebdomadaire">Hebdomadaire (7 jours)</option>
-                <option value="mensuelle">Mensuelle (par jour)</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      typeCourbeVentes: "hebdomadaire",
+                    })
+                  }
+                  className={
+                    valeursTemporaires.typeCourbeVentes === "hebdomadaire"
+                      ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
+                      : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
+                  }
+                >
+                  Hebdomadaire
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    setValeursTemporaires({
+                      ...valeursTemporaires,
+                      typeCourbeVentes: "mensuelle",
+                    })
+                  }
+                  className={
+                    valeursTemporaires.typeCourbeVentes === "mensuelle"
+                      ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
+                      : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
+                  }
+                >
+                  Mensuelle
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {valeursTemporaires.typeCourbeVentes === "hebdomadaire"
+                  ? "Évolution sur 7 jours consécutifs"
+                  : "Évolution quotidienne dans un mois"}
+              </p>
             </div>
 
             {valeursTemporaires.typeCourbeVentes === "hebdomadaire" && (
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   Début de semaine
                 </label>
-                <Input
-                  type="date"
-                  value={valeursTemporaires.semaineCourbeVentes}
-                  onChange={(e) =>
+                <DatePicker
+                  date={new Date(valeursTemporaires.semaineCourbeVentes)}
+                  onSelect={(date) =>
                     setValeursTemporaires({
                       ...valeursTemporaires,
-                      semaineCourbeVentes: e.target.value,
+                      semaineCourbeVentes: date
+                        ? date.toISOString().split("T")[0]
+                        : "",
                     })
                   }
+                  placeholder="Sélectionner une date"
                 />
               </div>
             )}
 
             {valeursTemporaires.typeCourbeVentes === "mensuelle" && (
               <div>
-                <label className="block text-sm font-medium mb-2">Mois</label>
-                <Input
-                  type="month"
-                  value={valeursTemporaires.moisCourbeVentes}
-                  onChange={(e) =>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Mois
+                </label>
+                <MonthPicker
+                  date={valeursTemporaires.moisCourbeVentes}
+                  onSelect={(month) =>
                     setValeursTemporaires({
                       ...valeursTemporaires,
-                      moisCourbeVentes: e.target.value,
+                      moisCourbeVentes: month || "",
                     })
                   }
+                  placeholder="Sélectionner un mois"
                 />
               </div>
             )}
+          </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={fermerModal}>
-                Annuler
-              </Button>
-              <Button onClick={appliquerFiltre}>Appliquer</Button>
-            </div>
+          <div className="flex justify-end gap-3 px-6 pb-5">
+            <Button variant="ghost" onClick={fermerModal}>
+              Annuler
+            </Button>
+            <Button
+              onClick={appliquerFiltre}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Appliquer
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

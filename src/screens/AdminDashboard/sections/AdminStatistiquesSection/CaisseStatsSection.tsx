@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "../../../../components/ui/card";
-import { Input } from "../../../../components/ui/input";
 import { Button } from "../../../../components/ui/button";
 import { FilterIcon, X } from "lucide-react";
 import {
@@ -12,12 +11,13 @@ import {
 import { TrendLineChart } from "../../../../components/charts";
 import { useRecettes } from "../../../../hooks/useRecettes";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
+import { DatePicker } from "../../../../components/ui/date-picker";
+import { MonthPicker } from "../../../../components/ui/month-picker";
+import { YearPicker } from "../../../../components/ui/year-picker";
 
 export const CaisseStatsSection: React.FC = () => {
   // États pour les filtres spécifiques de chaque card
-  const [dateJour, setDateJour] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [dateJour, setDateJour] = useState(new Date());
   const [dateMois, setDateMois] = useState(
     new Date().toISOString().slice(0, 7)
   ); // YYYY-MM
@@ -142,7 +142,7 @@ export const CaisseStatsSection: React.FC = () => {
     error: errorJour,
   } = useRecettes({
     mode: "single",
-    date: dateJour,
+    date: dateJour.toISOString().split("T")[0],
   });
 
   const {
@@ -233,7 +233,7 @@ export const CaisseStatsSection: React.FC = () => {
     {
       title: "Recettes du jour",
       value: formatMontant(recettesJour),
-      subtitle: `Le ${new Date(dateJour).toLocaleDateString("fr-FR")}`,
+      subtitle: `Le ${dateJour.toLocaleDateString("fr-FR")}`,
       color: "text-orange-500",
       loading: loadingJour,
       error: errorJour,
@@ -386,7 +386,7 @@ export const CaisseStatsSection: React.FC = () => {
                 variant="ghost"
                 size="icon"
                 onClick={fermerModal}
-                className="h-8 w-8 rounded-full hover:bg-gray-100"
+                className="h-8 w-8 rounded-full hover:bg-gray-10"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -400,16 +400,15 @@ export const CaisseStatsSection: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Sélectionner une date
                   </label>
-                  <Input
-                    type="date"
-                    value={valeursTemporaires.dateJour}
-                    onChange={(e) =>
+                  <DatePicker
+                    date={valeursTemporaires.dateJour}
+                    onSelect={(date) =>
                       setValeursTemporaires((prev) => ({
                         ...prev,
-                        dateJour: e.target.value,
+                        dateJour: date || new Date(),
                       }))
                     }
-                    className="w-full"
+                    placeholder="Sélectionner une date"
                   />
                 </div>
               )}
@@ -419,16 +418,15 @@ export const CaisseStatsSection: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Sélectionner un mois
                   </label>
-                  <Input
-                    type="month"
-                    value={valeursTemporaires.dateMois}
-                    onChange={(e) =>
+                  <MonthPicker
+                    date={valeursTemporaires.dateMois}
+                    onSelect={(month) =>
                       setValeursTemporaires((prev) => ({
                         ...prev,
-                        dateMois: e.target.value,
+                        dateMois: month,
                       }))
                     }
-                    className="w-full"
+                    placeholder="Choisir un mois"
                   />
                 </div>
               )}
@@ -438,18 +436,17 @@ export const CaisseStatsSection: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Sélectionner une année
                   </label>
-                  <Input
-                    type="number"
-                    min="2020"
-                    max="2030"
-                    value={valeursTemporaires.dateAnnee}
-                    onChange={(e) =>
+                  <YearPicker
+                    year={valeursTemporaires.dateAnnee}
+                    onSelect={(year) =>
                       setValeursTemporaires((prev) => ({
                         ...prev,
-                        dateAnnee: e.target.value,
+                        dateAnnee: year,
                       }))
                     }
-                    className="w-full"
+                    placeholder="Choisir une année"
+                    minYear={2020}
+                    maxYear={2030}
                   />
                 </div>
               )}
@@ -464,11 +461,11 @@ export const CaisseStatsSection: React.FC = () => {
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         type="button"
-                        variant={
-                          valeursTemporaires.typeCourbe === "mensuelle"
-                            ? "default"
-                            : "outline"
-                        }
+                        // variant={
+                        //   valeursTemporaires.typeCourbe === "mensuelle"
+                        //     ? "default"
+                        //     : "outline"
+                        // }
                         size="sm"
                         onClick={() =>
                           setValeursTemporaires((prev) => ({
@@ -476,17 +473,21 @@ export const CaisseStatsSection: React.FC = () => {
                             typeCourbe: "mensuelle",
                           }))
                         }
-                        className="w-full"
+                        className={
+                          valeursTemporaires.typeCourbe === "mensuelle"
+                            ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
+                            : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
+                        }
                       >
                         Mensuelle
                       </Button>
                       <Button
                         type="button"
-                        variant={
-                          valeursTemporaires.typeCourbe === "annuelle"
-                            ? "default"
-                            : "outline"
-                        }
+                        // variant={
+                        //   valeursTemporaires.typeCourbe === "annuelle"
+                        //     ? "default"
+                        //     : "outline"
+                        // }
                         size="sm"
                         onClick={() =>
                           setValeursTemporaires((prev) => ({
@@ -494,7 +495,11 @@ export const CaisseStatsSection: React.FC = () => {
                             typeCourbe: "annuelle",
                           }))
                         }
-                        className="w-full"
+                        className={
+                          valeursTemporaires.typeCourbe === "annuelle"
+                            ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
+                            : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
+                        }
                       >
                         Annuelle
                       </Button>
@@ -512,16 +517,15 @@ export const CaisseStatsSection: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Sélectionner un mois
                       </label>
-                      <Input
-                        type="month"
-                        value={valeursTemporaires.moisCourbe}
-                        onChange={(e) =>
+                      <MonthPicker
+                        date={valeursTemporaires.moisCourbe}
+                        onSelect={(month) =>
                           setValeursTemporaires((prev) => ({
                             ...prev,
-                            moisCourbe: e.target.value,
+                            moisCourbe: month,
                           }))
                         }
-                        className="w-full"
+                        placeholder="Choisir un mois"
                       />
                     </div>
                   ) : (
@@ -529,18 +533,17 @@ export const CaisseStatsSection: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Sélectionner une année
                       </label>
-                      <Input
-                        type="number"
-                        min="2020"
-                        max="2030"
-                        value={valeursTemporaires.anneeCourbe}
-                        onChange={(e) =>
+                      <YearPicker
+                        year={valeursTemporaires.anneeCourbe}
+                        onSelect={(year) =>
                           setValeursTemporaires((prev) => ({
                             ...prev,
-                            anneeCourbe: e.target.value,
+                            anneeCourbe: year,
                           }))
                         }
-                        className="w-full"
+                        placeholder="Choisir une année"
+                        minYear={2020}
+                        maxYear={2030}
                       />
                     </div>
                   )}
@@ -554,7 +557,12 @@ export const CaisseStatsSection: React.FC = () => {
             <Button variant="ghost" onClick={fermerModal}>
               Annuler
             </Button>
-            <Button onClick={appliquerFiltre}>Appliquer</Button>
+            <Button
+              className="bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
+              onClick={appliquerFiltre}
+            >
+              Appliquer
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

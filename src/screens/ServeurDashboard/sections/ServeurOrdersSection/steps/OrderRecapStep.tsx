@@ -107,7 +107,7 @@ export const OrderRecapStep: React.FC<OrderRecapStepProps> = ({
                       {categoryItems.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-3 bg-gray-5 rounded-lg"
                         >
                           <div className="flex-1">
                             <h4 className="font-medium text-gray-900">

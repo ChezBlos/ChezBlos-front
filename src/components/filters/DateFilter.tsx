@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { CalendarIcon, FilterIcon, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Input } from "../ui/input";
+import { DatePicker } from "../ui/date-picker";
 
 export type DateFilterValue =
   | { mode: "single"; date: string }
@@ -25,32 +25,45 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<DateFilterValue["mode"]>(value.mode);
-  const [singleDate, setSingleDate] = useState(
-    value.mode === "single" ? value.date : ""
+  const [singleDate, setSingleDate] = useState<Date | undefined>(
+    value.mode === "single" && value.date ? new Date(value.date) : undefined
   );
-  const [startDate, setStartDate] = useState(
-    value.mode === "period" ? value.startDate : ""
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    value.mode === "period" && value.startDate
+      ? new Date(value.startDate)
+      : undefined
   );
-  const [endDate, setEndDate] = useState(
-    value.mode === "period" ? value.endDate : ""
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    value.mode === "period" && value.endDate
+      ? new Date(value.endDate)
+      : undefined
   );
 
   // Sync props <-> state
   React.useEffect(() => {
     setMode(value.mode);
     if (value.mode === "single") {
-      setSingleDate(value.date);
+      setSingleDate(value.date ? new Date(value.date) : undefined);
     } else {
-      setStartDate(value.startDate);
-      setEndDate(value.endDate);
+      setStartDate(value.startDate ? new Date(value.startDate) : undefined);
+      setEndDate(value.endDate ? new Date(value.endDate) : undefined);
     }
   }, [value]);
 
   const handleApply = () => {
     if (mode === "single") {
-      onChange({ mode: "single", date: singleDate });
+      const dateStr = singleDate ? singleDate.toISOString().split("T")[0] : "";
+      onChange({ mode: "single", date: dateStr });
     } else {
-      onChange({ mode: "period", startDate, endDate });
+      const startDateStr = startDate
+        ? startDate.toISOString().split("T")[0]
+        : "";
+      const endDateStr = endDate ? endDate.toISOString().split("T")[0] : "";
+      onChange({
+        mode: "period",
+        startDate: startDateStr,
+        endDate: endDateStr,
+      });
     }
     setOpen(false);
   };
@@ -63,9 +76,12 @@ export const DateFilter: React.FC<DateFilterProps> = ({
   // Affichage du résumé du filtre
   let filterLabel = "Aucun filtre";
   if (mode === "single" && singleDate) {
-    filterLabel = `Le ${singleDate.split("-").reverse().join("/")}`;
+    const dateStr = singleDate.toISOString().split("T")[0];
+    filterLabel = `Le ${dateStr.split("-").reverse().join("/")}`;
   } else if (mode === "period" && (startDate || endDate)) {
-    filterLabel = `Du ${startDate || "..."} au ${endDate || "..."}`;
+    const startStr = startDate ? startDate.toISOString().split("T")[0] : "...";
+    const endStr = endDate ? endDate.toISOString().split("T")[0] : "...";
+    filterLabel = `Du ${startStr} au ${endStr}`;
   }
 
   return (
@@ -127,26 +143,20 @@ export const DateFilter: React.FC<DateFilterProps> = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Date de début
                     </label>
-                    <Input
-                      type="date"
-                      value={startDate}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setStartDate(e.target.value)
-                      }
-                      className="w-full"
+                    <DatePicker
+                      date={startDate}
+                      onSelect={setStartDate}
+                      placeholder="Sélectionner une date"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Date de fin
                     </label>
-                    <Input
-                      type="date"
-                      value={endDate}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setEndDate(e.target.value)
-                      }
-                      className="w-full"
+                    <DatePicker
+                      date={endDate}
+                      onSelect={setEndDate}
+                      placeholder="Sélectionner une date"
                     />
                   </div>
                 </div>
@@ -155,13 +165,10 @@ export const DateFilter: React.FC<DateFilterProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Date
                   </label>
-                  <Input
-                    type="date"
-                    value={singleDate}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setSingleDate(e.target.value)
-                    }
-                    className="w-full"
+                  <DatePicker
+                    date={singleDate}
+                    onSelect={setSingleDate}
+                    placeholder="Sélectionner une date"
                   />
                 </div>
               )}

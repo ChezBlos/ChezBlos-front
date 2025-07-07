@@ -14,6 +14,7 @@ import { Button } from "../../../../components/ui/button";
 import { ChartPie } from "@phosphor-icons/react";
 import { PaymentMethodChart } from "../../../../components/charts";
 import { useCaisseStats } from "../../../../hooks/useCaisseStats";
+import { DatePicker } from "../../../../components/ui/date-picker";
 
 function formatPaymentMethodName(mode: string): string {
   const formatMap: Record<string, string> = {
@@ -112,45 +113,54 @@ export const AdminCaisseSection: React.FC = () => {
     currentStart: string | null;
     currentEnd: string | null;
   }) => {
-    const [localDate, setLocalDate] = useState(currentDate || "");
-    const [localStart, setLocalStart] = useState(currentStart || "");
-    const [localEnd, setLocalEnd] = useState(currentEnd || "");
+    const [localDate, setLocalDate] = useState<Date | undefined>(
+      currentDate ? new Date(currentDate) : undefined
+    );
+    const [localStart, setLocalStart] = useState<Date | undefined>(
+      currentStart ? new Date(currentStart) : undefined
+    );
+    const [localEnd, setLocalEnd] = useState<Date | undefined>(
+      currentEnd ? new Date(currentEnd) : undefined
+    );
+
     const handleApply = () => {
-      onApply({ date: localDate, start: localStart, end: localEnd });
+      const dateStr = localDate ? localDate.toISOString().split("T")[0] : "";
+      const startStr = localStart ? localStart.toISOString().split("T")[0] : "";
+      const endStr = localEnd ? localEnd.toISOString().split("T")[0] : "";
+      onApply({ date: dateStr, start: startStr, end: endStr });
       onClose();
     };
+
     const handleClear = () => {
-      setLocalDate("");
-      setLocalStart("");
-      setLocalEnd("");
+      setLocalDate(undefined);
+      setLocalStart(undefined);
+      setLocalEnd(undefined);
     };
+
     if (!isOpen) return null;
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
         <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-sm">
           <h3 className="font-bold text-lg mb-4">Filtrer par date</h3>
           <div className="flex flex-col gap-3">
             <label className="text-xs">Date précise :</label>
-            <input
-              type="date"
-              value={localDate}
-              onChange={(e) => setLocalDate(e.target.value)}
-              className="border rounded px-2 py-1"
+            <DatePicker
+              date={localDate}
+              onSelect={setLocalDate}
+              placeholder="Sélectionner une date"
             />
             <label className="text-xs mt-2">Ou intervalle :</label>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={localStart}
-                onChange={(e) => setLocalStart(e.target.value)}
-                className="border rounded px-2 py-1"
+            <div className="flex flex-col gap-2">
+              <DatePicker
+                date={localStart}
+                onSelect={setLocalStart}
+                placeholder="Date de début"
               />
-              <span className="text-xs self-center">à</span>
-              <input
-                type="date"
-                value={localEnd}
-                onChange={(e) => setLocalEnd(e.target.value)}
-                className="border rounded px-2 py-1"
+              <DatePicker
+                date={localEnd}
+                onSelect={setLocalEnd}
+                placeholder="Date de fin"
               />
             </div>
           </div>

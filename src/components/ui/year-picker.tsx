@@ -35,12 +35,6 @@ export function YearPicker({
 
   const displayValue = year || placeholder;
 
-  // Générer la liste des années
-  const years = Array.from(
-    { length: maxYear - minYear + 1 },
-    (_, i) => minYear + i
-  ).reverse(); // Années les plus récentes en premier
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>

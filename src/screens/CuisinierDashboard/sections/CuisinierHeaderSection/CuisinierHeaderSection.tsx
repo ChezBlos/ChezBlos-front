@@ -1,5 +1,5 @@
 import { LogOutIcon, MenuIcon } from "lucide-react";
-import { User, ListBullets, Package, Camera } from "@phosphor-icons/react";
+import { User, ListBullets, Package, Camera, ClockCounterClockwise } from "@phosphor-icons/react";
 import React, { useState } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { Button } from "../../../../components/ui/button";
@@ -16,8 +16,8 @@ import { ProfileService } from "../../../../services/profileService";
 interface CuisinierHeaderSectionProps {
   onOrdersRefresh?: () => void;
   onStatsRefresh?: () => void;
-  selectedSection?: "commandes" | "stock";
-  onSectionSelect?: (section: "commandes" | "stock") => void;
+  selectedSection?: "commandes" | "stock" | "historique";
+  onSectionSelect?: (section: "commandes" | "stock" | "historique") => void;
 }
 
 export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
@@ -141,6 +141,15 @@ export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
                 >
                   <Package size={16} />
                   Gestion des stocks
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onSectionSelect?.("historique")}
+                  className={`flex items-center gap-2 ${
+                    selectedSection === "historique" ? "bg-gray-10" : "bg-white"
+                  }`}
+                >
+                  <ClockCounterClockwise size={16} />
+                  Historique
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

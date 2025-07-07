@@ -1,10 +1,10 @@
 import React from "react";
 import { Button } from "../../components/ui/button";
-import { ListBullets, Package } from "phosphor-react";
+import { ListBullets, Package, ClockCounterClockwise } from "phosphor-react";
 
 interface SidebarProps {
-  selected: "commandes" | "stock";
-  onSelect: (section: "commandes" | "stock") => void;
+  selected: "commandes" | "stock" | "historique";
+  onSelect: (section: "commandes" | "stock" | "historique") => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ selected, onSelect }) => {
@@ -34,6 +34,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ selected, onSelect }) => {
       >
         <Package size={32} />
         Gestion des stocks
+      </Button>
+      <Button
+        variant="ghost"
+        className={`flex items-center gap-3 px-4 py-6 text-white text-lg font-semibold justify-start rounded-full transition-all duration-200 ${
+          selected === "historique"
+            ? "bg-brand-primary-500 hover:text-white hover:bg-brand-primary-600"
+            : "bg-gray-5 text-gray-80 hover:bg-brand-primary-50"
+        }`}
+        onClick={() => onSelect("historique")}
+      >
+        <ClockCounterClockwise size={32} />
+        Historique
       </Button>
     </aside>
   );

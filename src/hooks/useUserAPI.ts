@@ -115,6 +115,39 @@ export const useUpdateUser = () => {
   };
 };
 
+// Hook pour supprimer définitivement un utilisateur
+export const usePermanentlyDeleteUser = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const permanentlyDeleteUser = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        setLoading(true);
+        setError(null);
+        await UserService.permanentlyDeleteUser(id);
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Erreur lors de la suppression définitive"
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  return {
+    permanentlyDeleteUser,
+    loading,
+    error,
+  };
+};
+
 // Hook pour supprimer un utilisateur
 export const useDeleteUser = () => {
   const [loading, setLoading] = useState(false);

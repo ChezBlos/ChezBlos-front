@@ -34,6 +34,7 @@ import { Spinner, SpinnerMedium } from "../../../../components/ui/spinner";
 import {
   useUsers,
   useDeleteUser,
+  usePermanentlyDeleteUser,
   useToggleUserStatus,
 } from "../../../../hooks/useUserAPI";
 import { UserAvatar } from "../../../../components/UserAvatar";
@@ -72,14 +73,20 @@ export const AdminStaffSection: React.FC = () => {
   const [editStaffModalOpen, setEditStaffModalOpen] = useState(false);
   // const [userDetailsModalOpen, setUserDetailsModalOpen] = useState(false);
   const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
+  const [permanentDeleteConfirmModalOpen, setPermanentDeleteConfirmModalOpen] =
+    useState(false);
   const [toggleStatusConfirmModalOpen, setToggleStatusConfirmModalOpen] =
     useState(false);
   const [selectedUser, setSelectedUser] = useState<StaffUser | null>(null);
   const [userToDelete, setUserToDelete] = useState<StaffUser | null>(null);
+  const [userToPermanentlyDelete, setUserToPermanentlyDelete] =
+    useState<StaffUser | null>(null);
   const [userToToggle, setUserToToggle] = useState<StaffUser | null>(null);
 
   const { data: users, loading, error, refetch } = useUsers();
   const { deleteUser, loading: deleteLoading } = useDeleteUser();
+  const { permanentlyDeleteUser, loading: permanentDeleteLoading } =
+    usePermanentlyDeleteUser();
   const { toggleUserStatus, loading: toggleLoading } = useToggleUserStatus();
   const { showAlert } = useAlert();
 
@@ -257,6 +264,24 @@ export const AdminStaffSection: React.FC = () => {
   const handleEditStaffSuccess = () => {
     refetch(); // Actualiser la liste des utilisateurs
   };
+  // Gestionnaire de suppression définitive d'utilisateur
+  const handlePermanentlyDeleteUser = (user: StaffUser) => {
+    setUserToPermanentlyDelete(user);
+    setPermanentDeleteConfirmModalOpen(true);
+  };
+
+  // Confirmation de suppression définitive d'utilisateur
+  const confirmPermanentlyDeleteUser = async () => {
+    if (userToPermanentlyDelete) {
+      const success = await permanentlyDeleteUser(userToPermanentlyDelete._id);
+      if (success) {
+        await refetch(); // Actualiser la liste
+      }
+    }
+    setPermanentDeleteConfirmModalOpen(false);
+    setUserToPermanentlyDelete(null);
+  };
+
   // Gestionnaire de suppression d'utilisateur
   const handleDeleteUser = async (user: StaffUser) => {
     setUserToDelete(user);
@@ -420,20 +445,26 @@ export const AdminStaffSection: React.FC = () => {
 
   const getRoleBadge = (role: string) => {
     const roleColors = {
-      ADMIN: "bg-orange-100 text-orange-700",
-      SERVEUR: "bg-blue-100 text-blue-700",
-      CUISINIER: "bg-purple-100 text-purple-700",
+      ADMIN: "bg-orange-100 text-orange-700 border-orange-300",
+      SERVEUR: "bg-blue-100 text-blue-700 border-blue-300",
+      CUISINIER: "bg-purple-100 text-purple-700 border-purple-300",
     };
 
     const colorClass =
       roleColors[role as keyof typeof roleColors] ||
-      "bg-gray-100 text-gray-700";
+      "bg-gray-100 text-gray-700 border-gray-300";
 
     return (
       <Badge
         className={`${colorClass} rounded-full px-3 py-1 font-medium text-xs border`}
+        title={
+          role === "ADMIN"
+            ? "Les administrateurs ne peuvent pas être supprimés"
+            : undefined
+        }
       >
         {formatRole(role)}
+        {role === "ADMIN"}
       </Badge>
     );
   };
@@ -764,27 +795,43 @@ export const AdminStaffSection: React.FC = () => {
                                   <PencilSimple className="h-4 w-4 mr-2" />
                                   Modifier
                                 </DropdownMenuItem>{" "}
-                                <DropdownMenuItem
-                                  className={
-                                    user.actif
-                                      ? "text-orange-600 hover:bg-orange-600 hover:text-white"
-                                      : "text-green-600 hover:bg-green-600 hover:text-white"
-                                  }
-                                  onClick={() => handleToggleUserStatus(user)}
-                                  disabled={toggleLoading}
-                                >
-                                  {user.actif ? (
-                                    <>
-                                      <UserX className="h-4 w-4 mr-2" />
-                                      Désactiver
-                                    </>
-                                  ) : (
-                                    <>
-                                      <UserCheck className="h-4 w-4 mr-2" />
-                                      Réactiver
-                                    </>
-                                  )}
-                                </DropdownMenuItem>
+                                {/* Ne pas permettre la modification du statut des administrateurs */}
+                                {user.role !== "ADMIN" && (
+                                  <DropdownMenuItem
+                                    className={
+                                      user.actif
+                                        ? "text-orange-600 hover:bg-orange-600 hover:text-white"
+                                        : "text-green-600 hover:bg-green-600 hover:text-white"
+                                    }
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    disabled={toggleLoading}
+                                  >
+                                    {user.actif ? (
+                                      <>
+                                        <UserX className="h-4 w-4 mr-2" />
+                                        Désactiver
+                                      </>
+                                    ) : (
+                                      <>
+                                        <UserCheck className="h-4 w-4 mr-2" />
+                                        Réactiver
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                )}
+                                {/* Ne pas permettre la suppression des administrateurs */}
+                                {user.role !== "ADMIN" && (
+                                  <DropdownMenuItem
+                                    className="text-red-700 hover:bg-red-700 hover:text-white"
+                                    onClick={() =>
+                                      handlePermanentlyDeleteUser(user)
+                                    }
+                                    disabled={permanentDeleteLoading}
+                                  >
+                                    <TrashSimpleIcon className="h-4 w-4 mr-2" />
+                                    Supprimer définitivement
+                                  </DropdownMenuItem>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -871,39 +918,59 @@ export const AdminStaffSection: React.FC = () => {
                                   Code d'accès
                                 </DropdownMenuItem>
                               )}{" "}
-                              <DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleEditUser(user)}
+                              >
                                 <PencilSimple className="h-4 w-4 mr-2" />
                                 Modifier
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className={
-                                  user.actif
-                                    ? "text-orange-600"
-                                    : "text-green-600"
-                                }
-                                onClick={() => handleToggleUserStatus(user)}
-                                disabled={toggleLoading}
-                              >
-                                {user.actif ? (
-                                  <>
-                                    <TrashSimpleIcon className="h-4 w-4 mr-2" />
+                              {/* Ne pas permettre la modification du statut des administrateurs */}
+                              {user.role !== "ADMIN" && (
+                                <>
+                                  <DropdownMenuItem
+                                    className={
+                                      user.actif
+                                        ? "text-orange-600"
+                                        : "text-green-600"
+                                    }
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    disabled={toggleLoading}
+                                  >
+                                    {user.actif ? (
+                                      <>
+                                        <UserX className="h-4 w-4 mr-2" />
+                                        Désactiver
+                                      </>
+                                    ) : (
+                                      <>
+                                        <UserCheck className="h-4 w-4 mr-2" />
+                                        Réactiver
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-red-600 hover:bg-red-600 hover:text-white"
+                                    onClick={() => handleDeleteUser(user)}
+                                    disabled={deleteLoading}
+                                  >
+                                    <TrashIcon className="h-4 w-4 mr-2" />
                                     Désactiver
-                                  </>
-                                ) : (
-                                  <>
-                                    <TrashSimpleIcon className="h-4 w-4 mr-2 transform rotate-180" />
-                                    Réactiver
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => handleDeleteUser(user)}
-                                disabled={deleteLoading}
-                              >
-                                <TrashIcon className="h-4 w-4 mr-2" />
-                                Supprimer définitivement
-                              </DropdownMenuItem>
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {/* Ne pas permettre la suppression des administrateurs */}
+                              {user.role !== "ADMIN" && (
+                                <DropdownMenuItem
+                                  className="text-red-700 hover:bg-red-700 hover:text-white"
+                                  onClick={() =>
+                                    handlePermanentlyDeleteUser(user)
+                                  }
+                                  disabled={permanentDeleteLoading}
+                                >
+                                  <TrashSimpleIcon className="h-4 w-4 mr-2" />
+                                  Supprimer définitivement
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -968,6 +1035,25 @@ export const AdminStaffSection: React.FC = () => {
         cancelText="Annuler"
         variant="danger"
         isLoading={deleteLoading}
+      />
+      {/* Modal de confirmation pour la suppression définitive */}
+      <ConfirmationModal
+        isOpen={permanentDeleteConfirmModalOpen}
+        onClose={() => {
+          setPermanentDeleteConfirmModalOpen(false);
+          setUserToPermanentlyDelete(null);
+        }}
+        onConfirm={confirmPermanentlyDeleteUser}
+        title="Supprimer définitivement l'utilisateur"
+        message={
+          userToPermanentlyDelete
+            ? `⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer définitivement ${userToPermanentlyDelete.prenom} ${userToPermanentlyDelete.nom} ? Cette action est IRRÉVERSIBLE et supprimera toutes ses données de la base de données, y compris son historique et ses codes d'accès.`
+            : ""
+        }
+        confirmText="Supprimer définitivement"
+        cancelText="Annuler"
+        variant="danger"
+        isLoading={permanentDeleteLoading}
       />
       {/* Modal de confirmation de changement de statut */}
       <ConfirmationModal

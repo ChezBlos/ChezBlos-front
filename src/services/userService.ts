@@ -66,12 +66,59 @@ export class UserService {
     return response.data.data;
   }
 
-  static async getUserAccessCode(id: string): Promise<{ codeAcces: string }> {
-    const response = await api.get(`/users/${id}/access-code`);
-    return response.data.data;
+  static async getUserAccessCode(id: string): Promise<any> {
+    logger.info(
+      `🔍 [Frontend] Récupération du code d'accès pour l'utilisateur ID: ${id}`
+    );
+    try {
+      const response = await api.get(`/users/${id}/access-code`);
+      logger.info(`✅ [Frontend] Code d'accès récupéré:`, response.data.data);
+      return response.data.data;
+    } catch (error) {
+      logger.error(
+        `❌ [Frontend] Erreur lors de la récupération du code:`,
+        error
+      );
+      throw error;
+    }
   }
-  static async generateAccessCode(id: string): Promise<{ codeAcces: string }> {
-    const response = await api.post(`/users/${id}/access-code/generate`);
-    return response.data.data;
+
+  static async generateAccessCode(id: string): Promise<any> {
+    logger.info(
+      `🔄 [Frontend] Début de régénération de code d'accès pour l'utilisateur ID: ${id}`
+    );
+    try {
+      const response = await api.post(`/users/${id}/access-code/generate`);
+      logger.info(
+        `🎉 [Frontend] Code d'accès regénéré avec succès:`,
+        response.data.data
+      );
+      return response.data.data;
+    } catch (error) {
+      logger.error(
+        `❌ [Frontend] Erreur lors de la régénération du code:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  static async permanentlyDeleteUser(id: string): Promise<boolean> {
+    logger.info(
+      `🗑️ [Frontend] Suppression définitive de l'utilisateur ID: ${id}`
+    );
+    try {
+      const response = await api.delete(`/users/${id}/permanent`);
+      logger.info(
+        `✅ [Frontend] Utilisateur supprimé définitivement avec succès`
+      );
+      return response.data.success;
+    } catch (error) {
+      logger.error(
+        `❌ [Frontend] Erreur lors de la suppression définitive:`,
+        error
+      );
+      throw error;
+    }
   }
 }

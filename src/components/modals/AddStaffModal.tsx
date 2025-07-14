@@ -47,6 +47,39 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
     motDePasse: "",
   });
 
+  // Fonction pour déterminer le type d'affichage du rôle
+  const getDisplayRole = () => {
+    if (formData.role === "SERVEUR" && formData.isCaissier) {
+      return "CAISSIER";
+    }
+    return formData.role;
+  };
+
+  // Fonction pour gérer le changement de rôle d'affichage
+  const handleRoleChange = (
+    displayRole: "SERVEUR" | "CUISINIER" | "CAISSIER"
+  ) => {
+    const newData = { ...formData };
+
+    if (displayRole === "CAISSIER") {
+      newData.role = "SERVEUR";
+      newData.isCaissier = true;
+    } else {
+      newData.role = displayRole;
+      newData.isCaissier = false;
+    }
+
+    setFormData(newData);
+    // Nettoyer l'erreur de rôle si elle existe
+    if (errors.role) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.role;
+        return newErrors;
+      });
+    }
+  };
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { createUser, loading, error } = useCreateUser();
 
@@ -275,9 +308,9 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                   <div className="grid grid-cols-1 gap-3">
                     {/* Option Serveur */}
                     <div
-                      onClick={() => handleInputChange("role", "SERVEUR")}
+                      onClick={() => handleRoleChange("SERVEUR")}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.role === "SERVEUR"
+                        getDisplayRole() === "SERVEUR"
                           ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
                           : "border-gray-200 hover:border-brand-primary-500"
                       }`}
@@ -285,7 +318,7 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                       <div className="flex items-center gap-3">
                         <div
                           className={`p-2 rounded-full ${
-                            formData.role === "SERVEUR"
+                            getDisplayRole() === "SERVEUR"
                               ? "bg-brand-primary-500 text-brand-primary-50"
                               : "bg-gray-10 text-gray-600"
                           }`}
@@ -295,18 +328,58 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900">Serveur</h4>
                           <p className="text-sm text-gray-500">
-                            Service en salle, prise de commandes, accès caisse
-                            possible
+                            Service en salle, prise de commandes
                           </p>
                         </div>
                         <div
                           className={`w-4 h-4 rounded-full border-2 ${
-                            formData.role === "SERVEUR"
+                            getDisplayRole() === "SERVEUR"
                               ? "border-brand-primary-500 bg-brand-primary-500"
                               : "border-gray-300"
                           }`}
                         >
-                          {formData.role === "SERVEUR" && (
+                          {getDisplayRole() === "SERVEUR" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Option Caissier */}
+                    <div
+                      onClick={() => handleRoleChange("CAISSIER")}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        getDisplayRole() === "CAISSIER"
+                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
+                          : "border-gray-200 hover:border-brand-primary-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            getDisplayRole() === "CAISSIER"
+                              ? "bg-brand-primary-500 text-white"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <UserIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            Caissier
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Service en salle avec accès complet à la caisse
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            getDisplayRole() === "CAISSIER"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {getDisplayRole() === "CAISSIER" && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>
@@ -315,9 +388,9 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
 
                     {/* Option Cuisinier */}
                     <div
-                      onClick={() => handleInputChange("role", "CUISINIER")}
+                      onClick={() => handleRoleChange("CUISINIER")}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.role === "CUISINIER"
+                        getDisplayRole() === "CUISINIER"
                           ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
                           : "border-gray-200 hover:border-brand-primary-500"
                       }`}
@@ -325,7 +398,7 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                       <div className="flex items-center gap-3">
                         <div
                           className={`p-2 rounded-full ${
-                            formData.role === "CUISINIER"
+                            getDisplayRole() === "CUISINIER"
                               ? "bg-brand-primary-500 text-brand-primary-50"
                               : "bg-gray-10 text-gray-600"
                           }`}
@@ -343,12 +416,12 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                         </div>
                         <div
                           className={`w-4 h-4 rounded-full border-2 ${
-                            formData.role === "CUISINIER"
+                            getDisplayRole() === "CUISINIER"
                               ? "border-brand-primary-500 bg-brand-primary-500"
                               : "border-gray-300"
                           }`}
                         >
-                          {formData.role === "CUISINIER" && (
+                          {getDisplayRole() === "CUISINIER" && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>
@@ -379,28 +452,14 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                   )}
                 </div>
 
-                {/* ...existing switches and password field... */}
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="isCaissier"
-                    className="text-sm flex items-center"
-                  >
-                    Accès caisse
-                    {formData.role === "CUISINIER" && (
-                      <span className="text-xs text-gray-500 ml-2">
-                        (Non disponible pour les cuisiniers)
-                      </span>
-                    )}
-                  </Label>
-                  <Switch
-                    id="isCaissier"
-                    checked={formData.isCaissier}
-                    onCheckedChange={(checked: boolean) =>
-                      handleInputChange("isCaissier", checked)
-                    }
-                    disabled={formData.role === "CUISINIER"}
-                  />
-                </div>
+                {/* Informations sur le rôle sélectionné */}
+                {/* {getDisplayRole() === "CAISSIER" && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Rôle Caissier :</strong> Ce membre aura tous les accès d'un serveur plus l'accès complet à la caisse pour gérer les transactions.
+                    </p>
+                  </div>
+                )} */}
 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="actif" className="text-sm">

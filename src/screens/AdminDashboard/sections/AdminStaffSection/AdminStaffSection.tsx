@@ -47,6 +47,7 @@ import { ConfirmationModal } from "../../../../components/modals/ConfirmationMod
 import { ExportService } from "../../../../services/exportService";
 import { useAlert } from "../../../../contexts/AlertContext";
 import { logger } from "../../../../utils/logger";
+import { getDisplayRole } from "../../../../types/user";
 
 // Interface pour les types utilisateur (utilise StaffUser du service)
 interface StaffUser {
@@ -131,7 +132,9 @@ export const AdminStaffSection: React.FC = () => {
           filtered = filtered.filter((user) => user.role !== "ADMIN");
           break;
         case "CAISSIERS":
-          filtered = filtered.filter((user) => user.isCaissier);
+          filtered = filtered.filter(
+            (user) => user.role === "SERVEUR" && user.isCaissier
+          );
           break;
       }
     }
@@ -139,14 +142,16 @@ export const AdminStaffSection: React.FC = () => {
     // Filtrage par recherche
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (user) =>
+      filtered = filtered.filter((user) => {
+        const displayRole = getDisplayRole(user);
+        return (
           user.nom.toLowerCase().includes(searchLower) ||
           user.prenom.toLowerCase().includes(searchLower) ||
           user.email?.toLowerCase().includes(searchLower) ||
           user.codeAcces?.toLowerCase().includes(searchLower) ||
-          user.role.toLowerCase().includes(searchLower)
-      );
+          displayRole.toLowerCase().includes(searchLower)
+        );
+      });
     }
 
     return filtered;
@@ -160,6 +165,7 @@ export const AdminStaffSection: React.FC = () => {
         utilisateursActifs: 0,
         utilisateursInactifs: 0,
         admins: 0,
+        caissiers: 0,
         nouveauxAujourdhui: 0,
         nouveauxHier: 0,
       };
@@ -175,6 +181,9 @@ export const AdminStaffSection: React.FC = () => {
     const utilisateursActifs = users.filter((user) => user.actif).length;
     const utilisateursInactifs = users.filter((user) => !user.actif).length;
     const admins = users.filter((user) => user.role === "ADMIN").length;
+    const caissiers = users.filter(
+      (user) => user.role === "SERVEUR" && user.isCaissier
+    ).length;
 
     // Nouveaux utilisateurs aujourd'hui
     const nouveauxAujourdhui = users.filter((user) => {
@@ -193,6 +202,7 @@ export const AdminStaffSection: React.FC = () => {
       utilisateursActifs,
       utilisateursInactifs,
       admins,
+      caissiers,
       nouveauxAujourdhui,
       nouveauxHier,
     };
@@ -224,8 +234,8 @@ export const AdminStaffSection: React.FC = () => {
       title: "Administrateurs",
       mobileTitle: "Admins",
       value: loading ? "..." : stats.admins.toString(),
-      subtitle: `${stats.totalPersonnel - stats.admins} personnel`,
-      subtitleColor: "text-orange-500",
+      subtitle: `${stats.caissiers} caissiers`,
+      subtitleColor: "text-yellow-500",
     },
   ]; // Gestionnaire de recherche
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -448,6 +458,7 @@ export const AdminStaffSection: React.FC = () => {
       ADMIN: "bg-orange-100 text-orange-700 border-orange-300",
       SERVEUR: "bg-blue-100 text-blue-700 border-blue-300",
       CUISINIER: "bg-purple-100 text-purple-700 border-purple-300",
+      CAISSIER: "bg-yellow-100 text-yellow-700 border-yellow-300",
     };
 
     const colorClass =
@@ -465,14 +476,6 @@ export const AdminStaffSection: React.FC = () => {
       >
         {formatRole(role)}
         {role === "ADMIN"}
-      </Badge>
-    );
-  };
-
-  const getCashierBadge = () => {
-    return (
-      <Badge className="bg-yellow-100 text-yellow-700 rounded-full px-2 py-1 font-medium text-xs border ml-1">
-        Caissier
       </Badge>
     );
   };
@@ -752,8 +755,7 @@ export const AdminStaffSection: React.FC = () => {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              {getRoleBadge(user.role)}
-                              {user.isCaissier && getCashierBadge()}
+                              {getRoleBadge(getDisplayRole(user))}
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-3">
@@ -862,7 +864,6 @@ export const AdminStaffSection: React.FC = () => {
                               <span className="font-bold text-lg text-gray-900 truncate">
                                 {user.prenom} {user.nom}
                               </span>
-                              {user.isCaissier && getCashierBadge()}
                             </div>
                             <div
                               className="text-sm text-gray-600 mb-2 max-w-[250px] truncate"
@@ -877,7 +878,7 @@ export const AdminStaffSection: React.FC = () => {
                               {user.telephone || "Téléphone non défini"}
                             </div>
                             <div className="flex items-center gap-2 mb-2">
-                              {getRoleBadge(user.role)}
+                              {getRoleBadge(getDisplayRole(user))}
                               {getUserStatusBadge(user.actif)}
                             </div>
                             {user.codeAcces && (

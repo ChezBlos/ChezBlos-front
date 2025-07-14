@@ -1,5 +1,11 @@
 import { PlusIcon, LogOutIcon, MenuIcon } from "lucide-react";
-import { User, ListBullets, Users, Camera } from "@phosphor-icons/react";
+import {
+  User,
+  ListBullets,
+  Users,
+  Camera,
+  CreditCard,
+} from "@phosphor-icons/react";
 import React, { useState } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { Button } from "../../../../components/ui/button";
@@ -19,8 +25,8 @@ import { logger } from "../../../../utils/logger";
 interface ServeurHeaderSectionProps {
   onOrdersRefresh?: () => void;
   onStatsRefresh?: () => void;
-  selectedSection?: "commandes" | "historique";
-  onSectionSelect?: (section: "commandes" | "historique") => void;
+  selectedSection?: "commandes" | "historique" | "caisse";
+  onSectionSelect?: (section: "commandes" | "historique" | "caisse") => void;
 }
 
 export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
@@ -144,6 +150,24 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                   <Users size={20} />
                   <span>Historique</span>
                 </DropdownMenuItem>
+
+                {/* Section Caisse - visible uniquement pour les caissiers */}
+                {user?.isCaissier && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
+                        selectedSection === "caisse"
+                          ? "bg-orange-50 text-orange-600"
+                          : ""
+                      }`}
+                      onClick={() => onSectionSelect?.("caisse")}
+                    >
+                      <CreditCard size={20} />
+                      <span>Caisse</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

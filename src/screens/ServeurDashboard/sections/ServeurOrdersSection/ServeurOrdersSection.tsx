@@ -50,7 +50,6 @@ import {
   PaperPlaneTilt,
   CreditCard,
   Money,
-  CheckCircle,
   DotsThreeVertical,
 } from "phosphor-react";
 import {
@@ -143,16 +142,20 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
   // État pour le rafraîchissement
   const [isRefreshing, setIsRefreshing] = useState(false);
-  // États pour la gestion du mode de paiement
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [orderToPay, setOrderToPay] = useState<Order | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<string>("");
 
   // États pour la gestion de l'annulation avec motif
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+
+  // États pour l'envoi en caisse
+  const [isSendToCashierModalOpen, setIsSendToCashierModalOpen] =
+    useState(false);
+  const [orderToSendToCashier, setOrderToSendToCashier] =
+    useState<Order | null>(null);
+  const [selectedPaymentMethodForCashier, setSelectedPaymentMethodForCashier] =
+    useState<string>("");
+  const [isSendingToCashier, setIsSendingToCashier] = useState(false);
 
   // Récupération de l'utilisateur connecté
   const { user } = useAuth();
@@ -511,16 +514,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
       // Erreur silencieuse
     }
   };
-  const handleCompleteOrder = async (orderId: string) => {
-    try {
-      await OrderService.markAsCompleted(orderId);
-      refetch(); // Actualiser la liste
-      refetchStats(); // Actualiser les statistiques
-    } catch (error) {
-      // Erreur silencieuse
-    }
-  };
-
   const handleViewOrderDetails = (order: Order) => {
     setSelectedOrder(order);
     setIsOrderDetailsModalOpen(true);
@@ -530,19 +523,23 @@ export const ServeurOrdersSection = (): JSX.Element => {
     setOrderToEdit(order);
     setIsEditOrderModalOpen(true);
     setActiveDropdown(null); // Fermer le dropdown
-  }; // Fonction pour gérer le paiement
-  const handlePayment = (order: Order) => {
-    setOrderToPay(order);
-    setSelectedPaymentMethod(order.modePaiement || ""); // Initialiser avec le mode actuel
-    setIsPaymentModalOpen(true);
+  }; // Fonction pour gérer l'envoi en caisse
+  const handleSendToCashier = (order: Order) => {
+    setOrderToSendToCashier(order);
+    setSelectedPaymentMethodForCashier(""); // Réinitialiser la sélection
+    setIsSendToCashierModalOpen(true);
     setActiveDropdown(null); // Fermer le dropdown
-  }; // Fonction pour traiter le paiement
-  const handleProcessPayment = async () => {
-    if (!orderToPay || !selectedPaymentMethod) return;
+  };
 
+  // Fonction pour traiter l'envoi en caisse
+  const handleProcessSendToCashier = async () => {
+    if (!orderToSendToCashier || !selectedPaymentMethodForCashier) return;
+
+    setIsSendingToCashier(true);
     try {
-      await OrderService.updateOrder(orderToPay._id, {
-        modePaiement: selectedPaymentMethod as
+      // Mettre à jour la commande avec le mode de paiement
+      await OrderService.updateOrder(orderToSendToCashier._id, {
+        modePaiement: selectedPaymentMethodForCashier as
           | "ESPECES"
           | "CARTE_BANCAIRE"
           | "WAVE"
@@ -550,13 +547,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
           | "ORANGE_MONEY"
           | "MOOV_MONEY",
       });
-      setIsPaymentModalOpen(false);
-      setOrderToPay(null);
-      setSelectedPaymentMethod("");
+
+      // Note: Il faudra ajouter une méthode spécifique pour envoyer en caisse avec nouveau statut
+      // Pour l'instant, on met juste à jour le mode de paiement
+
+      setIsSendToCashierModalOpen(false);
+      setOrderToSendToCashier(null);
+      setSelectedPaymentMethodForCashier("");
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
       // Erreur silencieuse
+    } finally {
+      setIsSendingToCashier(false);
     }
   }; // Fonction pour ouvrir le bottom sheet mobile
   const handleMobileCardClick = (order: Order) => {
@@ -926,34 +929,17 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   Voir détails
                                 </span>
                               </DropdownMenuItem>
-                              {/* Option Paiement pour toutes les commandes sauf annulées */}
-                              {order.statut !== "ANNULE" && (
-                                <>
-                                  <DropdownMenuSeparator className="h-px bg-gray-200" />
-                                  <DropdownMenuItem
-                                    className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
-                                    onClick={() => handlePayment(order)}
-                                  >
-                                    <CreditCard size={20} />
-                                    <span className="text-gray-700">
-                                      Paiement
-                                    </span>
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {/* Option Marquer comme terminée pour les commandes prêtes */}
+                              {/* Option Envoyer en caisse pour les commandes prêtes */}
                               {order.statut === "PRET" && (
                                 <>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                   <DropdownMenuItem
                                     className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
-                                    onClick={() =>
-                                      handleCompleteOrder(order._id)
-                                    }
+                                    onClick={() => handleSendToCashier(order)}
                                   >
-                                    <CheckCircle size={20} />
+                                    <CreditCard size={20} />
                                     <span className="text-gray-700">
-                                      Marquer comme terminée
+                                      Envoyer en caisse
                                     </span>
                                   </DropdownMenuItem>
                                 </>
@@ -1106,15 +1092,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   : "Non défini"}
                               </span>
                             </div>
-                            {/* <div className="flex items-center gap-2 mt-1">
-                            <span className="font-semibold text-sm text-gray-900">
-                              #{order.numeroCommande}
-                            </span>
-                            <span className="text-gray-400">•</span>
-                            <span className="font-semibold text-sm text-gray-900 truncate">
-                              {formatPrice(order.montantTotal)} XOF
-                            </span>
-                          </div> */}
                           </div>
                         </div>
                         {/* Right side: Status badge only */}
@@ -1222,29 +1199,16 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   />
                 </>
               )}
-              {/* Paiement - disponible pour toutes les commandes sauf annulées */}
-              {selectedOrderForActions.statut !== "ANNULE" && (
-                <BottomSheetAction
-                  onClick={() => {
-                    handlePayment(selectedOrderForActions);
-                    handleCloseBottomSheet();
-                  }}
-                  icon={<CreditCard size={24} />}
-                  title="Paiement"
-                  description="Choisir le mode de paiement"
-                  variant="primary"
-                />
-              )}
-              {/* Marquer comme terminée - disponible pour les commandes PRET */}
+              {/* Envoyer en caisse - disponible pour les commandes PRET */}
               {selectedOrderForActions.statut === "PRET" && (
                 <BottomSheetAction
                   onClick={() => {
-                    handleCompleteOrder(selectedOrderForActions._id);
+                    handleSendToCashier(selectedOrderForActions);
                     handleCloseBottomSheet();
                   }}
-                  icon={<CheckCircle size={24} />}
-                  title="Marquer comme terminée"
-                  description="Finaliser la commande après livraison"
+                  icon={<CreditCard size={24} />}
+                  title="Envoyer en caisse"
+                  description="Transférer vers le caissier pour paiement"
                   variant="primary"
                 />
               )}
@@ -1299,14 +1263,14 @@ export const ServeurOrdersSection = (): JSX.Element => {
         }}
         order={selectedOrder}
       />
-      {/* Modal pour le mode de paiement */}
+      {/* Modal pour l'envoi en caisse */}
       <Dialog
-        open={isPaymentModalOpen}
+        open={isSendToCashierModalOpen}
         onOpenChange={(open) => {
           if (!open) {
-            setIsPaymentModalOpen(false);
-            setOrderToPay(null);
-            setSelectedPaymentMethod("");
+            setIsSendToCashierModalOpen(false);
+            setOrderToSendToCashier(null);
+            setSelectedPaymentMethodForCashier("");
           }
         }}
       >
@@ -1314,17 +1278,58 @@ export const ServeurOrdersSection = (): JSX.Element => {
           <div className="px-8 py-6">
             <DialogHeader className="pb-6">
               <DialogTitle className="text-2xl font-bold text-gray-900">
-                Moyen de paiement
+                Envoyer en caisse
               </DialogTitle>
+              <p className="text-gray-600 mt-2">
+                Sélectionnez le mode de paiement et envoyez la commande au
+                caissier
+              </p>
             </DialogHeader>
+
+            {/* Info de la commande */}
+            {orderToSendToCashier && (
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
+                    {orderToSendToCashier.items?.[0]?.menuItem &&
+                    typeof orderToSendToCashier.items[0].menuItem ===
+                      "object" &&
+                    orderToSendToCashier.items[0].menuItem.image ? (
+                      <MemoizedOrderImage
+                        imagePath={orderToSendToCashier.items[0].menuItem.image}
+                        altText={orderToSendToCashier.items[0]?.nom || "Plat"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src="/img/plat_petit.png"
+                        alt="Plat"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">
+                      Commande #{orderToSendToCashier.numeroCommande}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Table {orderToSendToCashier.numeroTable} •{" "}
+                      {formatPrice(orderToSendToCashier.montantTotal)} XOF
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Grid des options de paiement */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               {/* Carte bancaire */}
               <div
-                onClick={() => setSelectedPaymentMethod("CARTE_BANCAIRE")}
+                onClick={() =>
+                  setSelectedPaymentMethodForCashier("CARTE_BANCAIRE")
+                }
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "CARTE_BANCAIRE"
+                  selectedPaymentMethodForCashier === "CARTE_BANCAIRE"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1341,7 +1346,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     Carte de crédit
                   </span>
                 </div>
-                {selectedPaymentMethod === "CARTE_BANCAIRE" && (
+                {selectedPaymentMethodForCashier === "CARTE_BANCAIRE" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1360,9 +1365,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Orange Money */}
               <div
-                onClick={() => setSelectedPaymentMethod("ORANGE_MONEY")}
+                onClick={() =>
+                  setSelectedPaymentMethodForCashier("ORANGE_MONEY")
+                }
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "ORANGE_MONEY"
+                  selectedPaymentMethodForCashier === "ORANGE_MONEY"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1379,7 +1386,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     Orange money
                   </span>
                 </div>
-                {selectedPaymentMethod === "ORANGE_MONEY" && (
+                {selectedPaymentMethodForCashier === "ORANGE_MONEY" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1398,9 +1405,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* MTN Money */}
               <div
-                onClick={() => setSelectedPaymentMethod("MTN_MONEY")}
+                onClick={() => setSelectedPaymentMethodForCashier("MTN_MONEY")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "MTN_MONEY"
+                  selectedPaymentMethodForCashier === "MTN_MONEY"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1415,7 +1422,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">MTN money</span>
                 </div>
-                {selectedPaymentMethod === "MTN_MONEY" && (
+                {selectedPaymentMethodForCashier === "MTN_MONEY" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1434,9 +1441,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Moov Money */}
               <div
-                onClick={() => setSelectedPaymentMethod("MOOV_MONEY")}
+                onClick={() => setSelectedPaymentMethodForCashier("MOOV_MONEY")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "MOOV_MONEY"
+                  selectedPaymentMethodForCashier === "MOOV_MONEY"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1451,7 +1458,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">Moov money</span>
                 </div>
-                {selectedPaymentMethod === "MOOV_MONEY" && (
+                {selectedPaymentMethodForCashier === "MOOV_MONEY" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1470,9 +1477,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Wave */}
               <div
-                onClick={() => setSelectedPaymentMethod("WAVE")}
+                onClick={() => setSelectedPaymentMethodForCashier("WAVE")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "WAVE"
+                  selectedPaymentMethodForCashier === "WAVE"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1487,7 +1494,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">Wave</span>
                 </div>
-                {selectedPaymentMethod === "WAVE" && (
+                {selectedPaymentMethodForCashier === "WAVE" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1506,9 +1513,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Espèces */}
               <div
-                onClick={() => setSelectedPaymentMethod("ESPECES")}
+                onClick={() => setSelectedPaymentMethodForCashier("ESPECES")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "ESPECES"
+                  selectedPaymentMethodForCashier === "ESPECES"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1523,7 +1530,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">Espèces</span>
                 </div>
-                {selectedPaymentMethod === "ESPECES" && (
+                {selectedPaymentMethodForCashier === "ESPECES" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1541,14 +1548,26 @@ export const ServeurOrdersSection = (): JSX.Element => {
               </div>
             </div>
 
-            {/* Bouton Valider */}
-            <Button
-              onClick={handleProcessPayment}
-              disabled={!selectedPaymentMethod}
-              className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium text-base rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              Valider
-            </Button>
+            {/* Boutons d'action */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsSendToCashierModalOpen(false)}
+                disabled={isSendingToCashier}
+                className="flex-1 h-12 font-medium text-base rounded-xl"
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleProcessSendToCashier}
+                disabled={
+                  !selectedPaymentMethodForCashier || isSendingToCashier
+                }
+                className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium text-base rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {isSendingToCashier ? "Envoi en cours..." : "Envoyer en caisse"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

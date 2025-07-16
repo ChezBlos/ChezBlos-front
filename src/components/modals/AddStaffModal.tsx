@@ -343,6 +343,47 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                       </div>
                     </div>
 
+                    {/* Option Caissier */}
+                    <div
+                      onClick={() => handleInputChange("role", "CAISSIER")}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        formData.role === "CAISSIER"
+                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
+                          : "border-gray-200 hover:border-brand-primary-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "CAISSIER"
+                              ? "bg-brand-primary-500 text-brand-primary-50"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <Shield className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            Caissier
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Gestion des paiements, accès caisse et historique
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "CAISSIER"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "CAISSIER" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Option Administrateur (désactivée) */}
                     <div className="border-2 border-gray-200 rounded-lg p-4 opacity-50 cursor-not-allowed">
                       <div className="flex items-center gap-3">

@@ -59,11 +59,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (token) {
         try {
           const response = await getUserProfile();
-          // Normaliser le rôle en minuscules
           const userData = response.data.data;
-          if (userData && userData.role)
-            userData.role = userData.role.toLowerCase();
-          setUser(userData); // Corriger l'accès aux données
+          // Garder le rôle en majuscules comme défini dans l'interface
+          setUser(userData);
         } catch (error) {
           logger.error("Erreur lors de la récupération du profil:", error);
           localStorage.removeItem("token");
@@ -85,9 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       const response = await loginApi(credentials);
       const { user: userData, token: authToken } = response.data.data;
-      // Normaliser le rôle en minuscules
-      if (userData && userData.role)
-        userData.role = userData.role.toLowerCase();
+      // Garder le rôle en majuscules comme défini dans l'interface
       setUser(userData);
       setToken(authToken);
       localStorage.setItem("token", authToken);

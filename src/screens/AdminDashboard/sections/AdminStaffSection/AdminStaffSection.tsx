@@ -40,6 +40,7 @@ import { ProfileService } from "../../../../services/profileService";
 import { FileSpreadsheet, FileText, UserCheck, UserX } from "lucide-react";
 import { AccessCodeModal } from "../../../../components/modals/AccessCodeModal";
 import { AddStaffModal } from "../../../../components/modals/AddStaffModal";
+import { EditStaffModal } from "../../../../components/modals/EditStaffModal";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
 import { ExportService } from "../../../../services/exportService";
 import { useAlert } from "../../../../contexts/AlertContext";
@@ -65,10 +66,12 @@ export const AdminStaffSection: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [accessCodeModalOpen, setAccessCodeModalOpen] = useState(false);
   const [addStaffModalOpen, setAddStaffModalOpen] = useState(false);
+  const [editStaffModalOpen, setEditStaffModalOpen] = useState(false);
   const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
   const [toggleStatusConfirmModalOpen, setToggleStatusConfirmModalOpen] =
     useState(false);
   const [selectedUser, setSelectedUser] = useState<StaffUser | null>(null);
+  const [userToEdit, setUserToEdit] = useState<StaffUser | null>(null);
   const [userToDelete, setUserToDelete] = useState<StaffUser | null>(null);
   const [userToToggle, setUserToToggle] = useState<StaffUser | null>(null);
 
@@ -236,6 +239,17 @@ export const AdminStaffSection: React.FC = () => {
 
   // Gestionnaire de succès après ajout d'un utilisateur
   const handleAddStaffSuccess = () => {
+    refetch(); // Actualiser la liste des utilisateurs
+  };
+
+  // Gestionnaire de modification d'utilisateur
+  const handleEditUser = (user: StaffUser) => {
+    setUserToEdit(user);
+    setEditStaffModalOpen(true);
+  };
+
+  // Gestionnaire de succès après modification d'un utilisateur
+  const handleEditStaffSuccess = () => {
     refetch(); // Actualiser la liste des utilisateurs
   };
   // Gestionnaire de suppression d'utilisateur
@@ -748,7 +762,9 @@ export const AdminStaffSection: React.FC = () => {
                                     Code d'accès
                                   </DropdownMenuItem>
                                 )}{" "}
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleEditUser(user)}
+                                >
                                   <PencilSimple className="h-4 w-4 mr-2" />
                                   Modifier
                                 </DropdownMenuItem>{" "}
@@ -868,7 +884,9 @@ export const AdminStaffSection: React.FC = () => {
                                   Code d'accès
                                 </DropdownMenuItem>
                               )}{" "}
-                              <DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleEditUser(user)}
+                              >
                                 <PencilSimple className="h-4 w-4 mr-2" />
                                 Modifier
                               </DropdownMenuItem>
@@ -927,6 +945,16 @@ export const AdminStaffSection: React.FC = () => {
         isOpen={addStaffModalOpen}
         onClose={() => setAddStaffModalOpen(false)}
         onSuccess={handleAddStaffSuccess}
+      />{" "}
+      {/* Modal de modification de staff */}
+      <EditStaffModal
+        isOpen={editStaffModalOpen}
+        onClose={() => {
+          setEditStaffModalOpen(false);
+          setUserToEdit(null);
+        }}
+        onSuccess={handleEditStaffSuccess}
+        user={userToEdit}
       />{" "}
       {/* Modal de confirmation de suppression */}
       <ConfirmationModal

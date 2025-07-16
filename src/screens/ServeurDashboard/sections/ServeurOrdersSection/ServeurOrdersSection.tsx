@@ -42,6 +42,7 @@ import { OrderService } from "../../../../services/orderService";
 import { ProfileService } from "../../../../services/profileService";
 import NewOrderModal from "../../../../components/modals/NewOrderModal";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
+import { SendToCashierModal } from "../../../../components/modals/SendToCashierModal";
 import { useAuth } from "../../../../contexts/AuthContext";
 import {
   Eye,
@@ -78,6 +79,14 @@ export const ServeurOrdersSection = (): JSX.Element => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [orderToPay, setOrderToPay] = useState<Order | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<string>("");
+
+  // États pour la sélection du mode de paiement lors de l'envoi à la caisse
+  const [isSendToCashierModalOpen, setIsSendToCashierModalOpen] =
+    useState(false);
+  const [orderToSendToCashier, setOrderToSendToCashier] =
+    useState<Order | null>(null);
+  const [selectedCashierPaymentMethod, setSelectedCashierPaymentMethod] =
     useState<string>("");
 
   // Récupération de l'utilisateur connecté
@@ -182,20 +191,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
       subtitle: formatDate(getToday()),
       subtitleColor: "text-orange-500",
     },
-    // Carte Total caisse - visible seulement pour les caissiers et admins
-    ...(user?.role === "ADMIN" || user?.role === "CAISSIER"
-      ? [
-          {
-            title: "Total caisse",
-            value: statsLoading
-              ? "..."
-              : stats?.chiffreAffairesJour?.toLocaleString() || "0",
-            currency: statsLoading ? "" : "XOF",
-            subtitle: `Recette du ${formatDate(getToday())}`,
-            subtitleColor: "text-orange-500",
-          },
-        ]
-      : []),
   ]; // Order status tabs data with real counts
   const statusTabs = [
     {
@@ -247,99 +242,99 @@ export const ServeurOrdersSection = (): JSX.Element => {
       active: selectedStatus === "ANNULE",
     },
   ];
-  // Fonction pour obtenir l'icône de paiement (composant React)
-  const getPaymentIcon = (modePaiement: string) => {
-    const iconProps = {
-      size: 20,
-      strokeweigh: "1.5",
-      color: "#F97316" as const,
-    };
+  // // Fonction pour obtenir l'icône de paiement (composant React)
+  // const getPaymentIcon = (modePaiement: string) => {
+  //   const iconProps = {
+  //     size: 20,
+  //     strokeweigh: "1.5",
+  //     color: "#F97316" as const,
+  //   };
 
-    switch (modePaiement?.toLowerCase()) {
-      case "especes":
-        return (
-          <>
-            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0">
-              <Money {...iconProps} />
-            </div>
-          </>
-        );
+  //   switch (modePaiement?.toLowerCase()) {
+  //     case "especes":
+  //       return (
+  //         <>
+  //           <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0">
+  //             <Money {...iconProps} />
+  //           </div>
+  //         </>
+  //       );
 
-      case "carte_bancaire":
-      case "carte":
-        return (
-          <>
-            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-centerrounded-full flex-shrink-0">
-              <CreditCard {...iconProps} />
-            </div>
-          </>
-        );
-      case "wave":
-        return (
-          <img
-            src="/img/wave.jpg"
-            alt="Wave"
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        );
-      case "mtn_money":
-        return (
-          <img
-            src="/img/mtn_money.jpg"
-            alt="MTN Money"
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        );
-      case "orange_money":
-        return (
-          <img
-            src="/img/orange_money.jpg"
-            alt="Orange Money"
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        );
-      case "moov_money":
-        return (
-          <img
-            src="/img/moov_money.jpg"
-            alt="Moov Money"
-            className="w-10 h-10 rounded-full object-cover"
-          />
-        );
-      default:
-        return (
-          <>
-            <div className="flex w-10 h-10 items-center justify-center px-2 py-2 bg-orange-100 rounded-full flex-shrink-0">
-              <Money {...iconProps} />
-            </div>
-          </>
-        );
-    }
-  };
+  //     case "carte_bancaire":
+  //     case "carte":
+  //       return (
+  //         <>
+  //           <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-centerrounded-full flex-shrink-0">
+  //             <CreditCard {...iconProps} />
+  //           </div>
+  //         </>
+  //       );
+  //     case "wave":
+  //       return (
+  //         <img
+  //           src="/img/wave.jpg"
+  //           alt="Wave"
+  //           className="w-10 h-10 rounded-full object-cover"
+  //         />
+  //       );
+  //     case "mtn_money":
+  //       return (
+  //         <img
+  //           src="/img/mtn_money.jpg"
+  //           alt="MTN Money"
+  //           className="w-10 h-10 rounded-full object-cover"
+  //         />
+  //       );
+  //     case "orange_money":
+  //       return (
+  //         <img
+  //           src="/img/orange_money.jpg"
+  //           alt="Orange Money"
+  //           className="w-10 h-10 rounded-full object-cover"
+  //         />
+  //       );
+  //     case "moov_money":
+  //       return (
+  //         <img
+  //           src="/img/moov_money.jpg"
+  //           alt="Moov Money"
+  //           className="w-10 h-10 rounded-full object-cover"
+  //         />
+  //       );
+  //     default:
+  //       return (
+  //         <>
+  //           <div className="flex w-10 h-10 items-center justify-center px-2 py-2 bg-orange-100 rounded-full flex-shrink-0">
+  //             <Money {...iconProps} />
+  //           </div>
+  //         </>
+  //       );
+  //   }
+  // };
 
-  // Fonction pour formater les noms des modes de paiement
-  const formatPaymentMethodName = (
-    modePaiement: string | undefined
-  ): string => {
-    if (!modePaiement) return "Non défini";
+  // // Fonction pour formater les noms des modes de paiement
+  // const formatPaymentMethodName = (
+  //   modePaiement: string | undefined
+  // ): string => {
+  //   if (!modePaiement) return "Non défini";
 
-    switch (modePaiement.toUpperCase()) {
-      case "ESPECES":
-        return "Espèces";
-      case "CARTE_BANCAIRE":
-        return "Carte bancaire";
-      case "WAVE":
-        return "Wave";
-      case "MTN_MONEY":
-        return "MTN Money";
-      case "ORANGE_MONEY":
-        return "Orange Money";
-      case "MOOV_MONEY":
-        return "Moov Money";
-      default:
-        return modePaiement;
-    }
-  };
+  //   switch (modePaiement.toUpperCase()) {
+  //     case "ESPECES":
+  //       return "Espèces";
+  //     case "CARTE_BANCAIRE":
+  //       return "Carte bancaire";
+  //     case "WAVE":
+  //       return "Wave";
+  //     case "MTN_MONEY":
+  //       return "MTN Money";
+  //     case "ORANGE_MONEY":
+  //       return "Orange Money";
+  //     case "MOOV_MONEY":
+  //       return "Moov Money";
+  //     default:
+  //       return modePaiement;
+  //   }
+  // };
 
   // Fonction pour formater le prix
   const formatPrice = (price: number): string => {
@@ -448,6 +443,43 @@ export const ServeurOrdersSection = (): JSX.Element => {
       console.error("Erreur lors de l'envoi en cuisine:", error);
     }
   };
+
+  // Nouvelle fonction pour envoyer à la caisse avec choix du mode de paiement
+  const handleSendToCashier = (order: Order) => {
+    setOrderToSendToCashier(order);
+    setSelectedCashierPaymentMethod(order.modePaiement || "");
+    setIsSendToCashierModalOpen(true);
+    setActiveDropdown(null); // Fermer le dropdown
+  };
+
+  // Fonction pour confirmer l'envoi à la caisse avec le mode de paiement
+  const handleConfirmSendToCashier = async () => {
+    if (!orderToSendToCashier || !selectedCashierPaymentMethod) return;
+
+    try {
+      // D'abord mettre à jour le mode de paiement
+      await OrderService.updateOrder(orderToSendToCashier._id, {
+        modePaiement: selectedCashierPaymentMethod as
+          | "ESPECES"
+          | "CARTE_BANCAIRE"
+          | "WAVE"
+          | "MTN_MONEY"
+          | "ORANGE_MONEY"
+          | "MOOV_MONEY",
+      });
+
+      // Puis envoyer à la caisse (changement de statut vers EN_ATTENTE_PAIEMENT)
+      await OrderService.sendToCashier(orderToSendToCashier._id);
+
+      setIsSendToCashierModalOpen(false);
+      setOrderToSendToCashier(null);
+      setSelectedCashierPaymentMethod("");
+      refetch(); // Actualiser la liste
+      refetchStats(); // Actualiser les statistiques
+    } catch (error) {
+      console.error("Erreur lors de l'envoi à la caisse:", error);
+    }
+  };
   const handleCompleteOrder = async (orderId: string) => {
     try {
       await OrderService.markAsCompleted(orderId);
@@ -528,11 +560,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   <span className="font-bold text-xl sm:text-2xl md:text-3xl text-gray-900 truncate">
                     {card.value}
                   </span>
-                  {card.currency && (
-                    <span className="font-bold text-xl sm:text-2xl md:text-3xl text-gray-400 flex-shrink-0">
-                      {card.currency}
-                    </span>
-                  )}
                 </div>
                 <div className="flex items-start gap-1 w-full min-w-0">
                   <span
@@ -626,9 +653,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </TableHead>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
                     Serveur
-                  </TableHead>
-                  <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
-                    Type de paiement
                   </TableHead>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
                     Montant
@@ -810,16 +834,6 @@ export const ServeurOrdersSection = (): JSX.Element => {
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        {" "}
-                        {/* Payment Type Column */}
-                        <div className="flex items-center gap-3 min-w-0">
-                          {getPaymentIcon(order.modePaiement || "especes")}
-                          <div className="font-semibold text-base text-gray-900 truncate">
-                            {formatPaymentMethodName(order.modePaiement)}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
                         {/* Amount Column */}
                         <div className="font-semibold text-base">
                           <span className="text-gray-900">
@@ -894,33 +908,17 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 </span>
                               </DropdownMenuItem>{" "}
                               {/* Option Paiement pour toutes les commandes sauf annulées */}
-                              {order.statut !== "ANNULE" && (
-                                <>
-                                  <DropdownMenuSeparator className="h-px bg-gray-200" />
-                                  <DropdownMenuItem
-                                    className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
-                                    onClick={() => handlePayment(order)}
-                                  >
-                                    <CreditCard size={20} />
-                                    <span className="text-gray-700">
-                                      Paiement
-                                    </span>
-                                  </DropdownMenuItem>
-                                </>
-                              )}{" "}
-                              {/* Option Marquer comme terminée pour les commandes prêtes */}
+                              {/* Option Envoyer à la caisse pour les commandes prêtes */}
                               {order.statut === "PRET" && (
                                 <>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                   <DropdownMenuItem
                                     className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
-                                    onClick={() =>
-                                      handleCompleteOrder(order._id)
-                                    }
+                                    onClick={() => handleSendToCashier(order)}
                                   >
-                                    <CheckCircle size={20} />
+                                    <CreditCard size={20} />
                                     <span className="text-gray-700">
-                                      Marquer comme terminée
+                                      Envoyer à la caisse
                                     </span>
                                   </DropdownMenuItem>
                                 </>
@@ -1225,6 +1223,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   variant="primary"
                 />
               )}{" "}
+              {/* Envoyer à la caisse - disponible pour les commandes PRET */}
+              {selectedOrderForActions.statut === "PRET" && (
+                <BottomSheetAction
+                  onClick={() => {
+                    handleSendToCashier(selectedOrderForActions);
+                    handleCloseBottomSheet();
+                  }}
+                  icon={<CreditCard size={24} />}
+                  title="Envoyer à la caisse"
+                  description="Choisir le mode de paiement et envoyer"
+                  variant="primary"
+                />
+              )}
               {/* Marquer comme terminée - disponible pour les commandes PRET */}
               {selectedOrderForActions.statut === "PRET" && (
                 <BottomSheetAction
@@ -1287,7 +1298,21 @@ export const ServeurOrdersSection = (): JSX.Element => {
           setSelectedOrder(null);
         }}
         order={selectedOrder}
-      />{" "}
+      />
+      {/* Modal pour envoyer à la caisse */}
+      <SendToCashierModal
+        isOpen={isSendToCashierModalOpen}
+        onClose={() => {
+          setIsSendToCashierModalOpen(false);
+          setOrderToSendToCashier(null);
+          setSelectedCashierPaymentMethod("");
+        }}
+        order={orderToSendToCashier}
+        selectedPaymentMethod={selectedCashierPaymentMethod}
+        onPaymentMethodSelect={setSelectedCashierPaymentMethod}
+        onConfirm={handleConfirmSendToCashier}
+        isLoading={false}
+      />
       {/* Modal pour le mode de paiement */}
       <Dialog
         open={isPaymentModalOpen}

@@ -14,7 +14,7 @@ import { Input } from "../../../../components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
-import { CreditCard, Money } from "phosphor-react";
+// import { CreditCard, Money } from "phosphor-react";
 import { SearchIcon, EyeIcon } from "lucide-react";
 import { Order } from "../../../../types/order";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
@@ -114,96 +114,96 @@ export const ServeurOrdersHistorySection: React.FC = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-  const getPaymentIcon = (modePaiement: string, size: "sm" | "md" = "md") => {
-    const iconProps = {
-      size: size === "sm" ? 16 : 20,
-      strokeweigh: "1.5",
-      color: "#F97316" as const,
-    };
-    const containerSize = size === "sm" ? "w-6 h-6" : "w-10 h-10";
-    const imageSize = size === "sm" ? "w-6 h-6" : "w-10 h-10";
-    switch ((modePaiement || "").toLowerCase()) {
-      case "especes":
-        return (
-          <div
-            className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
-          >
-            <Money {...iconProps} />
-          </div>
-        );
-      case "carte_bancaire":
-      case "carte":
-        return (
-          <div
-            className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
-          >
-            <CreditCard {...iconProps} />
-          </div>
-        );
-      case "wave":
-        return (
-          <img
-            src="/img/wave.jpg"
-            alt="Wave"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      case "mtn_money":
-        return (
-          <img
-            src="/img/mtn_money.jpg"
-            alt="MTN Money"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      case "orange_money":
-        return (
-          <img
-            src="/img/orange_money.jpg"
-            alt="Orange Money"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      case "moov_money":
-        return (
-          <img
-            src="/img/moov_money.jpg"
-            alt="Moov Money"
-            className={`${imageSize} rounded-full object-cover`}
-          />
-        );
-      default:
-        return (
-          <div
-            className={`flex ${containerSize} items-center justify-center px-2 py-2 bg-orange-100 rounded-full flex-shrink-0`}
-          >
-            <Money {...iconProps} />
-          </div>
-        );
-    }
-  };
-  const formatPaymentMethodName = (
-    modePaiement: string | undefined
-  ): string => {
-    if (!modePaiement) return "Non défini";
-    switch (modePaiement.toUpperCase()) {
-      case "ESPECES":
-        return "Espèces";
-      case "CARTE_BANCAIRE":
-      case "CARTE":
-        return "Carte bancaire";
-      case "WAVE":
-        return "Wave";
-      case "MTN_MONEY":
-        return "MTN Money";
-      case "ORANGE_MONEY":
-        return "Orange Money";
-      case "MOOV_MONEY":
-        return "Moov Money";
-      default:
-        return modePaiement;
-    }
-  };
+  // const getPaymentIcon = (modePaiement: string, size: "sm" | "md" = "md") => {
+  //   const iconProps = {
+  //     size: size === "sm" ? 16 : 20,
+  //     strokeweigh: "1.5",
+  //     color: "#F97316" as const,
+  //   };
+  //   const containerSize = size === "sm" ? "w-6 h-6" : "w-10 h-10";
+  //   const imageSize = size === "sm" ? "w-6 h-6" : "w-10 h-10";
+  //   switch ((modePaiement || "").toLowerCase()) {
+  //     case "especes":
+  //       return (
+  //         <div
+  //           className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
+  //         >
+  //           <Money {...iconProps} />
+  //         </div>
+  //       );
+  //     case "carte_bancaire":
+  //     case "carte":
+  //       return (
+  //         <div
+  //           className={`flex ${containerSize} bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0`}
+  //         >
+  //           <CreditCard {...iconProps} />
+  //         </div>
+  //       );
+  //     case "wave":
+  //       return (
+  //         <img
+  //           src="/img/wave.jpg"
+  //           alt="Wave"
+  //           className={`${imageSize} rounded-full object-cover`}
+  //         />
+  //       );
+  //     case "mtn_money":
+  //       return (
+  //         <img
+  //           src="/img/mtn_money.jpg"
+  //           alt="MTN Money"
+  //           className={`${imageSize} rounded-full object-cover`}
+  //         />
+  //       );
+  //     case "orange_money":
+  //       return (
+  //         <img
+  //           src="/img/orange_money.jpg"
+  //           alt="Orange Money"
+  //           className={`${imageSize} rounded-full object-cover`}
+  //         />
+  //       );
+  //     case "moov_money":
+  //       return (
+  //         <img
+  //           src="/img/moov_money.jpg"
+  //           alt="Moov Money"
+  //           className={`${imageSize} rounded-full object-cover`}
+  //         />
+  //       );
+  //     default:
+  //       return (
+  //         <div
+  //           className={`flex ${containerSize} items-center justify-center px-2 py-2 bg-orange-100 rounded-full flex-shrink-0`}
+  //         >
+  //           <Money {...iconProps} />
+  //         </div>
+  //       );
+  //   }
+  // };
+  // const formatPaymentMethodName = (
+  //   modePaiement: string | undefined
+  // ): string => {
+  //   if (!modePaiement) return "Non défini";
+  //   switch (modePaiement.toUpperCase()) {
+  //     case "ESPECES":
+  //       return "Espèces";
+  //     case "CARTE_BANCAIRE":
+  //     case "CARTE":
+  //       return "Carte bancaire";
+  //     case "WAVE":
+  //       return "Wave";
+  //     case "MTN_MONEY":
+  //       return "MTN Money";
+  //     case "ORANGE_MONEY":
+  //       return "Orange Money";
+  //     case "MOOV_MONEY":
+  //       return "Moov Money";
+  //     default:
+  //       return modePaiement;
+  //   }
+  // };
 
   // Fonction pour ouvrir le modal de détails de commande
   const handleViewOrderDetails = (order: Order) => {
@@ -384,9 +384,9 @@ export const ServeurOrdersHistorySection: React.FC = () => {
                     <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                       Statut
                     </TableHead>
-                    <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                    {/* <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                       Paiement
-                    </TableHead>
+                    </TableHead> */}
                     <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                       Date
                     </TableHead>
@@ -449,14 +449,14 @@ export const ServeurOrdersHistorySection: React.FC = () => {
                       <TableCell className="py-4 px-4 lg:px-6">
                         <OrderStatusBadge statut={order.statut as any} />
                       </TableCell>
-                      <TableCell className="px-4 py-3">
+                      {/* <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-3 min-w-0">
                           {getPaymentIcon(order.modePaiement || "especes")}
                           <div className="font-semibold text-base text-gray-900 truncate">
                             {formatPaymentMethodName(order.modePaiement)}
                           </div>
                         </div>
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell className="py-4 px-4 lg:px-6">
                         <div className="text-sm text-gray-600">
                           {formatDateTime(order.dateCreation)}

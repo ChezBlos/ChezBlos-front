@@ -7,19 +7,18 @@ export const useAuthRedirect = () => {
   const { user, isAuthenticated } = useAuth();
   useEffect(() => {
     if (isAuthenticated && user) {
-      // Redirection basée sur le rôle de l'utilisateur
-      switch (user.role.toLowerCase()) {
-        case "admin":
+      // Redirection basée sur le rôle de l'utilisateur (rôles en majuscules)
+      switch (user.role) {
+        case "ADMIN":
           navigate("/admin/dashboard", { replace: true });
           break;
-        case "serveur":
+        case "SERVEUR":
           navigate("/serveur/dashboard", { replace: true });
           break;
-        case "caissier":
+        case "CAISSIER":
           navigate("/caissier/dashboard", { replace: true });
           break;
-        case "cuisinier":
-        case "cuisine":
+        case "CUISINIER":
           navigate("/cuisine/dashboard", { replace: true });
           break;
         default:
@@ -39,11 +38,7 @@ export const useRequireAuth = (requiredRoles?: string[]) => {
         navigate("/login", { replace: true });
         return;
       }
-      if (
-        requiredRoles &&
-        user &&
-        !requiredRoles.includes(user.role.toLowerCase())
-      ) {
+      if (requiredRoles && user && !requiredRoles.includes(user.role)) {
         navigate("/403", { replace: true });
         return;
       }

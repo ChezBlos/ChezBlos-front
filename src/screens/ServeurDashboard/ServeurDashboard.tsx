@@ -5,7 +5,6 @@ import { Sidebar } from "./Sidebar";
 import { ServeurHeaderSection } from "./sections/ServeurHeaderSection";
 import { ServeurOrdersSection } from "./sections/ServeurOrdersSection";
 import { ServeurOrdersHistorySection } from "./sections/ServeurOrdersHistorySection/ServeurOrdersHistorySection";
-import { CaisseSection } from "./sections/CaisseSection";
 import ToastContainer from "../../components/ui/toast-container";
 
 export const ServeurDashboard: React.FC = () => {
@@ -33,19 +32,13 @@ export const ServeurDashboard: React.FC = () => {
           <div className=" px-3 md:px-6 lg:px-12 xl:px-20 pt-6">
             <h1 className="text-3xl font-bold text-gray-900">
               Dashboard Serveur -{" "}
-              {section === "commandes"
-                ? "Commandes"
-                : section === "historique"
-                ? "Historique"
-                : "Caisse"}
+              {section === "commandes" ? "Commandes" : section === "historique"}
             </h1>
           </div>
           {section === "commandes" ? (
             <ServeurOrdersSection />
-          ) : section === "historique" ? (
-            <ServeurOrdersHistorySection />
           ) : (
-            <CaisseSection />
+            <ServeurOrdersHistorySection />
           )}{" "}
         </div>
       </div>

@@ -1,5 +1,40 @@
-import api from "./api";
-import { logger } from "../utils/logger";
+import axios from "axios";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:3000/api";
+
+// Configuration axios
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Intercepteur pour ajouter le token d'authentification
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Intercepteur de réponse pour gérer les erreurs
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("Erreur API complète:", error.response?.data);
+    return Promise.reject(error);
+  }
+);
 
 export interface StaffUser {
   _id: string;
@@ -7,8 +42,7 @@ export interface StaffUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
   photoProfil?: string;
   dateCreation: string;
@@ -21,8 +55,7 @@ export interface CreateUserRequest {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier?: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif?: boolean;
   motDePasse?: string;
 }
@@ -44,7 +77,7 @@ export class UserService {
   }
   static async createUser(userData: CreateUserRequest): Promise<StaffUser> {
     // Utiliser l'endpoint spécialisé pour créer du staff
-    logger.debug("Données envoyées au backend:", userData);
+    console.log("Données envoyées au backend:", userData);
     const response = await api.post("/users/staff", userData);
     return response.data.data;
   }
@@ -66,59 +99,12 @@ export class UserService {
     return response.data.data;
   }
 
-  static async getUserAccessCode(id: string): Promise<any> {
-    logger.info(
-      `🔍 [Frontend] Récupération du code d'accès pour l'utilisateur ID: ${id}`
-    );
-    try {
-      const response = await api.get(`/users/${id}/access-code`);
-      logger.info(`✅ [Frontend] Code d'accès récupéré:`, response.data.data);
-      return response.data.data;
-    } catch (error) {
-      logger.error(
-        `❌ [Frontend] Erreur lors de la récupération du code:`,
-        error
-      );
-      throw error;
-    }
+  static async getUserAccessCode(id: string): Promise<{ codeAcces: string }> {
+    const response = await api.get(`/users/${id}/access-code`);
+    return response.data.data;
   }
-
-  static async generateAccessCode(id: string): Promise<any> {
-    logger.info(
-      `🔄 [Frontend] Début de régénération de code d'accès pour l'utilisateur ID: ${id}`
-    );
-    try {
-      const response = await api.post(`/users/${id}/access-code/generate`);
-      logger.info(
-        `🎉 [Frontend] Code d'accès regénéré avec succès:`,
-        response.data.data
-      );
-      return response.data.data;
-    } catch (error) {
-      logger.error(
-        `❌ [Frontend] Erreur lors de la régénération du code:`,
-        error
-      );
-      throw error;
-    }
-  }
-
-  static async permanentlyDeleteUser(id: string): Promise<boolean> {
-    logger.info(
-      `🗑️ [Frontend] Suppression définitive de l'utilisateur ID: ${id}`
-    );
-    try {
-      const response = await api.delete(`/users/${id}/permanent`);
-      logger.info(
-        `✅ [Frontend] Utilisateur supprimé définitivement avec succès`
-      );
-      return response.data.success;
-    } catch (error) {
-      logger.error(
-        `❌ [Frontend] Erreur lors de la suppression définitive:`,
-        error
-      );
-      throw error;
-    }
+  static async generateAccessCode(id: string): Promise<{ codeAcces: string }> {
+    const response = await api.post(`/users/${id}/access-code/generate`);
+    return response.data.data;
   }
 }

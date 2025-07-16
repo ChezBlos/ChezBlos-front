@@ -36,7 +36,6 @@ import { useAlert } from "../../../../contexts/AlertContext";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
 import { AddMenuItemModal } from "../../../../components/modals/AddMenuItemModal";
 import { EditMenuItemModal } from "../../../../components/modals/EditMenuItemModal";
-import { logger } from "../../../../utils/logger";
 
 interface AdminMenuSectionProps {
   onSectionSelect?: (
@@ -53,7 +52,7 @@ interface AdminMenuSectionProps {
   ) => void;
 }
 
-export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
+export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -95,7 +94,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
 
   // Log des changements dans menuItems
   React.useEffect(() => {
-    logger.debug("🔄 [ADMIN MENU] MenuItems changés:", {
+    console.log("🔄 [ADMIN MENU] MenuItems changés:", {
       count: menuItems?.length || 0,
       items:
         menuItems?.slice(0, 3).map((item) => ({
@@ -110,7 +109,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
 
   // Log des changements d'état
   React.useEffect(() => {
-    logger.debug("📊 [ADMIN MENU] État:", {
+    console.log("📊 [ADMIN MENU] État:", {
       loading,
       error,
       menuItemsCount: menuItems?.length || 0,
@@ -152,10 +151,10 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   }, [menuItems]);
   // Calculs de statistiques
   const stats = useMemo(() => {
-    logger.debug("📊 [ADMIN MENU] Calcul des stats avec:", menuItems);
+    console.log("📊 [ADMIN MENU] Calcul des stats avec:", menuItems);
 
     if (!menuItems || !Array.isArray(menuItems)) {
-      logger.debug("⚠️ [ADMIN MENU] MenuItems invalide:", {
+      console.log("⚠️ [ADMIN MENU] MenuItems invalide:", {
         menuItems,
         isArray: Array.isArray(menuItems),
       });
@@ -184,7 +183,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
       totalRevenue,
     };
 
-    logger.debug("📊 [ADMIN MENU] Stats calculées:", calculatedStats);
+    console.log("📊 [ADMIN MENU] Stats calculées:", calculatedStats);
 
     return calculatedStats;
   }, [menuItems]);
@@ -201,10 +200,10 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   const handleCreateMenuItem = async (formData: FormData) => {
     setIsCreating(true);
     try {
-      logger.debug("➕ [ADMIN MENU] Début de la création via nouveau modal");
+      console.log("➕ [ADMIN MENU] Début de la création via nouveau modal");
 
       const newItem = await createMenuItem(formData);
-      logger.debug("✅ [ADMIN MENU] Article créé:", newItem);
+      console.log("✅ [ADMIN MENU] Article créé:", newItem);
 
       setIsCreateModalOpen(false);
       await refreshMenu();
@@ -212,7 +211,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
-      logger.error("❌ [ADMIN MENU] Erreur création:", errorMessage);
+      console.error("❌ [ADMIN MENU] Erreur création:", errorMessage);
       showAlert("error", `Erreur lors de la création: ${errorMessage}`);
     } finally {
       setIsCreating(false);
@@ -222,13 +221,13 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   const handleEditMenuItem = async (id: string, formData: FormData) => {
     setIsEditing(true);
     try {
-      logger.debug(
+      console.log(
         "✏️ [ADMIN MENU] Début de la modification via nouveau modal:",
         id
       );
 
       const updatedItem = await updateMenuItem(id, formData);
-      logger.debug("✅ [ADMIN MENU] Article modifié:", updatedItem);
+      console.log("✅ [ADMIN MENU] Article modifié:", updatedItem);
 
       setIsEditModalOpen(false);
       setSelectedItem(null);
@@ -240,7 +239,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
-      logger.error("❌ [ADMIN MENU] Erreur modification:", errorMessage);
+      console.error("❌ [ADMIN MENU] Erreur modification:", errorMessage);
       showAlert("error", `Erreur lors de la modification: ${errorMessage}`);
     } finally {
       setIsEditing(false);
@@ -282,16 +281,6 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
   };
   const handleToggleAvailability = async (id: string, itemName?: string) => {
     try {
-      logger.debug(
-        "🔄 [ADMIN MENU] Tentative de changement de disponibilité:",
-        {
-          id,
-          itemName,
-          idType: typeof id,
-          idLength: id?.length,
-        }
-      );
-
       const updatedItem = await toggleItemAvailability(id);
       // Rafraîchir la liste pour avoir les dernières données du serveur
       await refreshMenu();
@@ -305,11 +294,6 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erreur inconnue";
-      logger.error("❌ [ADMIN MENU] Erreur changement disponibilité:", {
-        id,
-        itemName,
-        error: errorMessage,
-      });
       showAlert(
         "error",
         `Erreur lors du changement de disponibilité: ${errorMessage}`
@@ -661,7 +645,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = () => {
                         <div className="bg-white p-4 rounded-2xl border border-slate-200">
                           {/* Header avec image */}
                           <div className="flex items-start gap-3 mb-4">
-                            <div className="w-16 h-16 bg-gray-10 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}

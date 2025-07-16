@@ -7,22 +7,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../../../components/ui/dialog";
-import { DatePicker } from "../../../../components/ui/date-picker";
+import { Input } from "../../../../components/ui/input";
 
 interface DateFilterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApplyFilter: (filter: {
-    mode: "period" | "single";
-    startDate?: string;
-    endDate?: string;
-    date?: string;
-  }) => void;
+  onApplyFilter: (startDate: string, endDate: string) => void;
   onClearFilter: () => void;
   currentStartDate?: string;
   currentEndDate?: string;
-  currentMode?: "period" | "single";
-  currentDate?: string;
 }
 
 export const DateFilterModal = ({
@@ -32,62 +25,31 @@ export const DateFilterModal = ({
   onClearFilter,
   currentStartDate = "",
   currentEndDate = "",
-  currentMode = "period",
-  currentDate = "",
 }: DateFilterModalProps): JSX.Element => {
-  const [mode, setMode] = React.useState<"period" | "single">(currentMode);
-  const [startDate, setStartDate] = React.useState<Date | undefined>(
-    currentStartDate ? new Date(currentStartDate) : undefined
-  );
-  const [endDate, setEndDate] = React.useState<Date | undefined>(
-    currentEndDate ? new Date(currentEndDate) : undefined
-  );
-  const [singleDate, setSingleDate] = React.useState<Date | undefined>(
-    currentDate ? new Date(currentDate) : undefined
-  );
+  const [startDate, setStartDate] = React.useState(currentStartDate);
+  const [endDate, setEndDate] = React.useState(currentEndDate);
 
   React.useEffect(() => {
-    setMode(currentMode);
-    setStartDate(currentStartDate ? new Date(currentStartDate) : undefined);
-    setEndDate(currentEndDate ? new Date(currentEndDate) : undefined);
-    setSingleDate(currentDate ? new Date(currentDate) : undefined);
-  }, [currentStartDate, currentEndDate, currentMode, currentDate, isOpen]);
+    setStartDate(currentStartDate);
+    setEndDate(currentEndDate);
+  }, [currentStartDate, currentEndDate, isOpen]);
 
   const handleApply = () => {
-    if (mode === "single") {
-      const dateStr = singleDate
-        ? singleDate.toISOString().split("T")[0]
-        : undefined;
-      onApplyFilter({ mode: "single", date: dateStr });
-    } else {
-      const startDateStr = startDate
-        ? startDate.toISOString().split("T")[0]
-        : undefined;
-      const endDateStr = endDate
-        ? endDate.toISOString().split("T")[0]
-        : undefined;
-      onApplyFilter({
-        mode: "period",
-        startDate: startDateStr,
-        endDate: endDateStr,
-      });
-    }
+    onApplyFilter(startDate, endDate);
     onClose();
   };
 
   const handleClear = () => {
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setSingleDate(undefined);
+    setStartDate("");
+    setEndDate("");
     onClearFilter();
     onClose();
   };
 
   const handleClose = () => {
-    setMode(currentMode);
-    setStartDate(currentStartDate ? new Date(currentStartDate) : undefined);
-    setEndDate(currentEndDate ? new Date(currentEndDate) : undefined);
-    setSingleDate(currentDate ? new Date(currentDate) : undefined);
+    // Reset to current values when closing without applying
+    setStartDate(currentStartDate);
+    setEndDate(currentEndDate);
     onClose();
   };
 
@@ -112,100 +74,61 @@ export const DateFilterModal = ({
           </div>
         </DialogHeader>
 
-        {/* Toggle mode */}
-        <div className="px-6 pt-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type de filtre
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setMode("period")}
-                className={
-                  mode === "period"
-                    ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
-                    : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
-                }
-              >
-                Période
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setMode("single")}
-                className={
-                  mode === "single"
-                    ? "w-full bg-brand-primary-500 hover:bg-brand-primary-600 text-white"
-                    : "w-full bg-white hover:bg-gray-5 border border-gray-200 text-black"
-                }
-              >
-                Date précise
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {mode === "period"
-                ? "Filtrer sur une plage de dates"
-                : "Filtrer sur une date spécifique"}
-            </p>
-          </div>
-        </div>
-
         {/* Content */}
         <div className="px-6 py-5">
           <div className="space-y-4">
-            {mode === "period" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Start Date */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date de début
-                  </label>
-                  <DatePicker
-                    date={startDate}
-                    onSelect={setStartDate}
-                    placeholder="Sélectionner une date"
-                  />
-                </div>
-                {/* End Date */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date de fin
-                  </label>
-                  <DatePicker
-                    date={endDate}
-                    onSelect={setEndDate}
-                    placeholder="Sélectionner une date"
-                  />
-                </div>
-              </div>
-            ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Start Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date
+                  Date de début
                 </label>
-                <DatePicker
-                  date={singleDate}
-                  onSelect={setSingleDate}
-                  placeholder="Sélectionner une date"
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setStartDate(e.target.value)
+                  }
+                  className="w-full"
                 />
               </div>
-            )}
+
+              {/* End Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date de fin
+                </label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEndDate(e.target.value)
+                  }
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="text-xs text-gray-500 bg-gray-10 p-3 rounded-lg">
+              <p>• Laissez vide pour ne pas filtrer par cette date</p>
+              <p>• La date de début inclut toute la journée (00:00)</p>
+              <p>• La date de fin inclut toute la journée (23:59)</p>
+            </div>
           </div>
-        </div>
-        {/* Footer */}
-        <div className="flex justify-end gap-2 px-6 pb-5">
-          <Button variant="ghost" onClick={handleClear}>
-            Réinitialiser
-          </Button>
-          <Button
-            onClick={handleApply}
-            disabled={mode === "single" ? !singleDate : !startDate || !endDate}
-            className="bg-brand-primary-500 hover:bg-brand-primary-600 text-white disabled:bg-gray-300 disabled:text-gray-500"
-          >
-            Appliquer
-          </Button>
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-6">
+            <Button variant="outline" onClick={handleClear} className="flex-1">
+              Effacer
+            </Button>
+            <Button
+              onClick={handleApply}
+              className="flex-1 bg-orange-500 hover:bg-orange-600"
+            >
+              Appliquer
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -30,8 +30,7 @@ interface StaffUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
   photoProfil?: string;
   dateCreation: string;
@@ -45,8 +44,7 @@ interface UserDetailsModalProps {
   user: StaffUser | null;
 }
 
-const getRoleIcon = (role: string, isCaissier: boolean = false) => {
-  if (isCaissier) return <CallBellIcon className="w-5 h-5" />;
+const getRoleIcon = (role: string) => {
   switch (role) {
     case "ADMIN":
       return <ShieldIcon className="w-5 h-5" />;
@@ -54,13 +52,14 @@ const getRoleIcon = (role: string, isCaissier: boolean = false) => {
       return <ChefHatIcon className="w-5 h-5" />;
     case "SERVEUR":
       return <CallBellIcon className="w-5 h-5" />;
+    case "CAISSIER":
+      return <CallBellIcon className="w-5 h-5" />;
     default:
       return <Shield className="w-5 h-5" />;
   }
 };
 
-const getRoleLabel = (role: string, isCaissier: boolean = false) => {
-  if (isCaissier) return "Caissier";
+const getRoleLabel = (role: string) => {
   switch (role) {
     case "ADMIN":
       return "Administrateur";
@@ -68,6 +67,8 @@ const getRoleLabel = (role: string, isCaissier: boolean = false) => {
       return "Cuisinier";
     case "SERVEUR":
       return "Serveur";
+    case "CAISSIER":
+      return "Caissier";
     default:
       return role;
   }
@@ -132,9 +133,9 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold">{fullName}</h3>
                   <div className="flex items-center space-x-2 mt-1">
-                    {getRoleIcon(user.role, user.isCaissier)}
+                    {getRoleIcon(user.role)}
                     <span className="text-gray-600">
-                      {getRoleLabel(user.role, user.isCaissier)}
+                      {getRoleLabel(user.role)}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2 mt-2">
@@ -248,8 +249,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     <CallBellIcon className="w-5 h-5" />
                     <span className="font-medium">Accès caisse</span>
                   </div>
-                  <Badge variant={user.isCaissier ? "default" : "secondary"}>
-                    {user.isCaissier ? "Autorisé" : "Non autorisé"}
+                  <Badge
+                    variant={user.role === "CAISSIER" ? "default" : "secondary"}
+                  >
+                    {user.role === "CAISSIER" ? "Autorisé" : "Non autorisé"}
                   </Badge>
                 </div>
               </div>

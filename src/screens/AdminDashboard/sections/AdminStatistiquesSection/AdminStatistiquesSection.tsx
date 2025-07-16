@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
+import { Button } from "../../../../components/ui/button";
 import { Tabs, TabsContent } from "../../../../components/ui/tabs";
 import { Spinner } from "../../../../components/ui/spinner";
 import { useDashboardStats } from "../../../../hooks/useDashboardStats";
@@ -10,27 +11,32 @@ import {
   usePaymentMethodStats,
   useComparisonStats,
   useGeneralStats,
+  useExportStats,
   useStockStats,
   useStockAlerts,
+  useStockItems,
   useStockMovements,
   useExpenseStats,
   usePersonnelStats,
+  // Nouveaux hooks commentés temporairement pour éviter les erreurs
+  // useRealTimeMetrics,
+  // useAdvancedStatsWithFilters,
+  // useClearStatsCache,
 } from "../../../../hooks/useAdvancedStats";
 import { ComparisonModal } from "../../../../components/modals/ComparisonModal";
-import { logger } from "../../../../utils/logger";
-// import { useAlert } from "../../../../contexts/AlertContext";
+import { useAlert } from "../../../../contexts/AlertContext";
 import PersonnelStatsSection from "./PersonnelStatsSection";
 import CommandesRecettesStatsSection from "./CommandesStatsSection";
 import StocksDepensesStatsSection from "./StocksDepensesStatsSection";
-import { CaisseStatsSection } from "./CaisseStatsSection";
 
 export const AdminStatistiquesSection: React.FC = () => {
+  const [selectedPeriod, setSelectedPeriod] = useState("7days");
   const [activeTab, setActiveTab] = useState("personnel");
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
-  const [comparisonPeriods, setComparisonPeriods] = useState<{
-    period1: any;
-    period2: any;
-  }>({ period1: null, period2: null });
+  const [comparisonPeriods, setComparisonPeriods] = useState({
+    period1: "",
+    period2: "",
+  });
   // Variables pour la section personnel (même si la version simple ne les utilise pas)
   const [personnelDateRange] = useState({
     dateDebut: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
@@ -50,7 +56,7 @@ export const AdminStatistiquesSection: React.FC = () => {
     loading: advancedLoading,
     error: advancedError,
   } = useAdvancedDashboardStats();
-  const { data: salesStats, error: salesError } = useSalesStats("7days");
+  const { data: salesStats, error: salesError } = useSalesStats(selectedPeriod);
   const { data: topItems, error: topItemsError } = useTopSellingItems(10);
   const { error: serverError } = useServerPerformance();
   const { data: paymentStats, error: paymentError } = usePaymentMethodStats();
@@ -61,9 +67,10 @@ export const AdminStatistiquesSection: React.FC = () => {
     error: generalError,
   } = useGeneralStats();
   const { data: comparisonData, error: comparisonError } = useComparisonStats(
-    comparisonPeriods.period1,
-    comparisonPeriods.period2
+    comparisonPeriods.period1 as any,
+    comparisonPeriods.period2 as any
   );
+  const { exportData, loading: exportLoading } = useExportStats();
   // Nouveaux hooks pour Stock & Dépenses - avec gestion d'erreur améliorée
   const {
     data: stockStats,
@@ -71,16 +78,26 @@ export const AdminStatistiquesSection: React.FC = () => {
     error: stockError,
   } = useStockStats();
   const {
+    data: stockAlerts,
+    loading: alertsLoading,
+    error: alertsError,
+  } = useStockAlerts();
+  const {
+    data: stockItems,
+    loading: itemsLoading,
+    error: itemsError,
+  } = useStockItems();
+  // Hooks pour Stock & Dépenses - ACTIVÉS pour afficher les vraies données
+  const {
     data: stockMovements,
+    loading: movementsLoading,
     error: movementsError,
-    refetch: refetchMovements,
   } = useStockMovements(10);
-  const { error: alertsError } = useStockAlerts();
   const {
     data: expenseStats,
     loading: expenseLoading,
     error: expenseError,
-  } = useExpenseStats("7days"); // Hook pour les statistiques du personnel avec polling automatique accéléré
+  } = useExpenseStats(selectedPeriod); // Hook pour les statistiques du personnel avec polling automatique accéléré
   const {
     data: personnelStats,
     loading: personnelLoading,
@@ -100,7 +117,7 @@ export const AdminStatistiquesSection: React.FC = () => {
   // });
   // const { clearCache, loading: cacheLoading } = useClearStatsCache();
 
-  // const { showAlert } = useAlert();
+  const { showAlert } = useAlert();
 
   // Calculs des variations avec gestion robuste des undefined
   const todayVsYesterday = useMemo(() => {
@@ -118,7 +135,7 @@ export const AdminStatistiquesSection: React.FC = () => {
       const change = ((today - yesterday) / yesterday) * 100;
       return { value: Math.abs(change), isPositive: change >= 0 };
     } catch (error) {
-      logger.error("Erreur dans le calcul todayVsYesterday:", error);
+      console.error("Erreur dans le calcul todayVsYesterday:", error);
       return { value: 0, isPositive: true };
     }
   }, [advancedStats]);
@@ -137,7 +154,7 @@ export const AdminStatistiquesSection: React.FC = () => {
       const change = ((today - yesterday) / yesterday) * 100;
       return { value: Math.abs(change), isPositive: change >= 0 };
     } catch (error) {
-      logger.error("Erreur dans le calcul revenueChange:", error);
+      console.error("Erreur dans le calcul revenueChange:", error);
       return { value: 0, isPositive: true };
     }
   }, [advancedStats]);
@@ -185,7 +202,9 @@ export const AdminStatistiquesSection: React.FC = () => {
       },
     };
 
-    const config = periodConfig["7days"] || periodConfig["7days"];
+    const config =
+      periodConfig[selectedPeriod as keyof typeof periodConfig] ||
+      periodConfig["7days"];
 
     // Fonction pour formater les dates selon la période
     const formatDateForPeriod = (item: any, format: string) => {
@@ -230,12 +249,12 @@ export const AdminStatistiquesSection: React.FC = () => {
     // Données pour la tendance (priorité: monthly > weekly > daily)
     let trendSource: any[] = salesStats?.daily || [];
     if (
-      ["6months", "1year"].includes("7days") &&
+      ["6months", "1year"].includes(selectedPeriod) &&
       salesStats?.monthly?.length > 0
     ) {
       trendSource = salesStats.monthly;
     } else if (
-      ["3months"].includes("7days") &&
+      ["3months"].includes(selectedPeriod) &&
       salesStats?.weekly?.length > 0
     ) {
       trendSource = salesStats.weekly;
@@ -252,12 +271,12 @@ export const AdminStatistiquesSection: React.FC = () => {
     // Données pour les revenus (même logique)
     let revenueSource: any[] = salesStats?.daily || [];
     if (
-      ["6months", "1year"].includes("7days") &&
+      ["6months", "1year"].includes(selectedPeriod) &&
       salesStats?.monthly?.length > 0
     ) {
       revenueSource = salesStats.monthly;
     } else if (
-      ["3months"].includes("7days") &&
+      ["3months"].includes(selectedPeriod) &&
       salesStats?.weekly?.length > 0
     ) {
       revenueSource = salesStats.weekly;
@@ -277,46 +296,35 @@ export const AdminStatistiquesSection: React.FC = () => {
       revenueData: revenueData.length > 0 ? revenueData : null,
       trendTitle: config.trendTitle,
     };
-  }, [salesStats, "7days"]);
+  }, [salesStats, selectedPeriod]);
+  const periods = [
+    { value: "7days", label: "7 derniers jours" },
+    { value: "30days", label: "30 derniers jours" },
+    { value: "3months", label: "3 derniers mois" },
+    { value: "6months", label: "6 derniers mois" },
+    { value: "1year", label: "1 an" },
+  ];
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat("fr-FR").format(price);
   };
-  // Ajout d'un état pour le filtre date unique (pour toutes les sections)
-  // const [filterDate, setFilterDate] = useState<string | null>(null);
-
-  // // Ajout de l'état pour le filtre date (modal)
-  // const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
-  // const [dateFilter, setDateFilter] = useState<{
-  //   startDate: string;
-  //   endDate: string;
-  // } | null>(null);
-
-  // Handler pour appliquer le filtre date
-  // const handleApplyDateFilter = (start: string, end: string) => {
-  //   setDateFilter({ startDate: start, endDate: end });
-  //   setIsDateFilterOpen(false);
-  // };
-  // const handleClearDateFilter = () => {
-  //   setDateFilter(null);
-  //   setIsDateFilterOpen(false);
-  // };
-
-  // Adaptation du callback pour le modal
-  const handleComparison = (date1: string, date2?: string) => {
-    if (date2) {
-      // Comparaison de deux dates
-      setComparisonPeriods({
-        period1: { type: "date", value: date1 },
-        period2: { type: "date", value: date2 },
-      });
-      // setFilterDate(null); // désactive le filtre simple
-    } else {
-      // Filtre simple sur une date
-      // setFilterDate(date1);
-      setComparisonPeriods({ period1: null, period2: null });
+  const handleExport = async (format: "excel" | "pdf" = "excel") => {
+    try {
+      await exportData(format);
+      showAlert(
+        "success",
+        `Export ${format.toUpperCase()} terminé avec succès !`
+      );
+    } catch (error) {
+      showAlert("error", `Erreur lors de l'export ${format.toUpperCase()}`);
     }
   };
 
+  const handleComparison = (period1: string, period2?: string) => {
+    setComparisonPeriods({ 
+      period1, 
+      period2: period2 || "" 
+    });
+  };
   // Fonction pour trier les données du personnel
   const sortedPersonnelData = useMemo(() => {
     if (!personnelStats?.data?.detailsPersonnel) {
@@ -368,6 +376,8 @@ export const AdminStatistiquesSection: React.FC = () => {
     generalError,
     comparisonError,
     stockError,
+    alertsError,
+    itemsError,
     movementsError,
     expenseError,
   ].filter(Boolean);
@@ -417,7 +427,34 @@ export const AdminStatistiquesSection: React.FC = () => {
             Analysez les performances de votre restaurant en détail
           </p>
         </div>
-        {/* Filtres globaux supprimés ici : select période, bouton comparer, bouton exporter */}
+        <div className="flex gap-2">
+          <select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            {periods.map((period) => (
+              <option key={period.value} value={period.value}>
+                {period.label}
+              </option>
+            ))}
+          </select>
+          <Button
+            onClick={() => setIsComparisonModalOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2 border-orange-300 text-orange-600 hover:bg-orange-50"
+          >
+            Comparer
+          </Button>
+
+          <Button
+            onClick={() => handleExport("excel")}
+            disabled={exportLoading}
+            className="bg-orange-500 hover:bg-orange-600 flex items-center gap-2"
+          >
+            Exporter
+          </Button>
+        </div>
       </div>
       {/* Bannière d'avertissement pour erreurs non critiques */}
       {hasErrors && !hasCriticalErrors && (
@@ -461,17 +498,17 @@ export const AdminStatistiquesSection: React.FC = () => {
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            Personnel
+            Rapports du personnel
           </button>
           <button
-            onClick={() => setActiveTab("commandes")}
+            onClick={() => setActiveTab("performances")}
             className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 ${
-              activeTab === "commandes"
+              activeTab === "performances"
                 ? "bg-white text-brand-primary-600 shadow-sm"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            Commandes
+            Commandes & Recettes
           </button>
           <button
             onClick={() => setActiveTab("stocks")}
@@ -483,22 +520,18 @@ export const AdminStatistiquesSection: React.FC = () => {
           >
             Stock & Dépenses
           </button>
-          <button
-            onClick={() => setActiveTab("caisse")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 ${
-              activeTab === "caisse"
-                ? "bg-white text-brand-primary-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            Caisse
-          </button>
         </div>
         {/* Contenu des onglets */}
-        <TabsContent value="caisse">
-          <CaisseStatsSection />
+        <TabsContent value="personnel" className="space-y-6">
+          <PersonnelStatsSection
+            personnelStats={personnelStats}
+            refetchPersonnelStats={refetchPersonnelStats}
+            personnelLoading={personnelLoading}
+            personnelError={personnelError}
+            sortedPersonnelData={sortedPersonnelData}
+          />
         </TabsContent>
-        <TabsContent value="commandes">
+        <TabsContent value="performances" className="space-y-6">
           <CommandesRecettesStatsSection
             advancedStats={advancedStats}
             dashboardStats={dashboardStats}
@@ -507,13 +540,14 @@ export const AdminStatistiquesSection: React.FC = () => {
             monthlyRevenueData={revenueData}
             weeklyTrendData={trendData}
             trendTitle={trendTitle}
+            selectedPeriod={selectedPeriod}
             paymentStats={paymentStats}
             topItems={topItems}
             comparisonData={comparisonData}
             formatPrice={formatPrice}
           />
         </TabsContent>
-        <TabsContent value="stocks">
+        <TabsContent value="stocks" className="space-y-6">
           <StocksDepensesStatsSection
             stockStats={stockStats}
             stockLoading={stockLoading}
@@ -521,21 +555,17 @@ export const AdminStatistiquesSection: React.FC = () => {
             expenseStats={expenseStats}
             expenseLoading={expenseLoading}
             expenseError={expenseError}
+            stockAlerts={stockAlerts}
+            alertsLoading={alertsLoading}
             alertsError={alertsError}
             stockMovements={stockMovements}
+            movementsLoading={movementsLoading}
             movementsError={movementsError}
-            itemsError={null} // Pour l'instant, pas d'erreur spécifique aux items
+            stockItems={stockItems}
+            itemsLoading={itemsLoading}
+            itemsError={itemsError}
+            selectedPeriod={selectedPeriod}
             formatPrice={formatPrice}
-            refetchMovements={refetchMovements}
-          />
-        </TabsContent>
-        <TabsContent value="personnel">
-          <PersonnelStatsSection
-            personnelStats={personnelStats}
-            refetchPersonnelStats={refetchPersonnelStats}
-            personnelLoading={personnelLoading}
-            personnelError={personnelError}
-            sortedPersonnelData={sortedPersonnelData}
           />
         </TabsContent>
       </Tabs>

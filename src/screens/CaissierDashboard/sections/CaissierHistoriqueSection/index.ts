@@ -1,0 +1,1 @@
+export { CaissierHistoriqueSection } from "./CaissierHistoriqueSection";

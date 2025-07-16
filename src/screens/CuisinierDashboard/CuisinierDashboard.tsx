@@ -5,13 +5,12 @@ import { Sidebar } from "./Sidebar";
 import { CuisinierHeaderSection } from "./sections/CuisinierHeaderSection/CuisinierHeaderSection";
 import { CuisinierOrdersSection } from "./sections/CuisinierOrdersSection/CuisinierOrdersSection";
 import { StockSection } from "./sections/StockSection/StockSection";
-import { CuisinierHistorySection } from "./sections/CuisinierHistorySection/CuisinierHistorySection";
 import ToastContainer from "../../components/ui/toast-container";
 
 export const CuisinierDashboard: React.FC = () => {
-  const [section, setSection] = React.useState<
-    "commandes" | "stock" | "historique"
-  >("commandes");
+  const [section, setSection] = React.useState<"commandes" | "stock">(
+    "commandes"
+  );
 
   // Récupération des hooks pour pouvoir rafraîchir les données depuis le header
   const { refetch: refetchOrders } = useOrders();
@@ -35,19 +34,13 @@ export const CuisinierDashboard: React.FC = () => {
           <div className=" px-3 md:px-6 lg:px-12 xl:px-20 pt-6">
             <h1 className="text-3xl font-bold text-gray-900">
               Dashboard Cuisinier -{" "}
-              {section === "commandes"
-                ? "Commandes"
-                : section === "stock"
-                ? "Stock"
-                : "Historique"}
+              {section === "commandes" ? "Commandes" : "Stock"}
             </h1>
           </div>
           {section === "commandes" ? (
             <CuisinierOrdersSection />
-          ) : section === "stock" ? (
-            <StockSection />
           ) : (
-            <CuisinierHistorySection />
+            <StockSection />
           )}
         </div>
       </div>

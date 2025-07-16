@@ -35,12 +35,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ selected, onSelect }) => {
         }`}
         onClick={() => onSelect("historique")}
       >
-        <Users size={32} />
-        <span>Historique</span>
+        <Users size={50} />
+        Historique
       </Button>
 
-      {/* Section Caisse - visible uniquement pour les caissiers */}
-      {user?.isCaissier && (
+      {/* Section Caisse - visible uniquement pour les admins */}
+      {user?.role === "ADMIN" && (
         <Button
           variant="ghost"
           className={`flex items-center gap-3 px-4 py-6 text-white text-lg font-semibold justify-start rounded-full transition-all duration-200 ${

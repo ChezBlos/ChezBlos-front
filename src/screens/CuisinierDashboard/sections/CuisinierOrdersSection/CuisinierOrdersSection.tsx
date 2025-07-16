@@ -1,5 +1,5 @@
-import { SearchIcon, RefreshCw, CheckCircle, Clock, X } from "lucide-react";
-import { useState, useMemo, useEffect } from "react";
+import { SearchIcon, RefreshCw, CheckCircle, Clock } from "lucide-react";
+import { useState, useMemo } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
 import { Button } from "../../../../components/ui/button";
@@ -26,13 +26,10 @@ import { MobileBottomSheet } from "../../../../components/ui/mobile-bottom-sheet
 import { useOrders, useOrderStats } from "../../../../hooks/useOrderAPI";
 import { Order } from "../../../../types/order";
 import { updateOrderStatus } from "../../../../services/api";
-import { OrderService } from "../../../../services/orderService";
 import { ProfileService } from "../../../../services/profileService";
-import { getOrderItemImage } from "../../../../services/imageService";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
-import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
 import { Eye, DotsThreeVertical, CookingPot, User } from "phosphor-react";
-import { logger } from "../../../../utils/logger";
+import { OrderService } from "../../../../services/orderService";
 
 export const CuisinierOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -50,11 +47,6 @@ export const CuisinierOrdersSection = (): JSX.Element => {
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  // États pour la gestion de l'annulation avec motif
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
-  const [isCancelling, setIsCancelling] = useState(false);
-
   // Récupération des données des commandes et statistiques
   const {
     data: allOrders,
@@ -68,16 +60,6 @@ export const CuisinierOrdersSection = (): JSX.Element => {
     loading: statsLoading,
     refetch: refetchStats,
   } = useOrderStats();
-
-  // Refresh automatique toutes les minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-      refetchStats();
-    }, 60000); // 60000ms = 1 minute
-
-    return () => clearInterval(interval);
-  }, [refetch, refetchStats]);
 
   // Filtrage des commandes côté frontend
   const filteredOrders = useMemo(() => {
@@ -217,22 +199,22 @@ export const CuisinierOrdersSection = (): JSX.Element => {
       active: selectedStatus === "TOUTES",
     },
     {
+      id: "EN_PREPARATION",
+      label: "En préparation",
+      count: statsLoading ? null : stats?.enPreparation || 0,
+      active: selectedStatus === "EN_PREPARATION",
+    },
+    {
       id: "EN_COURS",
       label: "En cours",
       count: statsLoading ? null : stats?.enCours || 0,
       active: selectedStatus === "EN_COURS",
     },
     {
-      id: "ANNULE",
-      label: "Annulée",
-      count: statsLoading ? null : 0,
-      active: selectedStatus === "ANNULE",
-    },
-    {
-      id: "TERMINE",
-      label: "Terminée",
-      count: statsLoading ? null : stats?.termine || 0,
-      active: selectedStatus === "TERMINE",
+      id: "PRET",
+      label: "Prêt",
+      count: statsLoading ? null : stats?.pret || 0,
+      active: selectedStatus === "PRET",
     },
   ]; // Fonction pour calculer le temps écoulé depuis la commande
   const getTimeElapsed = (dateCreation: string): string => {
@@ -262,8 +244,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
     const size = isMobile ? "w-12 h-12" : "w-10 h-10";
     const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
     const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
-    // Utilisation du service d'images centralisé
-    // const IMAGE_BASE_URL = import.meta.env.VITE_API_URL || "";
+    const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
 
     return (
       <div className={`relative ${size} flex-shrink-0`}>
@@ -272,7 +253,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             item.menuItem &&
             typeof item.menuItem === "object" &&
             item.menuItem.image
-              ? getOrderItemImage(item.menuItem.image)
+              ? `${IMAGE_BASE_URL}${item.menuItem.image}`
               : "/img/plat_petit.png";
 
           // Classes pour le décalage et la transparence
@@ -304,47 +285,36 @@ export const CuisinierOrdersSection = (): JSX.Element => {
     );
   };
 
-  // Fonction pour démarrer la préparation d'une commande (EN_COURS → EN_PREPARATION)
+  // Fonction pour démarrer la préparation d'une commande (EN_PREPARATION → EN_COURS)
   const handleStartPreparation = async (orderId: string) => {
     try {
-      await updateOrderStatus(orderId, "EN_PREPARATION");
+      await updateOrderStatus(orderId, "EN_COURS");
       refetch();
       refetchStats();
     } catch (error) {
-      logger.error("Erreur lors de la mise à jour du statut:", error);
+      console.error("Erreur lors de la mise à jour du statut:", error);
     }
   };
-  // Fonction pour marquer une commande comme prête (EN_PREPARATION → TERMINE)
+  // Fonction pour marquer une commande comme prête (EN_PREPARATION → PRET)
   const handleMarkAsReady = async (orderId: string) => {
     try {
-      await updateOrderStatus(orderId, "TERMINE");
+      await updateOrderStatus(orderId, "PRET");
       refetch();
       refetchStats();
     } catch (error) {
-      logger.error("Erreur lors de la mise à jour du statut:", error);
+      console.error("Erreur lors de la mise à jour du statut:", error);
     }
   };
 
-  // Fonction pour annuler une commande
-  const handleCancelOrder = (order: Order) => {
-    setOrderToCancel(order);
-    setIsCancelDialogOpen(true);
-    setActiveDropdown(null); // Fermer le dropdown
-  };
-
-  const handleConfirmCancelOrder = async (motifAnnulation: string) => {
-    if (!orderToCancel) return;
-
-    setIsCancelling(true);
+  // Fonction pour envoyer une commande à la caisse (PRET → EN_ATTENTE_PAIEMENT)
+  const handleSendToCashier = async (orderId: string) => {
     try {
-      await OrderService.cancelOrder(orderToCancel._id, motifAnnulation);
-      refetch(); // Actualiser la liste
-      refetchStats(); // Actualiser les statistiques
+      // Utiliser l'endpoint spécifique sendToCashier
+      await OrderService.sendToCashier(orderId);
+      refetch();
+      refetchStats();
     } catch (error) {
-      logger.error("Erreur lors de l'annulation de la commande:", error);
-    } finally {
-      setIsCancelling(false);
-      setOrderToCancel(null);
+      console.error("Erreur lors de l'envoi à la caisse:", error);
     }
   };
 
@@ -357,7 +327,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
   // Fonction pour obtenir le bouton d'action principal selon le statut
   const getMainActionButton = (order: Order) => {
     switch (order.statut) {
-      case "EN_COURS":
+      case "EN_PREPARATION":
         return (
           <Button
             onClick={() => handleStartPreparation(order._id)}
@@ -367,7 +337,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             Commencer préparation
           </Button>
         );
-      case "EN_PREPARATION":
+      case "EN_COURS":
         return (
           <Button
             onClick={() => handleMarkAsReady(order._id)}
@@ -375,6 +345,16 @@ export const CuisinierOrdersSection = (): JSX.Element => {
           >
             <CheckCircle size={16} />
             Marquer comme prête
+          </Button>
+        );
+      case "PRET":
+        return (
+          <Button
+            onClick={() => handleSendToCashier(order._id)}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+          >
+            <User size={16} />
+            Envoyer à la caisse
           </Button>
         );
       default:
@@ -588,7 +568,8 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                     order.items[0].menuItem.image ? (
                                       <img
                                         src={`${
-                                          import.meta.env.VITE_API_URL || ""
+                                          import.meta.env.VITE_IMAGE_BASE_URL ||
+                                          ""
                                         }${order.items[0].menuItem.image}`}
                                         alt={order.items[0]?.nom || "Plat"}
                                         className="w-full h-full object-cover"
@@ -635,7 +616,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                             <TableCell className="py-4 px-4 lg:px-6">
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-lg text-gray-900">
-                                  {order.numeroTable || "Non définie"}
+                                  {order.numeroTable}
                                 </span>
                               </div>
                             </TableCell>
@@ -732,7 +713,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                       <Eye size={16} />
                                       Voir les détails
                                     </DropdownMenuItem>
-                                    {order.statut === "EN_COURS" && (
+                                    {order.statut === "EN_PREPARATION" && (
                                       <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
@@ -746,7 +727,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                         </DropdownMenuItem>
                                       </>
                                     )}
-                                    {order.statut === "EN_PREPARATION" && (
+                                    {order.statut === "EN_COURS" && (
                                       <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
@@ -760,20 +741,17 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                         </DropdownMenuItem>
                                       </>
                                     )}
-                                    {/* Option Annuler pour EN_ATTENTE, EN_COURS et EN_PREPARATION */}
-                                    {(order.statut === "EN_ATTENTE" ||
-                                      order.statut === "EN_COURS" ||
-                                      order.statut === "EN_PREPARATION") && (
+                                    {order.statut === "PRET" && (
                                       <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                           onClick={() =>
-                                            handleCancelOrder(order)
+                                            handleSendToCashier(order._id)
                                           }
-                                          className="flex items-center gap-2 text-red-600"
+                                          className="flex items-center gap-2 text-orange-600"
                                         >
-                                          <X size={16} />
-                                          Annuler la commande
+                                          <User size={16} />
+                                          Envoyer à la caisse
                                         </DropdownMenuItem>
                                       </>
                                     )}
@@ -811,7 +789,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                 order.items[0].menuItem.image ? (
                                   <img
                                     src={`${
-                                      import.meta.env.VITE_API_URL || ""
+                                      import.meta.env.VITE_IMAGE_BASE_URL || ""
                                     }${order.items[0].menuItem.image}`}
                                     alt={order.items[0]?.nom || "Plat"}
                                     className="w-full h-full object-cover"
@@ -832,7 +810,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-semibold text-gray-900 text-lg">
-                                  Table {order.numeroTable || "Non définie"}
+                                  Table {order.numeroTable}
                                 </h3>
                               </div>
                               <p className="text-sm text-gray-600 mb-1">
@@ -928,7 +906,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
         <div className="p-4 space-y-3">
           {" "}
           <button
-            className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg"
+            className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg"
             onClick={() => {
               if (selectedOrderForActions) {
                 handleViewOrderDetails(selectedOrderForActions);
@@ -939,9 +917,9 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             <Eye size={20} />
             <span>Voir les détails</span>
           </button>{" "}
-          {selectedOrderForActions?.statut === "EN_COURS" && (
+          {selectedOrderForActions?.statut === "EN_PREPARATION" && (
             <button
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg text-blue-600"
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg text-blue-600"
               onClick={() => {
                 if (selectedOrderForActions?._id) {
                   handleStartPreparation(selectedOrderForActions._id);
@@ -953,9 +931,9 @@ export const CuisinierOrdersSection = (): JSX.Element => {
               <span>Commencer la préparation</span>
             </button>
           )}
-          {selectedOrderForActions?.statut === "EN_PREPARATION" && (
+          {selectedOrderForActions?.statut === "EN_COURS" && (
             <button
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg text-green-600"
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg text-green-600"
               onClick={() => {
                 if (selectedOrderForActions?._id) {
                   handleMarkAsReady(selectedOrderForActions._id);
@@ -966,24 +944,21 @@ export const CuisinierOrdersSection = (): JSX.Element => {
               <CheckCircle size={20} />
               <span>Marquer comme prête</span>
             </button>
-          )}{" "}
-          {/* Option Annuler pour EN_ATTENTE, EN_COURS et EN_PREPARATION */}
-          {(selectedOrderForActions?.statut === "EN_ATTENTE" ||
-            selectedOrderForActions?.statut === "EN_COURS" ||
-            selectedOrderForActions?.statut === "EN_PREPARATION") && (
+          )}
+          {selectedOrderForActions?.statut === "PRET" && (
             <button
-              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-5 rounded-lg text-red-600"
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg text-orange-600"
               onClick={() => {
-                if (selectedOrderForActions) {
-                  handleCancelOrder(selectedOrderForActions);
+                if (selectedOrderForActions?._id) {
+                  handleSendToCashier(selectedOrderForActions._id);
                 }
                 closeMobileBottomSheet();
               }}
             >
-              <X size={20} />
-              <span>Annuler la commande</span>
+              <User size={20} />
+              <span>Envoyer à la caisse</span>
             </button>
-          )}
+          )}{" "}
         </div>
       </MobileBottomSheet>
       {/* Modal de détails de commande */}
@@ -991,14 +966,6 @@ export const CuisinierOrdersSection = (): JSX.Element => {
         isOpen={isOrderDetailsModalOpen}
         onClose={() => setIsOrderDetailsModalOpen(false)}
         order={selectedOrder}
-      />
-      {/* Dialog pour l'annulation avec motif */}
-      <CancelOrderDialog
-        isOpen={isCancelDialogOpen}
-        onClose={() => setIsCancelDialogOpen(false)}
-        onConfirm={handleConfirmCancelOrder}
-        orderNumber={orderToCancel?.numeroCommande}
-        isLoading={isCancelling}
       />
     </section>
   );

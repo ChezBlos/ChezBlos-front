@@ -5,16 +5,14 @@ import { SpinnerMedium } from "./ui/spinner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: Array<"ADMIN" | "SERVEUR" | "CUISINIER">;
+  allowedRoles?: Array<"ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER">;
   requiredRoles?: string[];
-  requiresCaissier?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   allowedRoles,
   requiredRoles,
-  requiresCaissier = false,
 }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
   const location = useLocation();
@@ -37,10 +35,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Vérification des rôles autorisés (ancienne prop)
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  if (requiresCaissier && user && !user.isCaissier) {
     return <Navigate to="/unauthorized" replace />;
   }
 

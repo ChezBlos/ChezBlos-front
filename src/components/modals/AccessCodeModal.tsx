@@ -28,8 +28,7 @@ interface StaffUser {
   nom: string;
   prenom: string;
   email?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
   photoProfil?: string;
 }
@@ -79,22 +78,10 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
   const loadAccessCode = async () => {
     if (!user) return;
 
-    logger.info(
-      `🔍 [Modal] Chargement du code d'accès pour ${user.prenom} ${user.nom} (ID: ${user._id})`
-    );
     const response = await getUserAccessCode(user._id);
     if (response) {
-      logger.info(`✅ [Modal] Code d'accès chargé:`, {
-        codeAcces: response.codeAcces,
-        needsRegeneration: response.needsRegeneration,
-        dateCreation: response.dateCreation,
-      });
       setAccessCode(response.codeAcces);
       setNeedsRegeneration(response.needsRegeneration || false);
-    } else {
-      logger.warn(
-        `❌ [Modal] Aucun code d'accès retourné pour ${user.prenom} ${user.nom}`
-      );
     }
   };
 
@@ -126,23 +113,11 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
     setShowConfirmation(false);
     setIsGenerating(true);
 
-    logger.info(
-      `🔄 [Modal] Début de régénération pour ${user.prenom} ${user.nom} (ID: ${user._id})`
-    );
-
     const result = await generateAccessCode(user._id);
-    if (result) {
-      logger.info(
-        `✅ [Modal] Régénération terminée, rechargement des données...`
-      );
-      // Le backend a regénéré le code, on recharge les données complètes
-      await loadAccessCode();
-      setShowCode(true); // Afficher le nouveau code
-      logger.info(`🎉 [Modal] Processus de régénération terminé avec succès`);
-    } else {
-      logger.error(
-        `❌ [Modal] Échec de la régénération pour ${user.prenom} ${user.nom}`
-      );
+    if (result && result.codeAcces) {
+      setAccessCode(result.codeAcces);
+      setNeedsRegeneration(false);
+      setShowCode(true);
     }
     setIsGenerating(false);
   };
@@ -213,7 +188,7 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 {getRoleBadge(user.role)}
-                {user.isCaissier && (
+                {user.role === "CAISSIER" && (
                   <Badge className="bg-yellow-100 text-yellow-700 rounded-full px-2 py-1 font-medium text-xs border">
                     Caissier
                   </Badge>

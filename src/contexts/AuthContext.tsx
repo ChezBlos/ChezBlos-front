@@ -15,8 +15,7 @@ export interface User {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
   photoProfil?: string;
 }

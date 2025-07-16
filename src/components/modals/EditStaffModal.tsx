@@ -31,8 +31,7 @@ interface EditUserFormData {
   prenom: string;
   email: string;
   telephone: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
 }
 
@@ -42,8 +41,7 @@ interface StaffUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
   photoProfil?: string;
   dateCreation: string;
@@ -70,36 +68,19 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     email: "",
     telephone: "",
     role: "SERVEUR",
-    isCaissier: false,
     actif: true,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { updateUser, loading, error } = useUpdateUser();
 
-  // Fonction pour déterminer le type d'affichage du rôle
-  const getDisplayRole = () => {
-    if (formData.role === "SERVEUR" && formData.isCaissier) {
-      return "CAISSIER";
-    }
-    return formData.role;
-  };
+  // Fonction pour gérer le changement de rôle
+  const handleRoleChange = (role: "SERVEUR" | "CUISINIER" | "CAISSIER") => {
+    setFormData((prev) => ({
+      ...prev,
+      role: role,
+    }));
 
-  // Fonction pour gérer le changement de rôle d'affichage
-  const handleRoleChange = (
-    displayRole: "SERVEUR" | "CUISINIER" | "CAISSIER"
-  ) => {
-    const newData = { ...formData };
-
-    if (displayRole === "CAISSIER") {
-      newData.role = "SERVEUR";
-      newData.isCaissier = true;
-    } else {
-      newData.role = displayRole;
-      newData.isCaissier = false;
-    }
-
-    setFormData(newData);
     // Nettoyer l'erreur de rôle si elle existe
     if (errors.role) {
       setErrors((prev) => {
@@ -119,7 +100,6 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         email: user.email || "",
         telephone: user.telephone || "",
         role: user.role,
-        isCaissier: user.isCaissier || false,
         actif: user.actif,
       });
       setErrors({});
@@ -135,7 +115,6 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         email: "",
         telephone: "",
         role: "SERVEUR",
-        isCaissier: false,
         actif: true,
       });
       setErrors({});
@@ -187,7 +166,6 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       nom: formData.nom?.trim(),
       prenom: formData.prenom?.trim(),
       role: formData.role,
-      isCaissier: formData.isCaissier,
       actif: formData.actif,
     };
 
@@ -348,7 +326,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     <div
                       onClick={() => handleRoleChange("SERVEUR")}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        getDisplayRole() === "SERVEUR"
+                        formData.role === "SERVEUR"
                           ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
                           : "border-gray-200 hover:border-brand-primary-500"
                       }`}
@@ -356,7 +334,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       <div className="flex items-center gap-3">
                         <div
                           className={`p-2 rounded-full ${
-                            getDisplayRole() === "SERVEUR"
+                            formData.role === "SERVEUR"
                               ? "bg-brand-primary-500 text-brand-primary-50"
                               : "bg-gray-10 text-gray-600"
                           }`}
@@ -371,12 +349,12 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         </div>
                         <div
                           className={`w-4 h-4 rounded-full border-2 ${
-                            getDisplayRole() === "SERVEUR"
+                            formData.role === "SERVEUR"
                               ? "border-brand-primary-500 bg-brand-primary-500"
                               : "border-gray-300"
                           }`}
                         >
-                          {getDisplayRole() === "SERVEUR" && (
+                          {formData.role === "SERVEUR" && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>
@@ -387,7 +365,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     <div
                       onClick={() => handleRoleChange("CAISSIER")}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        getDisplayRole() === "CAISSIER"
+                        formData.role === "CAISSIER"
                           ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
                           : "border-gray-200 hover:border-brand-primary-500"
                       }`}
@@ -395,7 +373,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       <div className="flex items-center gap-3">
                         <div
                           className={`p-2 rounded-full ${
-                            getDisplayRole() === "CAISSIER"
+                            formData.role === "CAISSIER"
                               ? "bg-brand-primary-500 text-white"
                               : "bg-gray-10 text-gray-600"
                           }`}
@@ -412,12 +390,12 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         </div>
                         <div
                           className={`w-4 h-4 rounded-full border-2 ${
-                            getDisplayRole() === "CAISSIER"
+                            formData.role === "CAISSIER"
                               ? "border-brand-primary-500 bg-brand-primary-500"
                               : "border-gray-300"
                           }`}
                         >
-                          {getDisplayRole() === "CAISSIER" && (
+                          {formData.role === "CAISSIER" && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>
@@ -428,7 +406,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     <div
                       onClick={() => handleRoleChange("CUISINIER")}
                       className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        getDisplayRole() === "CUISINIER"
+                        formData.role === "CUISINIER"
                           ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
                           : "border-gray-200 hover:border-brand-primary-500"
                       }`}
@@ -436,7 +414,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       <div className="flex items-center gap-3">
                         <div
                           className={`p-2 rounded-full ${
-                            getDisplayRole() === "CUISINIER"
+                            formData.role === "CUISINIER"
                               ? "bg-brand-primary-500 text-brand-primary-50"
                               : "bg-gray-10 text-gray-600"
                           }`}
@@ -454,12 +432,12 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                         </div>
                         <div
                           className={`w-4 h-4 rounded-full border-2 ${
-                            getDisplayRole() === "CUISINIER"
+                            formData.role === "CUISINIER"
                               ? "border-brand-primary-500 bg-brand-primary-500"
                               : "border-gray-300"
                           }`}
                         >
-                          {getDisplayRole() === "CUISINIER" && (
+                          {formData.role === "CUISINIER" && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>

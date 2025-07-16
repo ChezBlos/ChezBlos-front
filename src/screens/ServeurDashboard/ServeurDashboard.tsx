@@ -1,7 +1,6 @@
 import React from "react";
 import { useOrders, useOrderStats } from "../../hooks/useOrderAPI";
 import { useToast } from "../../hooks/useToast";
-import { useAuth } from "../../contexts/AuthContext";
 import { Sidebar } from "./Sidebar";
 import { ServeurHeaderSection } from "./sections/ServeurHeaderSection";
 import { ServeurOrdersSection } from "./sections/ServeurOrdersSection";
@@ -14,27 +13,10 @@ export const ServeurDashboard: React.FC = () => {
     "commandes" | "historique" | "caisse"
   >("commandes");
 
-  const { user } = useAuth();
-
   // Récupération des hooks pour pouvoir rafraîchir les données depuis le header
   const { refetch: refetchOrders } = useOrders();
   const { refetch: refetchStats } = useOrderStats();
   const { toasts, hideToast } = useToast();
-
-  // Fonction pour obtenir le titre de la section
-  const getSectionTitle = () => {
-    switch (section) {
-      case "commandes":
-        return "Commandes";
-      case "historique":
-        return "Historique";
-      case "caisse":
-        return "Gestion de la caisse";
-      default:
-        return "Dashboard";
-    }
-  };
-
   return (
     <main className="bg-[#EFF1F3] flex flex-row w-full min-h-screen overflow-x-hidden">
       <Sidebar selected={section} onSelect={setSection} />
@@ -50,12 +32,21 @@ export const ServeurDashboard: React.FC = () => {
         <div className="w-full min-w-0 pb-20 lg:pb-0">
           <div className=" px-3 md:px-6 lg:px-12 xl:px-20 pt-6">
             <h1 className="text-3xl font-bold text-gray-900">
-              Dashboard Serveur - {getSectionTitle()}
+              Dashboard Serveur -{" "}
+              {section === "commandes"
+                ? "Commandes"
+                : section === "historique"
+                ? "Historique"
+                : "Caisse"}
             </h1>
           </div>
-          {section === "commandes" && <ServeurOrdersSection />}
-          {section === "historique" && <ServeurOrdersHistorySection />}
-          {section === "caisse" && user?.isCaissier && <CaisseSection />}
+          {section === "commandes" ? (
+            <ServeurOrdersSection />
+          ) : section === "historique" ? (
+            <ServeurOrdersHistorySection />
+          ) : (
+            <CaisseSection />
+          )}{" "}
         </div>
       </div>
 

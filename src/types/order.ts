@@ -31,6 +31,7 @@ export interface CreateOrderRequest {
 }
 
 export interface Order {
+  motifAnnulation?: string;
   _id: string;
   numeroCommande: string;
   items: OrderItem[];
@@ -40,11 +41,11 @@ export interface Order {
     | "EN_PREPARATION"
     | "EN_COURS"
     | "PRET"
+    | "EN_ATTENTE_PAIEMENT"
     | "TERMINE"
     | "ANNULE";
   numeroTable?: number; // Changé de "table" à "numeroTable"
   notes?: string;
-  motifAnnulation?: string; // Nouveau champ pour le motif d'annulation
   modePaiement?: string;
   serveur: {
     _id: string;
@@ -66,6 +67,7 @@ export interface OrderStats {
   enPreparation: number;
   enCours: number;
   pret: number;
+  enAttentePaiement: number;
   termine: number;
   annule: number;
   chiffreAffairesJour: number;

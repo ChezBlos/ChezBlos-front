@@ -16,7 +16,7 @@ import {
   UserPlus,
   PencilSimple,
   DotsThreeVertical as DotsThreeVerticalIcon,
-  //Eye as EyeIcon,
+  Eye as EyeIcon,
   MagnifyingGlass as SearchIcon,
   Download as DownloadIcon,
   Key as KeyIcon,
@@ -34,20 +34,15 @@ import { Spinner, SpinnerMedium } from "../../../../components/ui/spinner";
 import {
   useUsers,
   useDeleteUser,
-  usePermanentlyDeleteUser,
   useToggleUserStatus,
 } from "../../../../hooks/useUserAPI";
-import { UserAvatar } from "../../../../components/UserAvatar";
+import { ProfileService } from "../../../../services/profileService";
 import { FileSpreadsheet, FileText, UserCheck, UserX } from "lucide-react";
 import { AccessCodeModal } from "../../../../components/modals/AccessCodeModal";
 import { AddStaffModal } from "../../../../components/modals/AddStaffModal";
-import { EditStaffModal } from "../../../../components/modals/EditStaffModal";
-//import { UserDetailsModal } from "../../../../components/modals/UserDetailsModal";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
 import { ExportService } from "../../../../services/exportService";
 import { useAlert } from "../../../../contexts/AlertContext";
-import { logger } from "../../../../utils/logger";
-import { getDisplayRole } from "../../../../types/user";
 
 // Interface pour les types utilisateur (utilise StaffUser du service)
 interface StaffUser {
@@ -56,8 +51,7 @@ interface StaffUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
   photoProfil?: string;
   dateCreation: string;
@@ -71,23 +65,15 @@ export const AdminStaffSection: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [accessCodeModalOpen, setAccessCodeModalOpen] = useState(false);
   const [addStaffModalOpen, setAddStaffModalOpen] = useState(false);
-  const [editStaffModalOpen, setEditStaffModalOpen] = useState(false);
-  // const [userDetailsModalOpen, setUserDetailsModalOpen] = useState(false);
   const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] = useState(false);
-  const [permanentDeleteConfirmModalOpen, setPermanentDeleteConfirmModalOpen] =
-    useState(false);
   const [toggleStatusConfirmModalOpen, setToggleStatusConfirmModalOpen] =
     useState(false);
   const [selectedUser, setSelectedUser] = useState<StaffUser | null>(null);
   const [userToDelete, setUserToDelete] = useState<StaffUser | null>(null);
-  const [userToPermanentlyDelete, setUserToPermanentlyDelete] =
-    useState<StaffUser | null>(null);
   const [userToToggle, setUserToToggle] = useState<StaffUser | null>(null);
 
   const { data: users, loading, error, refetch } = useUsers();
   const { deleteUser, loading: deleteLoading } = useDeleteUser();
-  const { permanentlyDeleteUser, loading: permanentDeleteLoading } =
-    usePermanentlyDeleteUser();
   const { toggleUserStatus, loading: toggleLoading } = useToggleUserStatus();
   const { showAlert } = useAlert();
 
@@ -132,9 +118,7 @@ export const AdminStaffSection: React.FC = () => {
           filtered = filtered.filter((user) => user.role !== "ADMIN");
           break;
         case "CAISSIERS":
-          filtered = filtered.filter(
-            (user) => user.role === "SERVEUR" && user.isCaissier
-          );
+          filtered = filtered.filter((user) => user.role === "CAISSIER");
           break;
       }
     }
@@ -142,16 +126,14 @@ export const AdminStaffSection: React.FC = () => {
     // Filtrage par recherche
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter((user) => {
-        const displayRole = getDisplayRole(user);
-        return (
+      filtered = filtered.filter(
+        (user) =>
           user.nom.toLowerCase().includes(searchLower) ||
           user.prenom.toLowerCase().includes(searchLower) ||
           user.email?.toLowerCase().includes(searchLower) ||
           user.codeAcces?.toLowerCase().includes(searchLower) ||
-          displayRole.toLowerCase().includes(searchLower)
-        );
-      });
+          user.role.toLowerCase().includes(searchLower)
+      );
     }
 
     return filtered;
@@ -165,7 +147,6 @@ export const AdminStaffSection: React.FC = () => {
         utilisateursActifs: 0,
         utilisateursInactifs: 0,
         admins: 0,
-        caissiers: 0,
         nouveauxAujourdhui: 0,
         nouveauxHier: 0,
       };
@@ -181,9 +162,6 @@ export const AdminStaffSection: React.FC = () => {
     const utilisateursActifs = users.filter((user) => user.actif).length;
     const utilisateursInactifs = users.filter((user) => !user.actif).length;
     const admins = users.filter((user) => user.role === "ADMIN").length;
-    const caissiers = users.filter(
-      (user) => user.role === "SERVEUR" && user.isCaissier
-    ).length;
 
     // Nouveaux utilisateurs aujourd'hui
     const nouveauxAujourdhui = users.filter((user) => {
@@ -202,7 +180,6 @@ export const AdminStaffSection: React.FC = () => {
       utilisateursActifs,
       utilisateursInactifs,
       admins,
-      caissiers,
       nouveauxAujourdhui,
       nouveauxHier,
     };
@@ -234,25 +211,17 @@ export const AdminStaffSection: React.FC = () => {
       title: "Administrateurs",
       mobileTitle: "Admins",
       value: loading ? "..." : stats.admins.toString(),
-      subtitle: `${stats.caissiers} caissiers`,
-      subtitleColor: "text-yellow-500",
+      subtitle: `${stats.totalPersonnel - stats.admins} personnel`,
+      subtitleColor: "text-orange-500",
     },
   ]; // Gestionnaire de recherche
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
   // Gestionnaire de détails utilisateur
-  // const handleViewUserDetails = (user: StaffUser) => {
-  //   setSelectedUser(user);
-  //   setUserDetailsModalOpen(true);
-  //   logger.debug("Ouverture du modal de détails utilisateur:", user);
-  // };
-
-  // Gestionnaire de modification utilisateur
-  const handleEditUser = (user: StaffUser) => {
-    setSelectedUser(user);
-    setEditStaffModalOpen(true);
-    logger.debug("Ouverture de la modification utilisateur:", user);
+  const handleViewUserDetails = (user: StaffUser) => {
+    console.log("Voir détails utilisateur:", user);
+    // TODO: Implémenter le modal de détails utilisateur
   };
   // Gestionnaire du modal de code d'accès
   const handleViewAccessCode = (user: StaffUser) => {
@@ -269,29 +238,6 @@ export const AdminStaffSection: React.FC = () => {
   const handleAddStaffSuccess = () => {
     refetch(); // Actualiser la liste des utilisateurs
   };
-
-  // Gestionnaire de succès après modification d'un utilisateur
-  const handleEditStaffSuccess = () => {
-    refetch(); // Actualiser la liste des utilisateurs
-  };
-  // Gestionnaire de suppression définitive d'utilisateur
-  const handlePermanentlyDeleteUser = (user: StaffUser) => {
-    setUserToPermanentlyDelete(user);
-    setPermanentDeleteConfirmModalOpen(true);
-  };
-
-  // Confirmation de suppression définitive d'utilisateur
-  const confirmPermanentlyDeleteUser = async () => {
-    if (userToPermanentlyDelete) {
-      const success = await permanentlyDeleteUser(userToPermanentlyDelete._id);
-      if (success) {
-        await refetch(); // Actualiser la liste
-      }
-    }
-    setPermanentDeleteConfirmModalOpen(false);
-    setUserToPermanentlyDelete(null);
-  };
-
   // Gestionnaire de suppression d'utilisateur
   const handleDeleteUser = async (user: StaffUser) => {
     setUserToDelete(user);
@@ -346,7 +292,7 @@ export const AdminStaffSection: React.FC = () => {
         `Export Excel terminé avec succès ! ${filteredUsers.length} utilisateurs exportés.`
       );
     } catch (error) {
-      logger.error("Erreur lors de l'export Excel:", error);
+      console.error("Erreur lors de l'export Excel:", error);
       showAlert("error", "Erreur lors de l'export Excel. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
@@ -372,7 +318,7 @@ export const AdminStaffSection: React.FC = () => {
         `Export PDF terminé avec succès ! ${filteredUsers.length} utilisateurs exportés.`
       );
     } catch (error) {
-      logger.error("Erreur lors de l'export PDF:", error);
+      console.error("Erreur lors de l'export PDF:", error);
       showAlert("error", "Erreur lors de l'export PDF. Veuillez réessayer.");
     } finally {
       setIsExporting(false);
@@ -398,7 +344,7 @@ export const AdminStaffSection: React.FC = () => {
         `Export des statistiques terminé avec succès ! ${users.length} utilisateurs analysés.`
       );
     } catch (error) {
-      logger.error("Erreur lors de l'export des statistiques:", error);
+      console.error("Erreur lors de l'export des statistiques:", error);
       showAlert(
         "error",
         "Erreur lors de l'export des statistiques. Veuillez réessayer."
@@ -455,27 +401,28 @@ export const AdminStaffSection: React.FC = () => {
 
   const getRoleBadge = (role: string) => {
     const roleColors = {
-      ADMIN: "bg-orange-100 text-orange-700 border-orange-300",
-      SERVEUR: "bg-blue-100 text-blue-700 border-blue-300",
-      CUISINIER: "bg-purple-100 text-purple-700 border-purple-300",
-      CAISSIER: "bg-yellow-100 text-yellow-700 border-yellow-300",
+      ADMIN: "bg-orange-100 text-orange-700",
+      SERVEUR: "bg-blue-100 text-blue-700",
+      CUISINIER: "bg-purple-100 text-purple-700",
     };
 
     const colorClass =
       roleColors[role as keyof typeof roleColors] ||
-      "bg-gray-100 text-gray-700 border-gray-300";
+      "bg-gray-100 text-gray-700";
 
     return (
       <Badge
         className={`${colorClass} rounded-full px-3 py-1 font-medium text-xs border`}
-        title={
-          role === "ADMIN"
-            ? "Les administrateurs ne peuvent pas être supprimés"
-            : undefined
-        }
       >
         {formatRole(role)}
-        {role === "ADMIN"}
+      </Badge>
+    );
+  };
+
+  const getCashierBadge = () => {
+    return (
+      <Badge className="bg-yellow-100 text-yellow-700 rounded-full px-2 py-1 font-medium text-xs border ml-1">
+        Caissier
       </Badge>
     );
   };
@@ -720,13 +667,22 @@ export const AdminStaffSection: React.FC = () => {
                         >
                           <TableCell className="py-4 px-4 lg:px-6">
                             <div className="flex items-center gap-3">
-                              <UserAvatar
-                                photo={user.photoProfil}
-                                nom={user.nom}
-                                prenom={user.prenom}
-                                size="sm"
-                                className="flex-shrink-0"
-                              />
+                              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                {user.photoProfil ? (
+                                  <img
+                                    src={ProfileService.getProfilePictureUrl(
+                                      user.photoProfil
+                                    )}
+                                    alt={`${user.prenom} ${user.nom}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-4 h-4 text-gray-600 flex items-center justify-center font-semibold">
+                                    {user.prenom.charAt(0).toUpperCase()}
+                                    {user.nom.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
                               <div>
                                 <div className="font-medium text-gray-900">
                                   {user.nom} {user.prenom}
@@ -755,7 +711,8 @@ export const AdminStaffSection: React.FC = () => {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              {getRoleBadge(getDisplayRole(user))}
+                              {getRoleBadge(user.role)}
+                              {user.role === "CAISSIER" && getCashierBadge()}
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-3">
@@ -777,12 +734,12 @@ export const AdminStaffSection: React.FC = () => {
                                 </Button>
                               </DropdownMenuTrigger>{" "}
                               <DropdownMenuContent align="end">
-                                {/* <DropdownMenuItem
+                                <DropdownMenuItem
                                   onClick={() => handleViewUserDetails(user)}
                                 >
                                   <EyeIcon className="h-4 w-4 mr-2" />
                                   Voir détails
-                                </DropdownMenuItem> */}
+                                </DropdownMenuItem>
                                 {user.role !== "ADMIN" && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewAccessCode(user)}
@@ -791,49 +748,31 @@ export const AdminStaffSection: React.FC = () => {
                                     Code d'accès
                                   </DropdownMenuItem>
                                 )}{" "}
-                                <DropdownMenuItem
-                                  onClick={() => handleEditUser(user)}
-                                >
+                                <DropdownMenuItem>
                                   <PencilSimple className="h-4 w-4 mr-2" />
                                   Modifier
                                 </DropdownMenuItem>{" "}
-                                {/* Ne pas permettre la modification du statut des administrateurs */}
-                                {user.role !== "ADMIN" && (
-                                  <DropdownMenuItem
-                                    className={
-                                      user.actif
-                                        ? "text-orange-600 hover:bg-orange-600 hover:text-white"
-                                        : "text-green-600 hover:bg-green-600 hover:text-white"
-                                    }
-                                    onClick={() => handleToggleUserStatus(user)}
-                                    disabled={toggleLoading}
-                                  >
-                                    {user.actif ? (
-                                      <>
-                                        <UserX className="h-4 w-4 mr-2" />
-                                        Désactiver
-                                      </>
-                                    ) : (
-                                      <>
-                                        <UserCheck className="h-4 w-4 mr-2" />
-                                        Réactiver
-                                      </>
-                                    )}
-                                  </DropdownMenuItem>
-                                )}
-                                {/* Ne pas permettre la suppression des administrateurs */}
-                                {user.role !== "ADMIN" && (
-                                  <DropdownMenuItem
-                                    className="text-red-700 hover:bg-red-700 hover:text-white"
-                                    onClick={() =>
-                                      handlePermanentlyDeleteUser(user)
-                                    }
-                                    disabled={permanentDeleteLoading}
-                                  >
-                                    <TrashSimpleIcon className="h-4 w-4 mr-2" />
-                                    Supprimer définitivement
-                                  </DropdownMenuItem>
-                                )}
+                                <DropdownMenuItem
+                                  className={
+                                    user.actif
+                                      ? "text-orange-600 hover:bg-orange-600 hover:text-white"
+                                      : "text-green-600 hover:bg-green-600 hover:text-white"
+                                  }
+                                  onClick={() => handleToggleUserStatus(user)}
+                                  disabled={toggleLoading}
+                                >
+                                  {user.actif ? (
+                                    <>
+                                      <UserX className="h-4 w-4 mr-2" />
+                                      Désactiver
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserCheck className="h-4 w-4 mr-2" />
+                                      Réactiver
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -854,17 +793,27 @@ export const AdminStaffSection: React.FC = () => {
                         <div className="flex items-start justify-between gap-3 mb-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <UserAvatar
-                                photo={user.photoProfil}
-                                nom={user.nom}
-                                prenom={user.prenom}
-                                size="sm"
-                                className="flex-shrink-0"
-                              />
+                              <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                {user.photoProfil ? (
+                                  <img
+                                    src={ProfileService.getProfilePictureUrl(
+                                      user.photoProfil
+                                    )}
+                                    alt={`${user.prenom} ${user.nom}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="text-xs text-gray-600 font-semibold">
+                                    {user.prenom.charAt(0).toUpperCase()}
+                                    {user.nom.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>{" "}
                               <span className="font-bold text-lg text-gray-900 truncate">
                                 {user.prenom} {user.nom}
                               </span>
-                            </div>
+                              {user.role === "CAISSIER" && getCashierBadge()}
+                            </div>{" "}
                             <div
                               className="text-sm text-gray-600 mb-2 max-w-[250px] truncate"
                               title={user.email || "Email non défini"}
@@ -878,7 +827,7 @@ export const AdminStaffSection: React.FC = () => {
                               {user.telephone || "Téléphone non défini"}
                             </div>
                             <div className="flex items-center gap-2 mb-2">
-                              {getRoleBadge(getDisplayRole(user))}
+                              {getRoleBadge(user.role)}
                               {getUserStatusBadge(user.actif)}
                             </div>
                             {user.codeAcces && (
@@ -895,7 +844,7 @@ export const AdminStaffSection: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-                          {/* <Button
+                          <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewUserDetails(user)}
@@ -903,7 +852,7 @@ export const AdminStaffSection: React.FC = () => {
                           >
                             <EyeIcon className="h-4 w-4 mr-1" />
                             Détails
-                          </Button> */}
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="outline" size="sm">
@@ -919,59 +868,39 @@ export const AdminStaffSection: React.FC = () => {
                                   Code d'accès
                                 </DropdownMenuItem>
                               )}{" "}
-                              <DropdownMenuItem
-                                onClick={() => handleEditUser(user)}
-                              >
+                              <DropdownMenuItem>
                                 <PencilSimple className="h-4 w-4 mr-2" />
                                 Modifier
                               </DropdownMenuItem>
-                              {/* Ne pas permettre la modification du statut des administrateurs */}
-                              {user.role !== "ADMIN" && (
-                                <>
-                                  <DropdownMenuItem
-                                    className={
-                                      user.actif
-                                        ? "text-orange-600"
-                                        : "text-green-600"
-                                    }
-                                    onClick={() => handleToggleUserStatus(user)}
-                                    disabled={toggleLoading}
-                                  >
-                                    {user.actif ? (
-                                      <>
-                                        <UserX className="h-4 w-4 mr-2" />
-                                        Désactiver
-                                      </>
-                                    ) : (
-                                      <>
-                                        <UserCheck className="h-4 w-4 mr-2" />
-                                        Réactiver
-                                      </>
-                                    )}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-red-600 hover:bg-red-600 hover:text-white"
-                                    onClick={() => handleDeleteUser(user)}
-                                    disabled={deleteLoading}
-                                  >
-                                    <TrashIcon className="h-4 w-4 mr-2" />
+                              <DropdownMenuItem
+                                className={
+                                  user.actif
+                                    ? "text-orange-600"
+                                    : "text-green-600"
+                                }
+                                onClick={() => handleToggleUserStatus(user)}
+                                disabled={toggleLoading}
+                              >
+                                {user.actif ? (
+                                  <>
+                                    <TrashSimpleIcon className="h-4 w-4 mr-2" />
                                     Désactiver
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {/* Ne pas permettre la suppression des administrateurs */}
-                              {user.role !== "ADMIN" && (
-                                <DropdownMenuItem
-                                  className="text-red-700 hover:bg-red-700 hover:text-white"
-                                  onClick={() =>
-                                    handlePermanentlyDeleteUser(user)
-                                  }
-                                  disabled={permanentDeleteLoading}
-                                >
-                                  <TrashSimpleIcon className="h-4 w-4 mr-2" />
-                                  Supprimer définitivement
-                                </DropdownMenuItem>
-                              )}
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrashSimpleIcon className="h-4 w-4 mr-2 transform rotate-180" />
+                                    Réactiver
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => handleDeleteUser(user)}
+                                disabled={deleteLoading}
+                              >
+                                <TrashIcon className="h-4 w-4 mr-2" />
+                                Supprimer définitivement
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -998,26 +927,7 @@ export const AdminStaffSection: React.FC = () => {
         isOpen={addStaffModalOpen}
         onClose={() => setAddStaffModalOpen(false)}
         onSuccess={handleAddStaffSuccess}
-      />
-      {/* Modal de modification de staff */}
-      <EditStaffModal
-        isOpen={editStaffModalOpen}
-        onClose={() => {
-          setEditStaffModalOpen(false);
-          setSelectedUser(null);
-        }}
-        onSuccess={handleEditStaffSuccess}
-        user={selectedUser}
-      />
-      {/* Modal de détails utilisateur */}
-      {/* <UserDetailsModal
-        isOpen={userDetailsModalOpen}
-        onClose={() => {
-          setUserDetailsModalOpen(false);
-          setSelectedUser(null);
-        }}
-        user={selectedUser}
-      />{" "} */}
+      />{" "}
       {/* Modal de confirmation de suppression */}
       <ConfirmationModal
         isOpen={deleteConfirmModalOpen}
@@ -1036,25 +946,6 @@ export const AdminStaffSection: React.FC = () => {
         cancelText="Annuler"
         variant="danger"
         isLoading={deleteLoading}
-      />
-      {/* Modal de confirmation pour la suppression définitive */}
-      <ConfirmationModal
-        isOpen={permanentDeleteConfirmModalOpen}
-        onClose={() => {
-          setPermanentDeleteConfirmModalOpen(false);
-          setUserToPermanentlyDelete(null);
-        }}
-        onConfirm={confirmPermanentlyDeleteUser}
-        title="Supprimer définitivement l'utilisateur"
-        message={
-          userToPermanentlyDelete
-            ? `⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer définitivement ${userToPermanentlyDelete.prenom} ${userToPermanentlyDelete.nom} ? Cette action est IRRÉVERSIBLE et supprimera toutes ses données de la base de données, y compris son historique et ses codes d'accès.`
-            : ""
-        }
-        confirmText="Supprimer définitivement"
-        cancelText="Annuler"
-        variant="danger"
-        isLoading={permanentDeleteLoading}
       />
       {/* Modal de confirmation de changement de statut */}
       <ConfirmationModal

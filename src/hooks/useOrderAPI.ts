@@ -37,7 +37,7 @@ export const useOrders = () => {
           logger.debug("✅ [useOrders] Authentification automatique réussie");
         }
       }
-      const result = await OrderService.getAllOrders();
+      const result = await OrderService.getOrders();
       // S'assurer que result est un tableau
       setData(Array.isArray(result) ? result : []);
     } catch (err: any) {
@@ -56,7 +56,7 @@ export const useOrders = () => {
             logger.debug(
               "✅ [useOrders] Reconnexion réussie, récupération des commandes"
             );
-            const result = await OrderService.getAllOrders();
+            const result = await OrderService.getOrders();
             // S'assurer que result est un tableau
             setData(Array.isArray(result) ? result : []);
             return;
@@ -266,6 +266,23 @@ export const useOrderActions = () => {
     }
   };
 
+  const sendToCashier = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      return await OrderService.sendToCashier(id);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de l'envoi à la caisse"
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const cancelOrder = async (id: string) => {
     try {
       setLoading(true);
@@ -289,6 +306,7 @@ export const useOrderActions = () => {
     sendToKitchen,
     startCooking,
     finishCooking,
+    sendToCashier,
     cancelOrder,
   };
 };

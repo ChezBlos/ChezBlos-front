@@ -2,35 +2,28 @@ import * as XLSX from "xlsx";
 import * as pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
 import { LOGO_BASE64, LOGO_CONFIG } from "../utils/logoBase64";
-import { logger } from "../utils/logger";
 
 // Configuration des polices pour pdfMake
 try {
-  // Utiliser une approche plus compatible avec ESM
-  const pdfMakeConfig = pdfMake as any;
-  if (!pdfMakeConfig.vfs) {
-    pdfMakeConfig.vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
-  }
+  (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
 
   // Définir les polices disponibles
-  if (!pdfMakeConfig.fonts) {
-    pdfMakeConfig.fonts = {
-      Roboto: {
-        normal: "Roboto-Regular.ttf",
-        bold: "Roboto-Medium.ttf",
-        italics: "Roboto-Italic.ttf",
-        bolditalics: "Roboto-MediumItalic.ttf",
-      },
-      Helvetica: {
-        normal: "Helvetica",
-        bold: "Helvetica-Bold",
-        italics: "Helvetica-Oblique",
-        bolditalics: "Helvetica-BoldOblique",
-      },
-    };
-  }
+  (pdfMake as any).fonts = {
+    Roboto: {
+      normal: "Roboto-Regular.ttf",
+      bold: "Roboto-Medium.ttf",
+      italics: "Roboto-Italic.ttf",
+      bolditalics: "Roboto-MediumItalic.ttf",
+    },
+    Helvetica: {
+      normal: "Helvetica",
+      bold: "Helvetica-Bold",
+      italics: "Helvetica-Oblique",
+      bolditalics: "Helvetica-BoldOblique",
+    },
+  };
 } catch (error) {
-  logger.warn("Erreur lors du chargement des polices pdfMake:", error);
+  console.warn("Erreur lors du chargement des polices pdfMake:", error);
 }
 
 export interface ExportableOrder {
@@ -61,21 +54,7 @@ export interface ExportableUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
-  actif: boolean;
-  dateCreation: string;
-}
-
-// Interface pour les utilisateurs exportables
-export interface ExportableUser {
-  _id: string;
-  nom: string;
-  prenom: string;
-  email?: string;
-  telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER";
-  isCaissier: boolean;
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
   actif: boolean;
   dateCreation: string;
 }
@@ -166,7 +145,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export Excel:", error);
+      console.error("Erreur lors de l'export Excel:", error);
       throw new Error("Erreur lors de l'export Excel");
     }
   }
@@ -398,7 +377,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export PDF:", error);
+      console.error("Erreur lors de l'export PDF:", error);
       throw new Error("Erreur lors de l'export PDF");
     }
   }
@@ -503,7 +482,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export des statistiques:", error);
+      console.error("Erreur lors de l'export des statistiques:", error);
       throw new Error("Erreur lors de l'export des statistiques");
     }
   }
@@ -519,7 +498,7 @@ export class ExportService {
       Email: user.email || "N/A",
       Téléphone: user.telephone || "N/A",
       Rôle: this.formatRole(user.role),
-      Caissier: user.isCaissier ? "Oui" : "Non",
+      Caissier: user.role === "CAISSIER" ? "Oui" : "Non",
       Statut: user.actif ? "Actif" : "Inactif",
       "Date de création": new Date(user.dateCreation).toLocaleDateString(
         "fr-FR",
@@ -603,7 +582,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export Excel des utilisateurs:", error);
+      console.error("Erreur lors de l'export Excel des utilisateurs:", error);
       throw new Error("Erreur lors de l'export Excel des utilisateurs");
     }
   }
@@ -802,7 +781,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export PDF des utilisateurs:", error);
+      console.error("Erreur lors de l'export PDF des utilisateurs:", error);
       throw new Error("Erreur lors de l'export PDF des utilisateurs");
     }
   }
@@ -902,7 +881,7 @@ export class ExportService {
 
       return true;
     } catch (error) {
-      logger.error(
+      console.error(
         "Erreur lors de l'export des statistiques utilisateurs:",
         error
       );
@@ -921,7 +900,7 @@ export class ExportService {
       admins: users.filter((u) => u.role === "ADMIN").length,
       serveurs: users.filter((u) => u.role === "SERVEUR").length,
       cuisiniers: users.filter((u) => u.role === "CUISINIER").length,
-      caissiers: users.filter((u) => u.isCaissier).length,
+      caissiers: users.filter((u) => u.role === "CAISSIER").length,
     };
   }
 
@@ -989,7 +968,7 @@ export class ExportService {
       XLSX.writeFile(workbook, filename || defaultFilename);
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export Excel du stock:", error);
+      console.error("Erreur lors de l'export Excel du stock:", error);
       throw new Error("Erreur lors de l'export Excel du stock");
     }
   }
@@ -1191,7 +1170,7 @@ export class ExportService {
         .download(filename || defaultFilename);
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export PDF du stock:", error);
+      console.error("Erreur lors de l'export PDF du stock:", error);
       throw new Error("Erreur lors de l'export PDF du stock");
     }
   }
@@ -1258,7 +1237,10 @@ export class ExportService {
       );
       return true;
     } catch (error) {
-      logger.error("Erreur lors de l'export des statistiques du stock:", error);
+      console.error(
+        "Erreur lors de l'export des statistiques du stock:",
+        error
+      );
       throw new Error("Erreur lors de l'export des statistiques du stock");
     }
   }

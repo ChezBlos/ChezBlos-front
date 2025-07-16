@@ -15,6 +15,9 @@ export const useAuthRedirect = () => {
         case "serveur":
           navigate("/serveur/dashboard", { replace: true });
           break;
+        case "caissier":
+          navigate("/caissier/dashboard", { replace: true });
+          break;
         case "cuisinier":
         case "cuisine":
           navigate("/cuisine/dashboard", { replace: true });
@@ -35,7 +38,12 @@ export const useRequireAuth = (requiredRoles?: string[]) => {
       if (!isAuthenticated) {
         navigate("/login", { replace: true });
         return;
-      }      if (requiredRoles && user && !requiredRoles.includes(user.role.toLowerCase())) {
+      }
+      if (
+        requiredRoles &&
+        user &&
+        !requiredRoles.includes(user.role.toLowerCase())
+      ) {
         navigate("/403", { replace: true });
         return;
       }

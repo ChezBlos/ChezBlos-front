@@ -94,7 +94,6 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {user?.role === "SERVEUR" ? "Serveur" : "Serveur"}
-                    {user?.isCaissier && " • Caissier"}
                   </p>
                 </div>
                 <DropdownMenuSeparator />
@@ -151,8 +150,8 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                   <span>Historique</span>
                 </DropdownMenuItem>
 
-                {/* Section Caisse - visible uniquement pour les caissiers */}
-                {user?.isCaissier && (
+                {/* Section Caisse - visible uniquement pour les admins */}
+                {user?.role === "ADMIN" && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -250,7 +249,6 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {user?.role === "SERVEUR" ? "Serveur" : "Serveur"}
-                  {user?.isCaissier && " • Caissier"}
                 </p>
               </div>
               <DropdownMenuSeparator />

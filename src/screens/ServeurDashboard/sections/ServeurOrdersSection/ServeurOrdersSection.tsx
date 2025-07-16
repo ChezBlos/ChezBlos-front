@@ -1,5 +1,5 @@
 import { SearchIcon, PlusIcon, RefreshCw } from "lucide-react";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
 import { Button } from "../../../../components/ui/button";
@@ -39,9 +39,9 @@ import {
 import { useOrders, useOrderStats } from "../../../../hooks/useOrderAPI";
 import { Order } from "../../../../types/order";
 import { OrderService } from "../../../../services/orderService";
+import { ProfileService } from "../../../../services/profileService";
 import NewOrderModal from "../../../../components/modals/NewOrderModal";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
-import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
 import { useAuth } from "../../../../contexts/AuthContext";
 import {
   Eye,
@@ -50,80 +50,12 @@ import {
   PaperPlaneTilt,
   CreditCard,
   Money,
+  User,
+  CheckCircle,
   DotsThreeVertical,
 } from "phosphor-react";
-import {
-  getOrderItemImage,
-  handleImageError,
-} from "../../../../services/imageService";
-import { UserAvatar } from "../../../../components/UserAvatar";
 
-// Composant mémorisé pour éviter les re-rendus inutiles des images avec gestion locale du fallback
-const MemoizedOrderImage = React.memo(
-  ({
-    imagePath,
-    altText,
-    className = "w-full h-full object-cover",
-  }: {
-    imagePath?: string;
-    altText: string;
-    className?: string;
-  }) => {
-    const initialImageUrl = imagePath
-      ? getOrderItemImage(imagePath)
-      : "/img/plat_petit.png";
-
-    // État local pour gérer le fallback et éviter les boucles
-    const [currentSrc, setCurrentSrc] = useState(initialImageUrl);
-    const [hasErrored, setHasErrored] = useState(false);
-
-    // Réinitialiser quand l'imagePath change
-    useEffect(() => {
-      const newUrl = imagePath
-        ? getOrderItemImage(imagePath)
-        : "/img/plat_petit.png";
-      setCurrentSrc(newUrl);
-      setHasErrored(false);
-    }, [imagePath]);
-
-    const handleError = useCallback(
-      (e: React.SyntheticEvent<HTMLImageElement>) => {
-        if (!hasErrored) {
-          setHasErrored(true);
-          handleImageError(e);
-          const fallbackUrl = "/img/plat_petit.png";
-          setCurrentSrc(fallbackUrl);
-        }
-      },
-      [hasErrored]
-    );
-
-    const handleLoad = useCallback(() => {
-      // Image chargée avec succès
-    }, []);
-
-    return (
-      <img
-        src={currentSrc}
-        alt={altText}
-        className={className}
-        onError={handleError}
-        onLoad={handleLoad}
-        loading="lazy"
-      />
-    );
-  },
-  // Comparaison personnalisée pour éviter les re-rendus inutiles
-  (prevProps, nextProps) => {
-    return (
-      prevProps.imagePath === nextProps.imagePath &&
-      prevProps.altText === nextProps.altText &&
-      prevProps.className === nextProps.className
-    );
-  }
-);
-
-MemoizedOrderImage.displayName = "MemoizedOrderImage";
+const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
 
 export const ServeurOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -142,20 +74,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
   // État pour le rafraîchissement
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // États pour la gestion de l'annulation avec motif
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
-  const [isCancelling, setIsCancelling] = useState(false);
-
-  // États pour l'envoi en caisse
-  const [isSendToCashierModalOpen, setIsSendToCashierModalOpen] =
-    useState(false);
-  const [orderToSendToCashier, setOrderToSendToCashier] =
-    useState<Order | null>(null);
-  const [selectedPaymentMethodForCashier, setSelectedPaymentMethodForCashier] =
+  // États pour la gestion du mode de paiement
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [orderToPay, setOrderToPay] = useState<Order | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("");
-  const [isSendingToCashier, setIsSendingToCashier] = useState(false);
 
   // Récupération de l'utilisateur connecté
   const { user } = useAuth();
@@ -260,7 +183,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       subtitleColor: "text-orange-500",
     },
     // Carte Total caisse - visible seulement pour les caissiers et admins
-    ...(user?.role === "ADMIN" || user?.isCaissier
+    ...(user?.role === "ADMIN" || user?.role === "CAISSIER"
       ? [
           {
             title: "Total caisse",
@@ -300,8 +223,20 @@ export const ServeurOrdersSection = (): JSX.Element => {
       active: selectedStatus === "EN_COURS",
     },
     {
-      id: "TERMINE",
+      id: "PRET",
       label: "Prête",
+      count: statsLoading ? null : stats?.pret || 0,
+      active: selectedStatus === "PRET",
+    },
+    {
+      id: "EN_ATTENTE_PAIEMENT",
+      label: "En attente paiement",
+      count: statsLoading ? null : stats?.enAttentePaiement || 0,
+      active: selectedStatus === "EN_ATTENTE_PAIEMENT",
+    },
+    {
+      id: "TERMINE",
+      label: "Terminé",
       count: statsLoading ? null : stats?.termine || 0,
       active: selectedStatus === "TERMINE",
     },
@@ -324,7 +259,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       case "especes":
         return (
           <>
-            <div className="flex w-10 h-10 bg-orange-100 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0">
+            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0">
               <Money {...iconProps} />
             </div>
           </>
@@ -334,7 +269,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       case "carte":
         return (
           <>
-            <div className="flex w-10 h-10 bg-orange-100 text-brand-primary-500 items-center justify-centerrounded-full flex-shrink-0">
+            <div className="flex w-10 h-10 text-brand-primary-500 items-center justify-centerrounded-full flex-shrink-0">
               <CreditCard {...iconProps} />
             </div>
           </>
@@ -409,44 +344,55 @@ export const ServeurOrdersSection = (): JSX.Element => {
   // Fonction pour formater le prix
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
+  }; // Fonction pour rendre les images empilées
+  const renderStackedImages = (
+    items: any[],
+    maxImages: number = 3,
+    isMobile: boolean = false
+  ) => {
+    const imagesToShow = items.slice(0, maxImages);
+    const size = isMobile ? "w-12 h-12" : "w-10 h-10";
+    const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
+    const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
+
+    return (
+      <div className={`relative ${size} flex-shrink-0`}>
+        {imagesToShow.map((item, index) => {
+          const imageUrl =
+            item.menuItem &&
+            typeof item.menuItem === "object" &&
+            item.menuItem.image
+              ? `${IMAGE_BASE_URL}${item.menuItem.image}`
+              : "/img/plat_petit.png";
+
+          // Classes pour le décalage et la transparence
+          const positionClasses = [
+            "translate-x-0 translate-y-0 opacity-100 z-30", // Premier élément
+            `${translateClass} translate-y-0.5 opacity-70 z-20`, // Deuxième élément
+            `${translateClass2} translate-y-1 opacity-40 z-10`, // Troisième élément
+          ];
+
+          return (
+            <div
+              key={index}
+              className={`absolute ${size} rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden border-2 border-white shadow-sm ${
+                positionClasses[index] || ""
+              }`}
+            >
+              <img
+                src={imageUrl}
+                alt={item.nom || "Plat"}
+                className="w-full h-full mr-4 object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/img/plat_petit.png";
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
   };
-
-  // Fonction simple pour rendre les images empilées avec mémorisation des URLs
-  const renderStackedImages = useMemo(() => {
-    return (items: any[], maxImages: number = 3, isMobile: boolean = false) => {
-      const imagesToShow = items.slice(0, maxImages);
-      const size = isMobile ? "w-12 h-12" : "w-10 h-10";
-      const translateClass = isMobile ? "translate-x-1.5" : "translate-x-1";
-      const translateClass2 = isMobile ? "translate-x-3" : "translate-x-2";
-
-      return (
-        <div className={`relative ${size} flex-shrink-0`}>
-          {imagesToShow.map((item, index) => {
-            const positionClasses = [
-              "translate-x-0 translate-y-0 opacity-100 z-30",
-              `${translateClass} translate-y-0.5 opacity-70 z-20`,
-              `${translateClass2} translate-y-1 opacity-40 z-10`,
-            ];
-
-            return (
-              <div
-                key={`${item._id || item.nom || "item"}-${index}`}
-                className={`absolute ${size} rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden border-2 border-white shadow-sm ${
-                  positionClasses[index] || ""
-                }`}
-              >
-                <MemoizedOrderImage
-                  imagePath={item.menuItem?.image}
-                  altText={item.nom || "Plat"}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            );
-          })}
-        </div>
-      );
-    };
-  }, []); // Fonction mémorisée, ne se recréée jamais
 
   // Gestionnaire de changement d'onglet
   const handleTabChange = (value: string) => {
@@ -463,7 +409,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
     try {
       await Promise.all([refetch(), refetchStats()]);
     } catch (error) {
-      // Erreur silencieuse pour éviter les logs répétitifs
+      console.error("Erreur lors du rafraîchissement:", error);
     } finally {
       setIsRefreshing(false);
     }
@@ -484,25 +430,13 @@ export const ServeurOrdersSection = (): JSX.Element => {
   }, [selectedStatus, searchTerm]);
 
   // Gestion des actions sur les commandes
-  const handleCancelOrder = (order: Order) => {
-    setOrderToCancel(order);
-    setIsCancelDialogOpen(true);
-    setActiveDropdown(null); // Fermer le dropdown
-  };
-
-  const handleConfirmCancelOrder = async (motifAnnulation: string) => {
-    if (!orderToCancel) return;
-
-    setIsCancelling(true);
+  const handleCancelOrder = async (orderId: string) => {
     try {
-      await OrderService.cancelOrder(orderToCancel._id, motifAnnulation);
+      await OrderService.cancelOrder(orderId);
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      // Erreur silencieuse
-    } finally {
-      setIsCancelling(false);
-      setOrderToCancel(null);
+      console.error("Erreur lors de l'annulation:", error);
     }
   };
   const handleSendToKitchen = async (orderId: string) => {
@@ -511,9 +445,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      // Erreur silencieuse
+      console.error("Erreur lors de l'envoi en cuisine:", error);
     }
   };
+  const handleCompleteOrder = async (orderId: string) => {
+    try {
+      await OrderService.markAsCompleted(orderId);
+      refetch(); // Actualiser la liste
+      refetchStats(); // Actualiser les statistiques
+    } catch (error) {
+      console.error("Erreur lors de la finalisation de la commande:", error);
+    }
+  };
+
   const handleViewOrderDetails = (order: Order) => {
     setSelectedOrder(order);
     setIsOrderDetailsModalOpen(true);
@@ -523,23 +467,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
     setOrderToEdit(order);
     setIsEditOrderModalOpen(true);
     setActiveDropdown(null); // Fermer le dropdown
-  }; // Fonction pour gérer l'envoi en caisse
-  const handleSendToCashier = (order: Order) => {
-    setOrderToSendToCashier(order);
-    setSelectedPaymentMethodForCashier(""); // Réinitialiser la sélection
-    setIsSendToCashierModalOpen(true);
+  }; // Fonction pour gérer le paiement
+  const handlePayment = (order: Order) => {
+    setOrderToPay(order);
+    setSelectedPaymentMethod(order.modePaiement || ""); // Initialiser avec le mode actuel
+    setIsPaymentModalOpen(true);
     setActiveDropdown(null); // Fermer le dropdown
-  };
+  }; // Fonction pour traiter le paiement
+  const handleProcessPayment = async () => {
+    if (!orderToPay || !selectedPaymentMethod) return;
 
-  // Fonction pour traiter l'envoi en caisse
-  const handleProcessSendToCashier = async () => {
-    if (!orderToSendToCashier || !selectedPaymentMethodForCashier) return;
-
-    setIsSendingToCashier(true);
     try {
-      // Mettre à jour la commande avec le mode de paiement
-      await OrderService.updateOrder(orderToSendToCashier._id, {
-        modePaiement: selectedPaymentMethodForCashier as
+      await OrderService.updateOrder(orderToPay._id, {
+        modePaiement: selectedPaymentMethod as
           | "ESPECES"
           | "CARTE_BANCAIRE"
           | "WAVE"
@@ -547,19 +487,13 @@ export const ServeurOrdersSection = (): JSX.Element => {
           | "ORANGE_MONEY"
           | "MOOV_MONEY",
       });
-
-      // Note: Il faudra ajouter une méthode spécifique pour envoyer en caisse avec nouveau statut
-      // Pour l'instant, on met juste à jour le mode de paiement
-
-      setIsSendToCashierModalOpen(false);
-      setOrderToSendToCashier(null);
-      setSelectedPaymentMethodForCashier("");
+      setIsPaymentModalOpen(false);
+      setOrderToPay(null);
+      setSelectedPaymentMethod("");
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
     } catch (error) {
-      // Erreur silencieuse
-    } finally {
-      setIsSendingToCashier(false);
+      console.error("Erreur lors du traitement du paiement:", error);
     }
   }; // Fonction pour ouvrir le bottom sheet mobile
   const handleMobileCardClick = (order: Order) => {
@@ -617,6 +551,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
         <Card className="rounded-t-2xl border-b-0 rounded-b-none shadow-none md:shadow md:rounded-3xl overflow-hidden w-full">
           {/* Header and SearchIcon - Responsive */}
           <div className="flex flex-col border-b bg-white border-slate-200">
+            {" "}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-3 md:px-4 lg:px-6 pt-4 pb-3 gap-3 lg:gap-4">
               <h2 className="font-bold text-lg md:text-xl lg:text-2xl text-gray-900 flex-shrink-0">
                 Liste des commandes
@@ -673,10 +608,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </TabsList>
               </Tabs>
             </div>
-          </div>
+          </div>{" "}
           {/* Desktop Table - Hidden on mobile/tablet */}
           <div className="hidden lg:block w-full overflow-x-auto">
             <Table className="w-full table-auto min-w-0">
+              {" "}
               <TableHeader className="bg-gray-5">
                 <TableRow>
                   <TableHead className="h-[60px] px-4 py-3 text-sm text-gray-700 whitespace-nowrap min-w-0">
@@ -706,6 +642,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {" "}
                 {ordersLoading ? (
                   <TableRow>
                     <TableCell colSpan={8} className="h-40 text-center">
@@ -728,7 +665,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   <TableRow>
                     <TableCell colSpan={8} className="h-80 text-center">
                       <div className="flex flex-col items-center justify-center gap-4 py-8">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                           <PlusIcon className="w-8 h-8 text-gray-400" />
                         </div>
                         <div className="flex flex-col gap-2">
@@ -763,9 +700,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                       key={order._id}
                       className="h-20 border-b bg-white hover:bg-gray-10 border-slate-200"
                     >
+                      {" "}
                       <TableCell className="px-4 py-3">
                         {/* Dish Column */}
                         <div className="flex items-center gap-3 min-w-0">
+                          {" "}
                           {/* Images empilées pour commandes multiples */}
                           {order.items.length > 1 ? (
                             <div className="w-14 h-10 flex-shrink-0">
@@ -776,10 +715,14 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {order.items?.[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
-                                <MemoizedOrderImage
-                                  imagePath={order.items[0].menuItem.image}
-                                  altText={order.items[0]?.nom || "Plat"}
+                                <img
+                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
+                                  alt={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src =
+                                      "/img/plat_petit.png";
+                                  }}
                                 />
                               ) : (
                                 <img
@@ -798,7 +741,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {order.items.length > 1 &&
                                 `+${order.items.length - 1} autres éléments`}
                             </div>
-                          </div>
+                          </div>{" "}
                         </div>
                       </TableCell>
                       {/* N° Table Column */}
@@ -818,18 +761,38 @@ export const ServeurOrdersSection = (): JSX.Element => {
                           <div className="font-medium text-sm text-gray-500">
                             {order._id.slice(-6).toUpperCase()}
                           </div>
-                        </div>
-                      </TableCell>
+                        </div>{" "}
+                      </TableCell>{" "}
                       {/* Serveur Column */}
                       <TableCell className="px-4 py-3">
+                        {" "}
                         <div className="flex items-center gap-3">
                           {/* Photo de profil du serveur */}
-                          <UserAvatar
-                            photo={order.serveur?.photoProfil}
-                            nom={order.serveur?.nom}
-                            prenom={order.serveur?.prenom}
-                            size="md"
-                          />
+                          <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            {order.serveur?.photoProfil ? (
+                              <img
+                                src={ProfileService.getProfilePictureUrl(
+                                  order.serveur.photoProfil
+                                )}
+                                alt={order.serveur?.prenom || "Serveur"}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                  // Remplacer par l'icône User de Phosphor
+                                  const iconElement =
+                                    document.createElement("div");
+                                  iconElement.innerHTML =
+                                    '<div class="w-5 h-5 text-gray-600"><svg fill="currentColor" viewBox="0 0 256 256"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg></div>';
+                                  target.parentElement!.appendChild(
+                                    iconElement.firstChild!
+                                  );
+                                }}
+                              />
+                            ) : (
+                              <User size={20} className="text-gray-600" />
+                            )}
+                          </div>
                           <div className="flex flex-col min-w-0">
                             <div className="font-semibold text-base text-gray-900">
                               {order.serveur
@@ -847,6 +810,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3">
+                        {" "}
                         {/* Payment Type Column */}
                         <div className="flex items-center gap-3 min-w-0">
                           {getPaymentIcon(order.modePaiement || "especes")}
@@ -859,11 +823,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                         {/* Amount Column */}
                         <div className="font-semibold text-base">
                           <span className="text-gray-900">
-                            {formatPrice(order.montantTotal)}
+                            {formatPrice(order.montantTotal)}{" "}
                           </span>
                           <span className="text-gray-400">XOF</span>
                         </div>
-                      </TableCell>
+                      </TableCell>{" "}
                       {/* Status Column */}
                       <TableCell className="px-4 py-3">
                         <OrderStatusBadge statut={order.statut} />
@@ -919,7 +883,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                 </>
-                              )}
+                              )}{" "}
                               <DropdownMenuItem
                                 className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
                                 onClick={() => handleViewOrderDetails(order)}
@@ -928,31 +892,45 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 <span className="text-gray-700">
                                   Voir détails
                                 </span>
-                              </DropdownMenuItem>
-                              {/* Option Envoyer en caisse pour les commandes prêtes */}
+                              </DropdownMenuItem>{" "}
+                              {/* Option Paiement pour toutes les commandes sauf annulées */}
+                              {order.statut !== "ANNULE" && (
+                                <>
+                                  <DropdownMenuSeparator className="h-px bg-gray-200" />
+                                  <DropdownMenuItem
+                                    className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
+                                    onClick={() => handlePayment(order)}
+                                  >
+                                    <CreditCard size={20} />
+                                    <span className="text-gray-700">
+                                      Paiement
+                                    </span>
+                                  </DropdownMenuItem>
+                                </>
+                              )}{" "}
+                              {/* Option Marquer comme terminée pour les commandes prêtes */}
                               {order.statut === "PRET" && (
                                 <>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                   <DropdownMenuItem
                                     className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
-                                    onClick={() => handleSendToCashier(order)}
+                                    onClick={() =>
+                                      handleCompleteOrder(order._id)
+                                    }
                                   >
-                                    <CreditCard size={20} />
+                                    <CheckCircle size={20} />
                                     <span className="text-gray-700">
-                                      Envoyer en caisse
+                                      Marquer comme terminée
                                     </span>
                                   </DropdownMenuItem>
                                 </>
                               )}
-                              {/* Option Annuler pour EN_ATTENTE, EN_COURS et EN_PREPARATION */}
-                              {(order.statut === "EN_ATTENTE" ||
-                                order.statut === "EN_COURS" ||
-                                order.statut === "EN_PREPARATION") && (
+                              {order.statut === "EN_ATTENTE" && (
                                 <>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                   <DropdownMenuItem
                                     className="flex items-center gap-2.5 px-4 py-2.5 text-red-600 cursor-pointer font-medium text-sm"
-                                    onClick={() => handleCancelOrder(order)}
+                                    onClick={() => handleCancelOrder(order._id)}
                                   >
                                     <X size={20} />
                                     <span className="text-red-600">
@@ -1026,7 +1004,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   >
                     <CardContent className="p-3 md:p-4">
                       <div className="flex items-start justify-between gap-3">
-                        {/* Left side: Product info */}
+                        {/* Left side: Product info */}{" "}
                         <div className="flex items-center gap-3 flex-1 overflow-hidden">
                           {/* Product image */}
                           {order.items.length > 1 ? (
@@ -1038,10 +1016,14 @@ export const ServeurOrdersSection = (): JSX.Element => {
                               {order.items?.[0]?.menuItem &&
                               typeof order.items[0].menuItem === "object" &&
                               order.items[0].menuItem.image ? (
-                                <MemoizedOrderImage
-                                  imagePath={order.items[0].menuItem.image}
-                                  altText={order.items[0]?.nom || "Plat"}
+                                <img
+                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
+                                  alt={order.items[0]?.nom || "Plat"}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src =
+                                      "/img/plat_petit.png";
+                                  }}
                                 />
                               ) : (
                                 <img
@@ -1051,11 +1033,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 />
                               )}
                             </div>
-                          )}
-                          {/* Product info */}
+                          )}{" "}
+                          {/* Product info */}{" "}
                           <div className="flex flex-col gap-1 overflow-hidden flex-1">
                             <div className="font-semibold text-base text-gray-900 truncate">
-                              {order.items[0]?.nom || "Commande"}
+                              {order.items[0]?.nom || "Commande"}{" "}
                               {order.items.length > 1 && (
                                 <span className="font-medium text-sm text-gray-500">
                                   + {order.items.length - 1} autres
@@ -1074,14 +1056,34 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             <div className="flex items-center gap-2 mt-1">
                               <span className="font-medium text-sm text-orange-600">
                                 Serveur:
-                              </span>
+                              </span>{" "}
                               {/* Photo de profil du serveur */}
-                              <UserAvatar
-                                photo={order.serveur?.photoProfil}
-                                nom={order.serveur?.nom}
-                                prenom={order.serveur?.prenom}
-                                size="sm"
-                              />
+                              <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                {order.serveur?.photoProfil ? (
+                                  <img
+                                    src={ProfileService.getProfilePictureUrl(
+                                      order.serveur.photoProfil
+                                    )}
+                                    alt={order.serveur?.prenom || "Serveur"}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      target.style.display = "none";
+                                      // Remplacer par l'icône User de Phosphor
+                                      const iconElement =
+                                        document.createElement("div");
+                                      iconElement.innerHTML =
+                                        '<div class="w-3 h-3 text-gray-600"><svg fill="currentColor" viewBox="0 0 256 256"><path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path></svg></div>';
+                                      target.parentElement!.appendChild(
+                                        iconElement.firstChild!
+                                      );
+                                    }}
+                                  />
+                                ) : (
+                                  <User size={12} className="text-gray-600" />
+                                )}
+                              </div>
                               <span className="font-medium text-sm text-orange-600">
                                 {order.serveur
                                   ? user &&
@@ -1092,13 +1094,22 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   : "Non défini"}
                               </span>
                             </div>
+                            {/* <div className="flex items-center gap-2 mt-1">
+                            <span className="font-semibold text-sm text-gray-900">
+                              #{order.numeroCommande}
+                            </span>
+                            <span className="text-gray-400">•</span>
+                            <span className="font-semibold text-sm text-gray-900 truncate">
+                              {formatPrice(order.montantTotal)} XOF
+                            </span>
+                          </div> */}
                           </div>
-                        </div>
+                        </div>{" "}
                         {/* Right side: Status badge only */}
                         <div className="flex flex-col items-end gap-2 flex-shrink-0">
                           <OrderStatusBadge statut={order.statut} />
                           <span className="font-semibold text-sm text-gray-900 truncate">
-                            {formatPrice(order.montantTotal)}
+                            {formatPrice(order.montantTotal)}{" "}
                             <span className="text-gray-500">XOF</span>
                           </span>
                         </div>
@@ -1118,7 +1129,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
       >
         {selectedOrderForActions && (
           <>
-            {/* Order Info Header */}
+            {/* Order Info Header */}{" "}
             <div className="flex items-center gap-3 mb-6">
               {selectedOrderForActions.items.length > 1 ? (
                 <div className="w-20 h-14 flex-shrink-0">
@@ -1130,12 +1141,14 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   typeof selectedOrderForActions.items[0].menuItem ===
                     "object" &&
                   selectedOrderForActions.items[0].menuItem.image ? (
-                    <MemoizedOrderImage
-                      imagePath={
-                        selectedOrderForActions.items[0].menuItem.image
-                      }
-                      altText={selectedOrderForActions.items[0]?.nom || "Plat"}
+                    <img
+                      src={`${IMAGE_BASE_URL}${selectedOrderForActions.items[0].menuItem.image}`}
+                      alt={selectedOrderForActions.items[0]?.nom || "Plat"}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "/img/plat_petit.png";
+                      }}
                     />
                   ) : (
                     <img
@@ -1145,7 +1158,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     />
                   )}
                 </div>
-              )}
+              )}{" "}
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900">
                   {selectedOrderForActions.items[0]?.nom || "Commande"}
@@ -1156,7 +1169,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
                   {formatPrice(selectedOrderForActions.montantTotal)} XOF
-                </p>
+                </p>{" "}
               </div>
               <OrderStatusBadge statut={selectedOrderForActions.statut} />
             </div>
@@ -1198,27 +1211,39 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     variant="primary"
                   />
                 </>
-              )}
-              {/* Envoyer en caisse - disponible pour les commandes PRET */}
-              {selectedOrderForActions.statut === "PRET" && (
+              )}{" "}
+              {/* Paiement - disponible pour toutes les commandes sauf annulées */}
+              {selectedOrderForActions.statut !== "ANNULE" && (
                 <BottomSheetAction
                   onClick={() => {
-                    handleSendToCashier(selectedOrderForActions);
+                    handlePayment(selectedOrderForActions);
                     handleCloseBottomSheet();
                   }}
                   icon={<CreditCard size={24} />}
-                  title="Envoyer en caisse"
-                  description="Transférer vers le caissier pour paiement"
+                  title="Paiement"
+                  description="Choisir le mode de paiement"
+                  variant="primary"
+                />
+              )}{" "}
+              {/* Marquer comme terminée - disponible pour les commandes PRET */}
+              {selectedOrderForActions.statut === "PRET" && (
+                <BottomSheetAction
+                  onClick={() => {
+                    handleCompleteOrder(selectedOrderForActions._id);
+                    handleCloseBottomSheet();
+                  }}
+                  icon={<CheckCircle size={24} />}
+                  title="Marquer comme terminée"
+                  description="Finaliser la commande après livraison"
                   variant="primary"
                 />
               )}
-              {/* Annuler - disponible pour EN_ATTENTE, EN_COURS et EN_PREPARATION */}
+              {/* Annuler - disponible pour EN_ATTENTE et EN_PREPARATION */}
               {(selectedOrderForActions.statut === "EN_ATTENTE" ||
-                selectedOrderForActions.statut === "EN_COURS" ||
                 selectedOrderForActions.statut === "EN_PREPARATION") && (
                 <BottomSheetAction
                   onClick={() => {
-                    handleCancelOrder(selectedOrderForActions);
+                    handleCancelOrder(selectedOrderForActions._id);
                     handleCloseBottomSheet();
                   }}
                   icon={<X size={24} />}
@@ -1253,7 +1278,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
         }}
         orderToEdit={orderToEdit}
         isEditMode={true}
-      />
+      />{" "}
       {/* Modal pour les détails de commande */}
       <OrderDetailsModal
         isOpen={isOrderDetailsModalOpen}
@@ -1262,15 +1287,15 @@ export const ServeurOrdersSection = (): JSX.Element => {
           setSelectedOrder(null);
         }}
         order={selectedOrder}
-      />
-      {/* Modal pour l'envoi en caisse */}
+      />{" "}
+      {/* Modal pour le mode de paiement */}
       <Dialog
-        open={isSendToCashierModalOpen}
+        open={isPaymentModalOpen}
         onOpenChange={(open) => {
           if (!open) {
-            setIsSendToCashierModalOpen(false);
-            setOrderToSendToCashier(null);
-            setSelectedPaymentMethodForCashier("");
+            setIsPaymentModalOpen(false);
+            setOrderToPay(null);
+            setSelectedPaymentMethod("");
           }
         }}
       >
@@ -1278,58 +1303,17 @@ export const ServeurOrdersSection = (): JSX.Element => {
           <div className="px-8 py-6">
             <DialogHeader className="pb-6">
               <DialogTitle className="text-2xl font-bold text-gray-900">
-                Envoyer en caisse
+                Moyen de paiement
               </DialogTitle>
-              <p className="text-gray-600 mt-2">
-                Sélectionnez le mode de paiement et envoyez la commande au
-                caissier
-              </p>
             </DialogHeader>
-
-            {/* Info de la commande */}
-            {orderToSendToCashier && (
-              <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                    {orderToSendToCashier.items?.[0]?.menuItem &&
-                    typeof orderToSendToCashier.items[0].menuItem ===
-                      "object" &&
-                    orderToSendToCashier.items[0].menuItem.image ? (
-                      <MemoizedOrderImage
-                        imagePath={orderToSendToCashier.items[0].menuItem.image}
-                        altText={orderToSendToCashier.items[0]?.nom || "Plat"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <img
-                        src="/img/plat_petit.png"
-                        alt="Plat"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">
-                      Commande #{orderToSendToCashier.numeroCommande}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Table {orderToSendToCashier.numeroTable} •{" "}
-                      {formatPrice(orderToSendToCashier.montantTotal)} XOF
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Grid des options de paiement */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               {/* Carte bancaire */}
               <div
-                onClick={() =>
-                  setSelectedPaymentMethodForCashier("CARTE_BANCAIRE")
-                }
+                onClick={() => setSelectedPaymentMethod("CARTE_BANCAIRE")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethodForCashier === "CARTE_BANCAIRE"
+                  selectedPaymentMethod === "CARTE_BANCAIRE"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1346,7 +1330,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     Carte de crédit
                   </span>
                 </div>
-                {selectedPaymentMethodForCashier === "CARTE_BANCAIRE" && (
+                {selectedPaymentMethod === "CARTE_BANCAIRE" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1365,11 +1349,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Orange Money */}
               <div
-                onClick={() =>
-                  setSelectedPaymentMethodForCashier("ORANGE_MONEY")
-                }
+                onClick={() => setSelectedPaymentMethod("ORANGE_MONEY")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethodForCashier === "ORANGE_MONEY"
+                  selectedPaymentMethod === "ORANGE_MONEY"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1386,7 +1368,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                     Orange money
                   </span>
                 </div>
-                {selectedPaymentMethodForCashier === "ORANGE_MONEY" && (
+                {selectedPaymentMethod === "ORANGE_MONEY" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1405,9 +1387,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* MTN Money */}
               <div
-                onClick={() => setSelectedPaymentMethodForCashier("MTN_MONEY")}
+                onClick={() => setSelectedPaymentMethod("MTN_MONEY")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethodForCashier === "MTN_MONEY"
+                  selectedPaymentMethod === "MTN_MONEY"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1422,7 +1404,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">MTN money</span>
                 </div>
-                {selectedPaymentMethodForCashier === "MTN_MONEY" && (
+                {selectedPaymentMethod === "MTN_MONEY" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1441,9 +1423,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Moov Money */}
               <div
-                onClick={() => setSelectedPaymentMethodForCashier("MOOV_MONEY")}
+                onClick={() => setSelectedPaymentMethod("MOOV_MONEY")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethodForCashier === "MOOV_MONEY"
+                  selectedPaymentMethod === "MOOV_MONEY"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1458,7 +1440,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">Moov money</span>
                 </div>
-                {selectedPaymentMethodForCashier === "MOOV_MONEY" && (
+                {selectedPaymentMethod === "MOOV_MONEY" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1477,9 +1459,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Wave */}
               <div
-                onClick={() => setSelectedPaymentMethodForCashier("WAVE")}
+                onClick={() => setSelectedPaymentMethod("WAVE")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethodForCashier === "WAVE"
+                  selectedPaymentMethod === "WAVE"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1494,7 +1476,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">Wave</span>
                 </div>
-                {selectedPaymentMethodForCashier === "WAVE" && (
+                {selectedPaymentMethod === "WAVE" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1513,9 +1495,9 @@ export const ServeurOrdersSection = (): JSX.Element => {
 
               {/* Espèces */}
               <div
-                onClick={() => setSelectedPaymentMethodForCashier("ESPECES")}
+                onClick={() => setSelectedPaymentMethod("ESPECES")}
                 className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethodForCashier === "ESPECES"
+                  selectedPaymentMethod === "ESPECES"
                     ? "border-orange-500 bg-orange-50"
                     : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
@@ -1530,7 +1512,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   </div>
                   <span className="font-medium text-gray-900">Espèces</span>
                 </div>
-                {selectedPaymentMethodForCashier === "ESPECES" && (
+                {selectedPaymentMethod === "ESPECES" && (
                   <div className="absolute top-4 right-4 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
@@ -1548,39 +1530,17 @@ export const ServeurOrdersSection = (): JSX.Element => {
               </div>
             </div>
 
-            {/* Boutons d'action */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsSendToCashierModalOpen(false)}
-                disabled={isSendingToCashier}
-                className="flex-1 h-12 font-medium text-base rounded-xl"
-              >
-                Annuler
-              </Button>
-              <Button
-                onClick={handleProcessSendToCashier}
-                disabled={
-                  !selectedPaymentMethodForCashier || isSendingToCashier
-                }
-                className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium text-base rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                {isSendingToCashier ? "Envoi en cours..." : "Envoyer en caisse"}
-              </Button>
-            </div>
+            {/* Bouton Valider */}
+            <Button
+              onClick={handleProcessPayment}
+              disabled={!selectedPaymentMethod}
+              className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium text-base rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Valider
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Dialog pour l'annulation avec motif */}
-      <CancelOrderDialog
-        isOpen={isCancelDialogOpen}
-        onClose={() => setIsCancelDialogOpen(false)}
-        onConfirm={handleConfirmCancelOrder}
-        orderNumber={orderToCancel?.numeroCommande}
-        isLoading={isCancelling}
-      />
-
       {/* Barre mobile fixe pour nouvelle commande */}
       <MobileNewOrderBar
         onClick={() => setIsNewOrderBottomSheetOpen(true)}

@@ -12,15 +12,12 @@ import {
 } from "../../../../components/ui/table";
 import { Input } from "../../../../components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
-import { Button } from "../../../../components/ui/button";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
 import { CreditCard, Money } from "phosphor-react";
-import { SearchIcon, EyeIcon, CalendarIcon } from "lucide-react";
+import { SearchIcon, EyeIcon } from "lucide-react";
 import { Order } from "../../../../types/order";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
-import { Pagination } from "./Pagination";
-import { DateFilterModal } from "./DateFilterModal";
 // import { getMenuImageUrl } from "../../utils/menuImageUtils";
 // import MenuItemImage from "../../components/MenuItemImage";
 
@@ -34,43 +31,26 @@ export const ServeurOrdersHistorySection: React.FC = () => {
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  // États pour la pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // 10 commandes par page
-
-  // États pour le filtre de date
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
-  const [dateFilter, setDateFilter] = useState<{
-    mode: "period" | "single";
-    startDate?: string;
-    endDate?: string;
-    date?: string;
-  } | null>(null);
-
-  // Filtrer toutes les commandes du serveur connecté (y compris celles d'aujourd'hui)
+  // Filtrer uniquement les commandes des jours passés ET du serveur connecté
   const pastOrders = useMemo(() => {
-    if (!allOrders || !Array.isArray(allOrders) || !user) {
-      return [];
-    }
-
-    const filtered = allOrders.filter((order) => {
+    if (!allOrders || !Array.isArray(allOrders) || !user) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return allOrders.filter((order) => {
+      const orderDate = new Date(order.dateCreation);
+      // Correction typage serveurId
       const serveurId = order.serveur?._id;
-
-      // Seul critère : appartient au serveur connecté
-      const isFromUser =
-        serveurId && (serveurId === user._id || serveurId === user.id);
-
-      return isFromUser;
+      return (
+        orderDate < today &&
+        serveurId &&
+        (serveurId === user._id || serveurId === user.id)
+      );
     });
-
-    return filtered;
   }, [allOrders, user]);
 
-  // Recherche et filtre par statut et date
+  // Recherche et filtre par statut
   const filteredOrders = useMemo(() => {
     let filtered = pastOrders;
-
-    // Filtre par recherche
     if (searchTerm) {
       filtered = filtered.filter(
         (order) =>
@@ -90,55 +70,11 @@ export const ServeurOrdersHistorySection: React.FC = () => {
           })
       );
     }
-
-    // Filtre par statut
     if (selectedStatus !== "TOUTES") {
       filtered = filtered.filter((order) => order.statut === selectedStatus);
     }
-
-    // Filtre par date
-    if (dateFilter) {
-      filtered = filtered.filter((order) => {
-        const orderDate = new Date(order.dateCreation);
-        orderDate.setHours(0, 0, 0, 0); // Normaliser l'heure
-
-        if (dateFilter.mode === "single" && dateFilter.date) {
-          const filterDate = new Date(dateFilter.date);
-          filterDate.setHours(0, 0, 0, 0);
-          return orderDate.getTime() === filterDate.getTime();
-        } else if (
-          dateFilter.mode === "period" &&
-          dateFilter.startDate &&
-          dateFilter.endDate
-        ) {
-          const startDate = new Date(dateFilter.startDate);
-          const endDate = new Date(dateFilter.endDate);
-          startDate.setHours(0, 0, 0, 0);
-          endDate.setHours(23, 59, 59, 999);
-          return orderDate >= startDate && orderDate <= endDate;
-        }
-
-        return true;
-      });
-    }
-
     return filtered;
-  }, [pastOrders, searchTerm, selectedStatus, dateFilter]);
-
-  // Pagination des données filtrées
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredOrders.slice(startIndex, endIndex);
-  }, [filteredOrders, currentPage, itemsPerPage]);
-
-  // Calculs pour la pagination
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-
-  // Reset de la page quand les filtres changent
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedStatus, dateFilter]);
+  }, [pastOrders, searchTerm, selectedStatus]);
 
   // Statistiques summary cards
   const stats = useMemo(() => {
@@ -275,25 +211,6 @@ export const ServeurOrdersHistorySection: React.FC = () => {
     setIsOrderDetailsModalOpen(true);
   };
 
-  // Fonctions pour la gestion des filtres de date
-  const handleApplyDateFilter = (filter: {
-    mode: "period" | "single";
-    startDate?: string;
-    endDate?: string;
-    date?: string;
-  }) => {
-    setDateFilter(filter);
-  };
-
-  const handleClearDateFilter = () => {
-    setDateFilter(null);
-  };
-
-  // Fonction pour changer de page
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   // UI
   const summaryCards = [
     {
@@ -384,35 +301,6 @@ export const ServeurOrdersHistorySection: React.FC = () => {
                 />
                 <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
               </div>
-
-              {/* Bouton de filtre de date */}
-              <Button
-                variant="outline"
-                onClick={() => setIsDateFilterOpen(true)}
-                className={`h-10 md:h-12 px-4 rounded-full border-[#eff1f3] hover:bg-gray-20 flex items-center gap-2 flex-shrink-0 ${
-                  dateFilter
-                    ? "bg-orange-50 border-orange-200 text-orange-700"
-                    : ""
-                }`}
-              >
-                <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
-                <span className="hidden sm:inline">
-                  {dateFilter ? "Filtré" : "Filtrer par date"}
-                </span>
-                {dateFilter && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleClearDateFilter();
-                    }}
-                    className="h-5 w-5 p-0 hover:bg-orange-200"
-                  >
-                    ×
-                  </Button>
-                )}
-              </Button>
             </div>
           </div>
           <Tabs
@@ -466,12 +354,12 @@ export const ServeurOrdersHistorySection: React.FC = () => {
             <div className="flex items-center justify-center h-40">
               <SpinnerMedium />
             </div>
-          ) : paginatedOrders.length === 0 ? (
+          ) : filteredOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-gray-500">
               <SearchIcon size={48} className="mb-4 text-gray-300" />
               <p className="text-lg font-medium">Aucune commande trouvée</p>
               <p className="text-sm">
-                {searchTerm || dateFilter
+                {searchTerm
                   ? "Essayez de modifier vos critères de recherche"
                   : "L'historique des commandes apparaîtra ici"}
               </p>
@@ -508,7 +396,7 @@ export const ServeurOrdersHistorySection: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedOrders.map((order) => (
+                  {filteredOrders.map((order) => (
                     <TableRow
                       key={order._id}
                       className="border-b bg-white border-slate-100 hover:bg-gray-10 transition-colors"
@@ -589,17 +477,6 @@ export const ServeurOrdersHistorySection: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Pagination */}
-        {!loading && paginatedOrders.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={filteredOrders.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
-          />
-        )}
       </div>
 
       {/* Modal de détails de commande */}
@@ -610,18 +487,6 @@ export const ServeurOrdersHistorySection: React.FC = () => {
           setSelectedOrder(null);
         }}
         order={selectedOrder}
-      />
-
-      {/* Modal de filtre de date */}
-      <DateFilterModal
-        isOpen={isDateFilterOpen}
-        onClose={() => setIsDateFilterOpen(false)}
-        onApplyFilter={handleApplyDateFilter}
-        onClearFilter={handleClearDateFilter}
-        currentStartDate={dateFilter?.startDate}
-        currentEndDate={dateFilter?.endDate}
-        currentMode={dateFilter?.mode || "period"}
-        currentDate={dateFilter?.date}
       />
     </section>
   );

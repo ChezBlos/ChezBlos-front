@@ -178,7 +178,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         })),
         numeroTable: tableNumber ? parseInt(tableNumber) : undefined,
         notes: orderNotes || undefined,
-        modePaiement: "ESPECES", // Mode de paiement par défaut
+        // Mode de paiement sera défini lors de l'envoi à la caisse
       };
       let result: Order;
 

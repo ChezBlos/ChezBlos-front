@@ -451,7 +451,7 @@ export const ServeurOrdersHistorySection: React.FC = () => {
                       </TableCell>
                       {/* <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          {getPaymentIcon(order.modePaiement || "especes")}
+                          {getPaymentIcon(order.modePaiement || "")}
                           <div className="font-semibold text-base text-gray-900 truncate">
                             {formatPaymentMethodName(order.modePaiement)}
                           </div>

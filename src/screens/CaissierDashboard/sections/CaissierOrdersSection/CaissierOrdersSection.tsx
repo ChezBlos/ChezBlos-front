@@ -583,7 +583,7 @@ export const CaissierOrdersSection: React.FC<{
         try {
           // Étape 1: Traiter le paiement si ce n'est pas déjà fait
           await OrderService.processPayment(selectedOrder?._id || "", {
-            modePaiement: selectedOrder?.modePaiement || "ESPECES",
+            modePaiement: selectedOrder?.modePaiement || "",
             montant: selectedOrder?.montantTotal || 0,
             // Ajout d'une référence de transaction pour respecter le schéma
             referenceTransaction: `TICKET-${Date.now()}`,

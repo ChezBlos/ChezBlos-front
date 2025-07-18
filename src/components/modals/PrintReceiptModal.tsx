@@ -100,12 +100,14 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
     }
   };
 
+  // Vérification des modes de paiement, en tenant compte des valeurs undefined/null
   const isEspeces = order?.modePaiement?.toUpperCase() === "ESPECES";
   const isMobileMoney =
     order?.modePaiement &&
     ["WAVE", "MTN_MONEY", "ORANGE_MONEY", "MOOV_MONEY"].includes(
       order.modePaiement.toUpperCase()
     );
+  const isPaymentMethodDefined = !!order?.modePaiement;
 
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
@@ -168,8 +170,8 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
               </div>
             </div>
 
-            {/* Saisie du montant reçu pour les espèces */}
-            {isEspeces && (
+            {/* Saisie du montant reçu pour les espèces - seulement si un mode de paiement est défini et c'est "espèces" */}
+            {isPaymentMethodDefined && isEspeces && (
               <div className="space-y-2">
                 <Label htmlFor="montantRecu">Montant reçu (XOF)</Label>
                 <Input
@@ -195,8 +197,8 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
               </div>
             )}
 
-            {/* Info pour mobile money */}
-            {isMobileMoney && (
+            {/* Info pour mobile money - seulement si un mode de paiement est défini et c'est du mobile money */}
+            {isPaymentMethodDefined && isMobileMoney && (
               <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
                 <p>Paiement mobile confirmé - Montant exact reçu</p>
               </div>
@@ -216,6 +218,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
                 variant="outline"
                 className="flex-1"
                 disabled={
+                  isPaymentMethodDefined &&
                   isEspeces &&
                   order.statut !== "TERMINE" &&
                   (!montantRecu || montantRecuNumber < order.montantTotal)

@@ -27,7 +27,7 @@ export const PaymentMethodConfirmationModal: React.FC<
   PaymentMethodConfirmationModalProps
 > = ({ isOpen, onClose, order, onConfirm, onUpdatePaymentMethod }) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(
-    order.modePaiement || "ESPECES"
+    order.modePaiement || ""
   );
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string>("");
@@ -141,7 +141,7 @@ export const PaymentMethodConfirmationModal: React.FC<
   };
 
   const handleClose = () => {
-    setSelectedPaymentMethod(order.modePaiement || "ESPECES");
+    setSelectedPaymentMethod(order.modePaiement || "");
     setError("");
     onClose();
   };

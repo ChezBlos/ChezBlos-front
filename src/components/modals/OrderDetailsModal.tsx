@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, HelpCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Order } from "../../types/order";
@@ -38,7 +38,16 @@ export const OrderDetailsModal = ({
       color: "#F97316" as const,
     };
 
-    switch (modePaiement?.toLowerCase()) {
+    // Si le mode de paiement est vide ou non défini
+    if (!modePaiement) {
+      return (
+        <div className="flex w-8 h-8 text-gray-400 items-center justify-center rounded-full flex-shrink-0 bg-gray-100">
+          <HelpCircle {...iconProps} />
+        </div>
+      );
+    }
+
+    switch (modePaiement.toLowerCase()) {
       case "especes":
         return (
           <div className="flex w-8 h-8 text-brand-primary-500 items-center justify-center rounded-full flex-shrink-0 bg-orange-100">
@@ -169,17 +178,15 @@ export const OrderDetailsModal = ({
                 </div>
               )}
 
-              {order.modePaiement && (
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Paiement:</span>
-                  <div className="flex items-center gap-2">
-                    {getPaymentIcon(order.modePaiement)}
-                    <span className="font-medium text-gray-900">
-                      {formatPaymentMethodName(order.modePaiement)}
-                    </span>
-                  </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600">Paiement:</span>
+                <div className="flex items-center gap-2">
+                  {getPaymentIcon(order.modePaiement || "")}
+                  <span className="font-medium text-gray-900">
+                    {formatPaymentMethodName(order.modePaiement)}
+                  </span>
                 </div>
-              )}
+              </div>
 
               {order.motifAnnulation && (
                 <div className="text-sm">

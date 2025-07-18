@@ -748,7 +748,7 @@ export const AdminHistoriqueSection: React.FC = () => {
                           <TableCell className="px-4 py-3">
                             {/* Payment Type Column */}
                             <div className="flex items-center gap-3 min-w-0">
-                              {getPaymentIcon(order.modePaiement || "especes")}
+                              {getPaymentIcon(order.modePaiement || "")}
                               <div className="font-semibold text-base text-gray-900 truncate">
                                 {formatPaymentMethodName(order.modePaiement)}
                               </div>
@@ -870,7 +870,7 @@ export const AdminHistoriqueSection: React.FC = () => {
                                 <span className="text-gray-400">•</span>{" "}
                                 <div className="flex items-center gap-1">
                                   {getPaymentIcon(
-                                    order.modePaiement || "especes",
+                                    order.modePaiement || "",
                                     "sm"
                                   )}
                                   <span className="font-medium text-sm text-gray-900">

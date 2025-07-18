@@ -82,6 +82,10 @@ const App: React.FC = () => {
                           element={<CaissierDashboard />}
                         />
                         <Route
+                          path="historique"
+                          element={<CaissierDashboard />}
+                        />
+                        <Route
                           path=""
                           element={<Navigate to="dashboard" replace />}
                         />

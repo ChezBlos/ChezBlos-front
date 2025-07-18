@@ -99,6 +99,8 @@ const failedImages = new Set<string>();
 
 /**
  * Obtient l'URL d'une image de menu avec fallback et cache des échecs
+ * @param imagePath - Chemin vers l'image (peut être null/undefined)
+ * @returns URL de l'image ou image par défaut
  */
 export function getMenuImageUrl(imagePath?: string | null): string {
   if (!imagePath) {
@@ -191,3 +193,28 @@ export const IMAGE_CONFIG = {
  */
 export type ImageType = keyof typeof DEFAULT_IMAGES;
 export type AvatarInfo = ReturnType<typeof getUserAvatarUrl>;
+
+/**
+ * Exemples d'utilisation :
+ *
+ * // Pour une image de menu avec fallback automatique
+ * const imageUrl = getMenuImageUrl(menuItem.image);
+ * <img src={imageUrl} alt="Plat" onError={handleImageError} />
+ *
+ * // Pour un avatar utilisateur
+ * const avatar = getUserAvatarUrl(user.photoProfil, user.nom, user.prenom);
+ * if (avatar.type === 'image') {
+ *   <img src={avatar.url} alt="Avatar" />
+ * } else {
+ *   <div className={avatar.initials.backgroundColor}>
+ *     {avatar.initials.initials}
+ *   </div>
+ * }
+ *
+ * // Pour gérer les erreurs d'images automatiquement
+ * <img
+ *   src={getMenuImageUrl(item.image)}
+ *   alt="Plat"
+ *   onError={handleImageError}
+ * />
+ */

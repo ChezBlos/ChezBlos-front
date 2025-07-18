@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { CaissierHeaderSection } from "./sections/CaissierHeaderSection/CaissierHeaderSection";
 import { CaissierOrdersSection } from "./sections/CaissierOrdersSection/CaissierOrdersSection";
 import { CaissierHistoriqueSection } from "./sections/CaissierHistoriqueSection/CaissierHistoriqueSection";
@@ -8,14 +9,43 @@ import { useToast } from "../../hooks/useToast";
 import ToastContainer from "../../components/ui/toast-container";
 
 export const CaissierDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Récupération de la section depuis l'URL
+  const getSectionFromUrl = (): "commandes" | "historique" => {
+    const path = location.pathname;
+    if (path.includes("/historique")) return "historique";
+    return "commandes";
+  };
+
   const [selectedSection, setSelectedSection] = useState<
     "commandes" | "historique"
-  >("commandes");
+  >(getSectionFromUrl());
 
   // Récupération des hooks pour pouvoir rafraîchir les données depuis le header
   const { refetch: refetchOrders } = useOrders();
   const { refetch: refetchStats } = useOrderStats();
   const { toasts, hideToast } = useToast();
+
+  // Synchronisation avec l'URL lors du changement de route
+  useEffect(() => {
+    const currentSection = getSectionFromUrl();
+    if (currentSection !== selectedSection) {
+      setSelectedSection(currentSection);
+    }
+  }, [location.pathname, selectedSection]);
+
+  // Fonction pour gérer le changement de section avec mise à jour de l'URL
+  const handleSectionChange = (section: "commandes" | "historique") => {
+    setSelectedSection(section);
+
+    // Mise à jour de l'URL selon la section
+    const newPath =
+      section === "historique" ? "/caissier/historique" : "/caissier/dashboard";
+
+    navigate(newPath, { replace: true });
+  };
 
   const renderContent = () => {
     switch (selectedSection) {
@@ -37,13 +67,13 @@ export const CaissierDashboard: React.FC = () => {
     <main className="bg-[#EFF1F3] flex flex-row w-full min-h-screen overflow-x-hidden">
       <CaissierSidebar
         selected={selectedSection}
-        onSelect={setSelectedSection}
+        onSelect={handleSectionChange}
       />
       <div className="flex-1 flex flex-col ml-0 lg:ml-64 w-full min-w-0">
         {/* En-tête secondaire avec fonctions de rafraîchissement */}
         <CaissierHeaderSection
           selectedSection={selectedSection}
-          onSectionSelect={setSelectedSection}
+          onSectionSelect={handleSectionChange}
           onOrdersRefresh={refetchOrders}
           onStatsRefresh={refetchStats}
         />

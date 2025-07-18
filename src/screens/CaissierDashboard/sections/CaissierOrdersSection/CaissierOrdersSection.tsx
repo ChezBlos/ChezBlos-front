@@ -29,6 +29,10 @@ import { CreditCard, DotsThreeVertical } from "@phosphor-icons/react";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
 import { PrintReceiptModal } from "../../../../components/modals/PrintReceiptModal";
 import { PaymentValidationModal } from "../../../../components/modals/PaymentValidationModal";
+import {
+  getMenuImageUrl,
+  handleImageError,
+} from "../../../../services/imageService";
 
 // Type pour l'élément de commande du caissier
 interface CashierOrderItem {
@@ -67,11 +71,16 @@ const OrderImage: React.FC<{
   altText: string;
   className: string;
 }> = ({ imagePath, altText, className }) => {
-  const imageUrl = imagePath
-    ? `${import.meta.env.VITE_IMAGE_BASE_URL || ""}${imagePath}`
-    : "/img/plat_petit.png";
+  const imageUrl = getMenuImageUrl(imagePath);
 
-  return <img src={imageUrl} alt={altText} className={className} />;
+  return (
+    <img
+      src={imageUrl}
+      alt={altText}
+      className={className}
+      onError={handleImageError}
+    />
+  );
 };
 
 // Mémorisation du composant d'image pour éviter les re-rendus inutiles

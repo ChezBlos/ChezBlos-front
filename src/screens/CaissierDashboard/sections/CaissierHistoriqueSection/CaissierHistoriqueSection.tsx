@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "../../../../components/ui/dropdown-menu";
 import { DotsThreeVertical, Money } from "@phosphor-icons/react";
+import { Pagination } from "./Pagination";
 
 export const CaissierHistoriqueSection: React.FC<{
   onRefresh?: () => Promise<void>;
@@ -31,6 +32,10 @@ export const CaissierHistoriqueSection: React.FC<{
   const [searchTerm, setSearchTerm] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedStatus] = useState("TOUTES");
+
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // États pour le modal de détails de commande
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
@@ -47,6 +52,17 @@ export const CaissierHistoriqueSection: React.FC<{
     closePrintModal,
     handlePrintStart,
   } = usePrintReceipt();
+
+  // Fonction utilitaire pour vérifier si une date est aujourd'hui
+  const isToday = (date: string | Date) => {
+    const today = new Date();
+    const orderDate = new Date(date);
+    return (
+      orderDate.getDate() === today.getDate() &&
+      orderDate.getMonth() === today.getMonth() &&
+      orderDate.getFullYear() === today.getFullYear()
+    );
+  };
 
   // Filtrer uniquement les commandes terminées
   const completedOrders = useMemo(() => {
@@ -92,13 +108,28 @@ export const CaissierHistoriqueSection: React.FC<{
     return filtered;
   }, [completedOrders, searchTerm, selectedStatus]);
 
+  // Pagination des commandes filtrées
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredOrders.slice(startIndex, endIndex);
+  }, [filteredOrders, currentPage, itemsPerPage]);
+
+  // Calculs pour la pagination
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+
+  // Reset de la page quand les filtres changent
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedStatus]);
+
   // Statistiques summary cards
   const stats = useMemo(() => {
     if (!completedOrders.length)
       return {
         totalCommandes: 0,
         montantTotal: 0,
-        moyenneCommande: 0,
+        commandesAujourdhui: 0,
       };
 
     const totalCommandes = completedOrders.length;
@@ -106,14 +137,18 @@ export const CaissierHistoriqueSection: React.FC<{
       (total, o) => total + (o.montantTotal || 0),
       0
     );
-    const moyenneCommande = montantTotal / totalCommandes;
+
+    // Calculer les commandes d'aujourd'hui
+    const commandesAujourdhui = completedOrders.filter((order) =>
+      isToday(order.dateCreation)
+    ).length;
 
     return {
       totalCommandes,
       montantTotal,
-      moyenneCommande,
+      commandesAujourdhui,
     };
-  }, [completedOrders]);
+  }, [completedOrders, isToday]);
 
   // Formatters
   const formatPrice = (price: number): string =>
@@ -250,6 +285,25 @@ export const CaissierHistoriqueSection: React.FC<{
         <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
           <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
             <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
+              Commandes aujourd'hui
+            </h3>
+            <div className="flex flex-col items-start gap-1 w-full min-w-0">
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
+                  {stats.commandesAujourdhui}
+                </span>
+              </div>
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-medium text-xs md:text-sm text-blue-500 truncate w-full">
+                  Traitées ce jour
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
+          <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
+            <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
               Total commandes
             </h3>
             <div className="flex flex-col items-start gap-1 w-full min-w-0">
@@ -284,29 +338,6 @@ export const CaissierHistoriqueSection: React.FC<{
               <div className="flex items-start gap-1 w-full min-w-0">
                 <span className="font-medium text-xs md:text-sm text-green-500 truncate w-full">
                   Recettes validées
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
-          <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
-            <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
-              Panier moyen
-            </h3>
-            <div className="flex flex-col items-start gap-1 w-full min-w-0">
-              <div className="flex items-start gap-1 w-full min-w-0">
-                <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
-                  {formatPrice(stats.moyenneCommande)}
-                </span>
-                <span className="font-bold text-xl md:text-3xl truncate text-gray-500">
-                  XOF
-                </span>
-              </div>
-              <div className="flex items-start gap-1 w-full min-w-0">
-                <span className="font-medium text-xs md:text-sm text-blue-500 truncate w-full">
-                  Par commande
                 </span>
               </div>
             </div>
@@ -359,117 +390,130 @@ export const CaissierHistoriqueSection: React.FC<{
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-10 border-b border-slate-200">
-                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
-                      N° Commande
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
-                      Articles
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
-                      Mode de paiement
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
-                      Total
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
-                      Date
-                    </TableHead>
-                    <TableHead className="px-4 py-3 text-center font-semibold text-gray-700">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map((order) => (
-                    <TableRow
-                      key={order._id}
-                      className="h-20 border-b bg-white hover:bg-gray-10 border-slate-200"
-                    >
-                      <TableCell className="px-4 py-3 font-medium">
-                        {order.numeroCommande || order._id}
-                        {order.numeroTable && (
-                          <div className="text-sm text-gray-500">
-                            Table {order.numeroTable}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="font-medium">
-                          {order.items.length} article
-                          {order.items.length > 1 ? "s" : ""}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {order.items
-                            .slice(0, 2)
-                            .map((item) =>
-                              typeof item.menuItem === "object"
-                                ? item.menuItem.nom
-                                : item.nom || "Article"
-                            )
-                            .join(", ")}
-                          {order.items.length > 2 && "..."}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          {order.modePaiement &&
-                            getPaymentIcon(order.modePaiement, "md")}
-                          <span>
-                            {order.modePaiement
-                              ? formatPaymentMethodName(order.modePaiement)
-                              : "Non défini"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 font-medium">
-                        {formatPrice(order.montantTotal || 0)} XOF
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        {new Date(order.dateCreation).toLocaleDateString(
-                          "fr-FR"
-                        )}
-                        <div className="text-sm text-gray-500">
-                          {new Date(order.dateCreation).toLocaleTimeString(
-                            "fr-FR",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <DotsThreeVertical size={16} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleViewOrderDetails(order)}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              <span>Voir détails</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handlePrintReceipt(order)}
-                            >
-                              <Printer className="h-4 w-4 mr-2" />
-                              <span>Imprimer reçu</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-10 border-b border-slate-200">
+                      <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                        N° Commande
+                      </TableHead>
+                      <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                        Articles
+                      </TableHead>
+                      <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                        Mode de paiement
+                      </TableHead>
+                      <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                        Total
+                      </TableHead>
+                      <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                        Date
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-center font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedOrders.map((order) => (
+                      <TableRow
+                        key={order._id}
+                        className="h-20 border-b bg-white hover:bg-gray-10 border-slate-200"
+                      >
+                        <TableCell className="px-4 py-3 font-medium">
+                          {order.numeroCommande || order._id}
+                          {order.numeroTable && (
+                            <div className="text-sm text-gray-500">
+                              Table {order.numeroTable}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="font-medium">
+                            {order.items.length} article
+                            {order.items.length > 1 ? "s" : ""}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {order.items
+                              .slice(0, 2)
+                              .map((item) =>
+                                typeof item.menuItem === "object"
+                                  ? item.menuItem.nom
+                                  : item.nom || "Article"
+                              )
+                              .join(", ")}
+                            {order.items.length > 2 && "..."}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {order.modePaiement &&
+                              getPaymentIcon(order.modePaiement, "md")}
+                            <span>
+                              {order.modePaiement
+                                ? formatPaymentMethodName(order.modePaiement)
+                                : "Non défini"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 font-medium">
+                          {formatPrice(order.montantTotal || 0)} XOF
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          {new Date(order.dateCreation).toLocaleDateString(
+                            "fr-FR"
+                          )}
+                          <div className="text-sm text-gray-500">
+                            {new Date(order.dateCreation).toLocaleTimeString(
+                              "fr-FR",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <DotsThreeVertical size={16} />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleViewOrderDetails(order)}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                <span>Voir détails</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handlePrintReceipt(order)}
+                              >
+                                <Printer className="h-4 w-4 mr-2" />
+                                <span>Imprimer reçu</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredOrders.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

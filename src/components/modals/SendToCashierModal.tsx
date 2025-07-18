@@ -1,6 +1,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { ButtonSpinner } from "../ui/spinner";
 import { Order } from "../../types/order";
 import { formatPrice } from "../../utils/priceUtils";
 import { getOrderItemImage } from "../../services/imageService";
@@ -191,7 +192,14 @@ export const SendToCashierModal: React.FC<SendToCashierModalProps> = ({
               disabled={!selectedPaymentMethod || isLoading}
               className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium text-base rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Envoi en cours..." : "Envoyer en caisse"}
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <ButtonSpinner />
+                  Envoi en cours...
+                </div>
+              ) : (
+                "Envoyer en caisse"
+              )}
             </Button>
           </div>
         </div>

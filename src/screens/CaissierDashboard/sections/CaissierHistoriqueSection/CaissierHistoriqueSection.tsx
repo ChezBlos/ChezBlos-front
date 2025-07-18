@@ -5,10 +5,10 @@ import { PrintReceiptModal } from "../../../../components/modals/PrintReceiptMod
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { SearchIcon, RefreshCw } from "lucide-react";
-import { SummaryCard } from "../../../../components/ui/SummaryCard";
+import { SearchIcon, RefreshCw, Printer, Eye, CreditCard } from "lucide-react";
 import { useOrders } from "../../../../hooks/useOrderAPI";
 import { Card, CardContent } from "../../../../components/ui/card";
+import { SpinnerMedium } from "../../../../components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -17,12 +17,20 @@ import {
   TableHeader,
   TableRow,
 } from "../../../../components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../../../components/ui/dropdown-menu";
+import { DotsThreeVertical, Money } from "@phosphor-icons/react";
 
 export const CaissierHistoriqueSection: React.FC<{
   onRefresh?: () => Promise<void>;
 }> = ({ onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedStatus] = useState("TOUTES");
 
   // États pour le modal de détails de commande
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
@@ -76,8 +84,13 @@ export const CaissierHistoriqueSection: React.FC<{
       );
     }
 
+    // Filtre par statut si statut spécifique sélectionné
+    if (selectedStatus !== "TOUTES") {
+      filtered = filtered.filter((order) => order.statut === selectedStatus);
+    }
+
     return filtered;
-  }, [completedOrders, searchTerm]);
+  }, [completedOrders, searchTerm, selectedStatus]);
 
   // Statistiques summary cards
   const stats = useMemo(() => {
@@ -128,6 +141,78 @@ export const CaissierHistoriqueSection: React.FC<{
     }
   };
 
+  // Fonction pour obtenir l'icône de paiement (composant React)
+  const getPaymentIcon = (modePaiement: string, size: "sm" | "md" = "md") => {
+    const iconProps = {
+      size: size === "sm" ? 16 : 20,
+      strokeWeight: "1.5",
+      color: "#F97316" as const,
+    };
+
+    const containerSize = size === "sm" ? "w-6 h-6" : "w-8 h-8";
+    const imageSize = size === "sm" ? "w-6 h-6" : "w-8 h-8";
+
+    switch (modePaiement?.toLowerCase()) {
+      case "especes":
+        return (
+          <div
+            className={`flex ${containerSize} bg-orange-100 text-orange-600 items-center justify-center rounded-full flex-shrink-0`}
+          >
+            <Money size={iconProps.size} />
+          </div>
+        );
+      case "carte_bancaire":
+      case "carte":
+        return (
+          <div
+            className={`flex ${containerSize} bg-orange-100 text-orange-600 items-center justify-center rounded-full flex-shrink-0`}
+          >
+            <CreditCard size={iconProps.size} />
+          </div>
+        );
+      case "wave":
+        return (
+          <img
+            src="/img/wave.jpg"
+            alt="Wave"
+            className={`${imageSize} rounded-full object-cover`}
+          />
+        );
+      case "mtn_money":
+        return (
+          <img
+            src="/img/mtn_money.jpg"
+            alt="MTN Money"
+            className={`${imageSize} rounded-full object-cover`}
+          />
+        );
+      case "orange_money":
+        return (
+          <img
+            src="/img/orange_money.jpg"
+            alt="Orange Money"
+            className={`${imageSize} rounded-full object-cover`}
+          />
+        );
+      case "moov_money":
+        return (
+          <img
+            src="/img/moov_money.jpg"
+            alt="Moov Money"
+            className={`${imageSize} rounded-full object-cover`}
+          />
+        );
+      default:
+        return (
+          <div
+            className={`flex ${containerSize} bg-orange-100 text-orange-600 items-center justify-center rounded-full flex-shrink-0`}
+          >
+            <Money size={iconProps.size} />
+          </div>
+        );
+    }
+  };
+
   // Fonction pour ouvrir le modal de détails de commande
   const handleViewOrderDetails = (order: Order) => {
     setSelectedOrder(order);
@@ -152,10 +237,7 @@ export const CaissierHistoriqueSection: React.FC<{
     return (
       <section className="flex flex-col w-full mb-10 px-3 md:px-6 lg:px-12 gap-4 md:gap-6">
         <div className="flex items-center justify-center p-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement de l'historique...</p>
-          </div>
+          <SpinnerMedium />
         </div>
       </section>
     );
@@ -164,178 +246,231 @@ export const CaissierHistoriqueSection: React.FC<{
   return (
     <section className="flex flex-col w-full mb-10 px-3 md:px-6 lg:px-12 gap-4 md:gap-6">
       {/* Summary Cards */}
-      <div className="mt-4 md:mt-6 lg:mt-8 flex items-start gap-2 sm:gap-3 md:gap-5 w-full min-w-0 overflow-x-auto pb-2">
-        <SummaryCard
-          title="Total commandes"
-          value={stats.totalCommandes.toString()}
-          subtitle="Commandes traitées"
-          subtitleColor="text-orange-500"
-        />
-        <SummaryCard
-          title="Chiffre d'affaires"
-          value={formatPrice(stats.montantTotal)}
-          currency="XOF"
-          subtitle="Recettes validées"
-          subtitleColor="text-green-500"
-        />
-        <SummaryCard
-          title="Panier moyen"
-          value={formatPrice(stats.moyenneCommande)}
-          currency="XOF"
-          subtitle="Par commande"
-          subtitleColor="text-blue-500"
-        />
+      <div className="mt-4 md:mt-6 lg:mt-8 flex items-start gap-2 sm:gap-3 md:gap-5 w-full min-w-0">
+        <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
+          <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
+            <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
+              Total commandes
+            </h3>
+            <div className="flex flex-col items-start gap-1 w-full min-w-0">
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
+                  {stats.totalCommandes}
+                </span>
+              </div>
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-medium text-xs md:text-sm text-orange-500 truncate w-full">
+                  Commandes traitées
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
+          <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
+            <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
+              Chiffre d'affaires
+            </h3>
+            <div className="flex flex-col items-start gap-1 w-full min-w-0">
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
+                  {formatPrice(stats.montantTotal)}
+                </span>
+                <span className="font-bold text-xl md:text-3xl truncate text-gray-500">
+                  XOF
+                </span>
+              </div>
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-medium text-xs md:text-sm text-green-500 truncate w-full">
+                  Recettes validées
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
+          <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
+            <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
+              Panier moyen
+            </h3>
+            <div className="flex flex-col items-start gap-1 w-full min-w-0">
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
+                  {formatPrice(stats.moyenneCommande)}
+                </span>
+                <span className="font-bold text-xl md:text-3xl truncate text-gray-500">
+                  XOF
+                </span>
+              </div>
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-medium text-xs md:text-sm text-blue-500 truncate w-full">
+                  Par commande
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="shadow-md bg-white rounded-3xl overflow-hidden">
-        {/* En-tête avec titre et recherche */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 border-b border-slate-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+        {/* Header, Search, Tabs */}
+        <div className="flex flex-col rounded-t-3xl border-b bg-white rounded border-slate-200">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-3 md:px-4 lg:px-6 pt-4 pb-3 gap-3 lg:gap-4">
+            <h2 className="font-bold text-lg md:text-xl lg:text-2xl text-gray-900 flex-shrink-0">
               Historique des commandes
             </h2>
-            <p className="text-gray-600">
-              Consultez toutes les commandes terminées et réimprimez les reçus
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 lg:w-80">
+                <Input
+                  className="pl-4 pr-10 py-2.5 md:py-3 h-10 md:h-12 rounded-[123px] border border-[#eff1f3] text-sm md:text-base w-full"
+                  placeholder="Rechercher une commande"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
+              </div>
+              <Button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 md:h-12 md:w-12 rounded-full"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 md:h-5 md:w-5 ${
+                    isRefreshing ? "animate-spin" : ""
+                  }`}
+                />
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleRefresh} disabled={isRefreshing} size="sm">
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            Actualiser
-          </Button>
         </div>
 
-        {/* Barre de recherche */}
-        <div className="p-4 flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Rechercher par numéro de commande, plat..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        {/* Liste des commandes */}
-        <div className="p-4">
-          <Card>
-            <CardContent className="p-0">
-              {filteredOrders.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 mb-4">
-                    <svg
-                      className="w-16 h-16 mx-auto"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+        {/* Contenu du tableau */}
+        <div className="w-full">
+          {filteredOrders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-gray-500">
+              <SearchIcon size={48} className="mb-4 text-gray-300" />
+              <p className="text-lg font-medium">Aucune commande trouvée</p>
+              <p className="text-sm">
+                Les commandes terminées apparaîtront ici
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-10 border-b border-slate-200">
+                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                      N° Commande
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                      Articles
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                      Mode de paiement
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                      Total
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-semibold text-gray-700">
+                      Date
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-center font-semibold text-gray-700">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order) => (
+                    <TableRow
+                      key={order._id}
+                      className="h-20 border-b bg-white hover:bg-gray-10 border-slate-200"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Aucune commande dans l'historique
-                  </h3>
-                  <p className="text-gray-600">
-                    Les commandes terminées apparaîtront ici
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>N° Commande</TableHead>
-                        <TableHead>Articles</TableHead>
-                        <TableHead>Mode de paiement</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead className="text-center">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredOrders.map((order) => (
-                        <TableRow key={order._id}>
-                          <TableCell className="font-medium">
-                            {order.numeroCommande || order._id}
-                            {order.numeroTable && (
-                              <div className="text-sm text-gray-500">
-                                Table {order.numeroTable}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">
-                              {order.items.length} article(s)
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {order.items
-                                .slice(0, 2)
-                                .map((item) =>
-                                  typeof item.menuItem === "object"
-                                    ? item.menuItem.nom
-                                    : item.nom || "Article"
-                                )
-                                .join(", ")}
-                              {order.items.length > 2 && "..."}
-                            </div>
-                          </TableCell>
-                          <TableCell>
+                      <TableCell className="px-4 py-3 font-medium">
+                        {order.numeroCommande || order._id}
+                        {order.numeroTable && (
+                          <div className="text-sm text-gray-500">
+                            Table {order.numeroTable}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="font-medium">
+                          {order.items.length} article
+                          {order.items.length > 1 ? "s" : ""}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {order.items
+                            .slice(0, 2)
+                            .map((item) =>
+                              typeof item.menuItem === "object"
+                                ? item.menuItem.nom
+                                : item.nom || "Article"
+                            )
+                            .join(", ")}
+                          {order.items.length > 2 && "..."}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {order.modePaiement &&
+                            getPaymentIcon(order.modePaiement, "md")}
+                          <span>
                             {order.modePaiement
                               ? formatPaymentMethodName(order.modePaiement)
                               : "Non défini"}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {formatPrice(order.montantTotal || 0)} XOF
-                          </TableCell>
-                          <TableCell>
-                            {new Date(order.dateCreation).toLocaleDateString(
-                              "fr-FR"
-                            )}
-                            <div className="text-sm text-gray-500">
-                              {new Date(order.dateCreation).toLocaleTimeString(
-                                "fr-FR",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex justify-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewOrderDetails(order)}
-                              >
-                                Détails
-                              </Button>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="bg-orange-500 hover:bg-orange-600"
-                                onClick={() => handlePrintReceipt(order)}
-                              >
-                                Imprimer
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 font-medium">
+                        {formatPrice(order.montantTotal || 0)} XOF
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {new Date(order.dateCreation).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                        <div className="text-sm text-gray-500">
+                          {new Date(order.dateCreation).toLocaleTimeString(
+                            "fr-FR",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <DotsThreeVertical size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleViewOrderDetails(order)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              <span>Voir détails</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handlePrintReceipt(order)}
+                            >
+                              <Printer className="h-4 w-4 mr-2" />
+                              <span>Imprimer reçu</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
       </div>
 

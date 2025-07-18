@@ -40,14 +40,6 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
     documentTitle: `Reçu-${order?.numeroCommande || "commande"}`,
-    onBeforeGetContent: () => {
-      return new Promise<void>((resolve) => {
-        // Assurez-vous que le contenu est complètement chargé avant l'impression
-        setTimeout(() => {
-          resolve();
-        }, 1000); // Augmentation du délai pour garantir le chargement complet
-      });
-    },
     onAfterPrint: () => {
       // Traitement après impression
       try {
@@ -56,21 +48,6 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
         console.error("Erreur lors de la confirmation de l'impression:", error);
       }
       onClose(); // Fermer le modal
-      resetForm();
-    },
-    removeAfterPrint: true,
-    onPrintError: (error) => {
-      console.error("Erreur d'impression:", error);
-      // On continue le flux même en cas d'erreur d'impression
-      try {
-        onConfirmPrint(); // Marquer la commande comme terminée même si l'impression échoue
-      } catch (confirmError) {
-        console.error(
-          "Erreur lors de la confirmation après échec d'impression:",
-          confirmError
-        );
-      }
-      onClose();
       resetForm();
     },
   });
@@ -105,9 +82,21 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
     setShowPreview(true);
   };
 
-  const handleConfirmAndPrint = () => {
-    if (handlePrint) {
-      handlePrint();
+  const handleConfirmAndPrint = async () => {
+    try {
+      if (handlePrint) {
+        await handlePrint();
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'impression:", error);
+      // En cas d'erreur d'impression, on continue quand même le processus
+      try {
+        onConfirmPrint(); // Marquer la commande comme terminée
+      } catch (confirmError) {
+        console.error("Erreur lors de la confirmation:", confirmError);
+      }
+      onClose();
+      resetForm();
     }
   };
 

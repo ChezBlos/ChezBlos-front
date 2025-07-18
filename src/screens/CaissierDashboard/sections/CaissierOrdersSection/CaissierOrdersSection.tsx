@@ -670,9 +670,9 @@ export const CaissierOrdersSection: React.FC<{
 
   // Affichage des cartes de résumé
   return (
-    <div className="space-y-4 px-0 md:px-6 lg:px-12 xl:px-20">
+    <div className="space-y-4 pb-10 px-0 md:px-6 lg:px-12 xl:px-20">
       {/* Summary Cards - Style inspiré du ServeurDashboard */}
-      <div className="mt-4  flex items-start gap-3 md:gap-5 w-full min-w-0">
+      <div className="mt-4 flex items-start gap-3 md:gap-5 w-full min-w-0">
         <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
           <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
             <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
@@ -716,12 +716,17 @@ export const CaissierOrdersSection: React.FC<{
         <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
           <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
             <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
-              Total
+              Chiffre d'affaires
             </h3>
             <div className="flex flex-col items-start gap-1 w-full min-w-0">
               <div className="flex items-start gap-1 w-full min-w-0">
                 <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
-                  {statsLoading ? "..." : stats.total || 0}
+                  {statsLoading
+                    ? "..."
+                    : formatPrice(apiStats?.chiffreAffairesJour || 0)}
+                </span>
+                <span className="font-bold text-xl md:text-3xl truncate text-gray-500">
+                  XOF
                 </span>
               </div>
               <div className="flex items-start gap-1 w-full min-w-0">

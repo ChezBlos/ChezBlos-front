@@ -6,7 +6,7 @@ import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsMod
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { SearchIcon, RefreshCw, Printer, Eye, CreditCard } from "lucide-react";
-import { useOrders } from "../../../../hooks/useOrderAPI";
+import { useOrders, useOrderStats } from "../../../../hooks/useOrderAPI";
 import { Card, CardContent } from "../../../../components/ui/card";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
 import {
@@ -43,6 +43,7 @@ export const CaissierHistoriqueSection: React.FC<{
 
   // Récupération des hooks
   const { data: allOrders, loading } = useOrders();
+  const { data: apiStats } = useOrderStats();
 
   const {
     isPrintModalOpen,
@@ -133,10 +134,9 @@ export const CaissierHistoriqueSection: React.FC<{
       };
 
     const totalCommandes = completedOrders.length;
-    const montantTotal = completedOrders.reduce(
-      (total, o) => total + (o.montantTotal || 0),
-      0
-    );
+
+    // Utiliser le chiffre d'affaires total depuis l'API
+    const montantTotal = apiStats?.chiffreAffairesMois || 0;
 
     // Calculer les commandes d'aujourd'hui
     const commandesAujourdhui = completedOrders.filter((order) =>
@@ -148,7 +148,7 @@ export const CaissierHistoriqueSection: React.FC<{
       montantTotal,
       commandesAujourdhui,
     };
-  }, [completedOrders, isToday]);
+  }, [completedOrders, isToday, apiStats?.chiffreAffairesMois]);
 
   // Formatters
   const formatPrice = (price: number): string =>
@@ -324,7 +324,7 @@ export const CaissierHistoriqueSection: React.FC<{
         <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
           <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
             <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
-              Chiffre d'affaires
+              Chiffre d'affaires total
             </h3>
             <div className="flex flex-col items-start gap-1 w-full min-w-0">
               <div className="flex items-start gap-1 w-full min-w-0">
@@ -337,7 +337,7 @@ export const CaissierHistoriqueSection: React.FC<{
               </div>
               <div className="flex items-start gap-1 w-full min-w-0">
                 <span className="font-medium text-xs md:text-sm text-green-500 truncate w-full">
-                  Recettes validées
+                  Toutes périodes confondues
                 </span>
               </div>
             </div>

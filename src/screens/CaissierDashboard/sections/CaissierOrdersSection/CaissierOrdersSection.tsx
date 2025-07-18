@@ -25,9 +25,10 @@ import { OrderService } from "../../../../services/orderService";
 import { Order, OrderItem } from "../../../../types/order";
 import { useAlert } from "../../../../contexts/AlertContext";
 import { useOrders, useOrderStats } from "../../../../hooks/useOrderAPI";
-import { CreditCard, DotsThreeVertical } from "@phosphor-icons/react";
+import { CreditCard, DotsThreeVertical, X } from "@phosphor-icons/react";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
 import { PrintReceiptModal } from "../../../../components/modals/PrintReceiptModal";
+import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
 import { PaymentValidationModal } from "../../../../components/modals/PaymentValidationModal";
 import {
   getMenuImageUrl,
@@ -117,6 +118,13 @@ export const CaissierOrdersSection: React.FC<{
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showPrintReceiptModal, setShowPrintReceiptModal] = useState(false);
   const [isPrintLoading, setIsPrintLoading] = useState(false);
+
+  // États pour la gestion de l'annulation
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelOrderData, setCancelOrderData] = useState<{
+    id: string;
+    numeroCommande: string;
+  } | null>(null);
   const [orders, setOrders] = useState<CashierOrder[]>([]);
   const [stats, setStats] = useState<CashierStats>({
     en_attente_paiement: 0,
@@ -633,6 +641,10 @@ export const CaissierOrdersSection: React.FC<{
   const renderOrderActions = (order: CashierOrder) => {
     const isAwaitingPayment = order.statut === "EN_ATTENTE_PAIEMENT";
     const isCompleted = order.statut === "TERMINE";
+    const canCancel =
+      order.statut === "EN_ATTENTE" ||
+      order.statut === "EN_PREPARATION" ||
+      order.statut === "EN_COURS";
 
     return (
       <DropdownMenu>
@@ -658,6 +670,16 @@ export const CaissierOrdersSection: React.FC<{
               <span>{isCompleted ? "Réimprimer reçu" : "Imprimer ticket"}</span>
             </DropdownMenuItem>
           )}
+
+          {canCancel && (
+            <DropdownMenuItem
+              onClick={() => handleCancelOrder(order._id, order.numero)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <X className="h-4 w-4 mr-2" />
+              <span>Annuler</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -674,6 +696,28 @@ export const CaissierOrdersSection: React.FC<{
       showAlert("error", "Erreur lors du rafraîchissement des données");
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  // Fonction pour gérer l'annulation d'une commande
+  const handleCancelOrder = (orderId: string, numeroCommande: string) => {
+    setCancelOrderData({ id: orderId, numeroCommande });
+    setIsCancelModalOpen(true);
+  };
+
+  // Fonction pour confirmer l'annulation
+  const handleConfirmCancel = async (motif: string) => {
+    if (!cancelOrderData) return;
+
+    try {
+      await OrderService.cancelOrder(cancelOrderData.id, motif);
+      await Promise.all([refetch(), refetchStats()]);
+      showAlert("success", "Commande annulée avec succès");
+      setIsCancelModalOpen(false);
+      setCancelOrderData(null);
+    } catch (error) {
+      console.error("Erreur lors de l'annulation:", error);
+      showAlert("error", "Erreur lors de l'annulation de la commande");
     }
   };
 
@@ -1021,6 +1065,19 @@ export const CaissierOrdersSection: React.FC<{
           order={selectedOrder as any}
           onConfirmPrint={handleConfirmPrint}
           isLoading={isPrintLoading}
+        />
+      )}
+
+      {/* Modal d'annulation de commande */}
+      {isCancelModalOpen && cancelOrderData && (
+        <CancelOrderDialog
+          isOpen={isCancelModalOpen}
+          onClose={() => {
+            setIsCancelModalOpen(false);
+            setCancelOrderData(null);
+          }}
+          onConfirm={handleConfirmCancel}
+          orderNumber={cancelOrderData.numeroCommande}
         />
       )}
     </div>

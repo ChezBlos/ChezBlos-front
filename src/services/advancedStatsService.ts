@@ -348,9 +348,43 @@ export class AdvancedStatsService {
   // Récupérer les statistiques des serveurs (nouvelles APIs)
   static async getServerStats(): Promise<ServerPerformance[]> {
     try {
+      console.log(
+        "🔍 [advancedStatsService.getServerStats] Début de la requête"
+      );
+      console.log(
+        "🌐 URL complète:",
+        `${api.defaults.baseURL}/stats/performance-complete`
+      );
+
       const response = await api.get("/stats/performance-complete");
+
+      console.log("✅ [advancedStatsService.getServerStats] Réponse reçue");
+      console.log("📊 Status:", response.status);
+      console.log("🔍 Headers:", response.headers);
+      console.log("📋 Data structure:", {
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : [],
+        hasNestedData: !!response.data?.data,
+        nestedDataKeys: response.data?.data
+          ? Object.keys(response.data.data)
+          : [],
+        hasDetailsPersonnel: !!response.data?.data?.detailsPersonnel,
+        detailsPersonnelLength:
+          response.data?.data?.detailsPersonnel?.length || 0,
+      });
+
       return response.data.data.detailsPersonnel || [];
-    } catch (error) {
+    } catch (error: any) {
+      console.error(
+        "❌ [advancedStatsService.getServerStats] Erreur détaillée:"
+      );
+      console.error("🔍 Error object:", error);
+      console.error("🔍 Error message:", error.message);
+      console.error("🔍 Error response:", error.response);
+      console.error("🔍 Error status:", error.response?.status);
+      console.error("🔍 Error data:", error.response?.data);
+      console.error("🔍 Error config:", error.config);
+
       logger.error("Erreur lors de la récupération des stats serveurs:", error);
       throw error;
     }

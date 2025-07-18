@@ -28,7 +28,8 @@ import { Order } from "../../../../types/order";
 import { updateOrderStatus } from "../../../../services/api";
 import { ProfileService } from "../../../../services/profileService";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
-import { Eye, DotsThreeVertical, CookingPot, User } from "phosphor-react";
+import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
+import { Eye, DotsThreeVertical, CookingPot, User, X } from "phosphor-react";
 import { OrderService } from "../../../../services/orderService";
 
 export const CuisinierOrdersSection = (): JSX.Element => {
@@ -40,6 +41,13 @@ export const CuisinierOrdersSection = (): JSX.Element => {
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedOrderForActions, setSelectedOrderForActions] =
     useState<Order | null>(null);
+
+  // États pour la gestion de l'annulation
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelOrderData, setCancelOrderData] = useState<{
+    id: string;
+    numeroCommande: string;
+  } | null>(null);
   // État pour le rafraîchissement
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -323,6 +331,28 @@ export const CuisinierOrdersSection = (): JSX.Element => {
     setSelectedOrder(order);
     setIsOrderDetailsModalOpen(true);
     setActiveDropdown(null); // Fermer le dropdown
+  };
+
+  // Fonction pour gérer l'annulation d'une commande
+  const handleCancelOrder = (orderId: string, numeroCommande: string) => {
+    setCancelOrderData({ id: orderId, numeroCommande });
+    setIsCancelModalOpen(true);
+    setActiveDropdown(null); // Fermer le dropdown
+  };
+
+  // Fonction pour confirmer l'annulation
+  const handleConfirmCancel = async (motif: string) => {
+    if (!cancelOrderData) return;
+
+    try {
+      await OrderService.cancelOrder(cancelOrderData.id, motif);
+      refetch(); // Actualiser la liste
+      refetchStats(); // Actualiser les statistiques
+      setIsCancelModalOpen(false);
+      setCancelOrderData(null);
+    } catch (error) {
+      console.error("Erreur lors de l'annulation:", error);
+    }
   };
   // Fonction pour obtenir le bouton d'action principal selon le statut
   const getMainActionButton = (order: Order) => {
@@ -732,6 +762,26 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                         </DropdownMenuItem>
                                       </>
                                     )}
+                                    {/* Option d'annulation pour les statuts autorisés */}
+                                    {(order.statut === "EN_ATTENTE" ||
+                                      order.statut === "EN_PREPARATION" ||
+                                      order.statut === "EN_COURS") && (
+                                      <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleCancelOrder(
+                                              order._id,
+                                              order.numeroCommande
+                                            )
+                                          }
+                                          className="flex items-center gap-2 text-red-600"
+                                        >
+                                          <X size={16} />
+                                          Annuler
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               </div>
@@ -935,7 +985,28 @@ export const CuisinierOrdersSection = (): JSX.Element => {
               <User size={20} />
               <span>Envoyer à la caisse</span>
             </button>
-          )}{" "}
+          )}
+          {/* Option d'annulation pour les statuts autorisés */}
+          {selectedOrderForActions &&
+            (selectedOrderForActions.statut === "EN_ATTENTE" ||
+              selectedOrderForActions.statut === "EN_PREPARATION" ||
+              selectedOrderForActions.statut === "EN_COURS") && (
+              <button
+                className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-50 rounded-lg text-red-600"
+                onClick={() => {
+                  if (selectedOrderForActions?._id) {
+                    handleCancelOrder(
+                      selectedOrderForActions._id,
+                      selectedOrderForActions.numeroCommande
+                    );
+                  }
+                  closeMobileBottomSheet();
+                }}
+              >
+                <X size={20} />
+                <span>Annuler la commande</span>
+              </button>
+            )}{" "}
         </div>
       </MobileBottomSheet>
       {/* Modal de détails de commande */}
@@ -943,6 +1014,16 @@ export const CuisinierOrdersSection = (): JSX.Element => {
         isOpen={isOrderDetailsModalOpen}
         onClose={() => setIsOrderDetailsModalOpen(false)}
         order={selectedOrder}
+      />
+      {/* Modal d'annulation de commande */}
+      <CancelOrderDialog
+        isOpen={isCancelModalOpen}
+        onClose={() => {
+          setIsCancelModalOpen(false);
+          setCancelOrderData(null);
+        }}
+        onConfirm={handleConfirmCancel}
+        orderNumber={cancelOrderData?.numeroCommande}
       />
     </section>
   );

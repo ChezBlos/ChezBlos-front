@@ -43,6 +43,7 @@ import { ProfileService } from "../../../../services/profileService";
 import NewOrderModal from "../../../../components/modals/NewOrderModal";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
 import { SendToCashierModal } from "../../../../components/modals/SendToCashierModal";
+import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
 import { useAuth } from "../../../../contexts/AuthContext";
 import {
   Eye,
@@ -425,11 +426,26 @@ export const ServeurOrdersSection = (): JSX.Element => {
   }, [selectedStatus, searchTerm]);
 
   // Gestion des actions sur les commandes
-  const handleCancelOrder = async (orderId: string) => {
+  const [cancelOrderData, setCancelOrderData] = useState<{
+    id: string;
+    numeroCommande: string;
+  } | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+
+  const handleCancelOrder = (orderId: string, numeroCommande: string) => {
+    setCancelOrderData({ id: orderId, numeroCommande });
+    setIsCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async (motif: string) => {
+    if (!cancelOrderData) return;
+
     try {
-      await OrderService.cancelOrder(orderId);
+      await OrderService.cancelOrder(cancelOrderData.id, motif);
       refetch(); // Actualiser la liste
       refetchStats(); // Actualiser les statistiques
+      setIsCancelModalOpen(false);
+      setCancelOrderData(null);
     } catch (error) {
       console.error("Erreur lors de l'annulation:", error);
     }
@@ -923,12 +939,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                   </DropdownMenuItem>
                                 </>
                               )}
-                              {order.statut === "EN_ATTENTE" && (
+                              {(order.statut === "EN_ATTENTE" ||
+                                order.statut === "EN_PREPARATION" ||
+                                order.statut === "EN_COURS") && (
                                 <>
                                   <DropdownMenuSeparator className="h-px bg-gray-200" />
                                   <DropdownMenuItem
                                     className="flex items-center gap-2.5 px-4 py-2.5 text-red-600 cursor-pointer font-medium text-sm"
-                                    onClick={() => handleCancelOrder(order._id)}
+                                    onClick={() =>
+                                      handleCancelOrder(
+                                        order._id,
+                                        order.numeroCommande
+                                      )
+                                    }
                                   >
                                     <X size={20} />
                                     <span className="text-red-600">
@@ -1249,12 +1272,16 @@ export const ServeurOrdersSection = (): JSX.Element => {
                   variant="primary"
                 />
               )}
-              {/* Annuler - disponible pour EN_ATTENTE et EN_PREPARATION */}
+              {/* Annuler - disponible pour EN_ATTENTE, EN_PREPARATION et EN_COURS */}
               {(selectedOrderForActions.statut === "EN_ATTENTE" ||
-                selectedOrderForActions.statut === "EN_PREPARATION") && (
+                selectedOrderForActions.statut === "EN_PREPARATION" ||
+                selectedOrderForActions.statut === "EN_COURS") && (
                 <BottomSheetAction
                   onClick={() => {
-                    handleCancelOrder(selectedOrderForActions._id);
+                    handleCancelOrder(
+                      selectedOrderForActions._id,
+                      selectedOrderForActions.numeroCommande
+                    );
                     handleCloseBottomSheet();
                   }}
                   icon={<X size={24} />}
@@ -1580,6 +1607,16 @@ export const ServeurOrdersSection = (): JSX.Element => {
           refetch();
           refetchStats();
         }}
+      />
+      {/* Modal d'annulation de commande */}
+      <CancelOrderDialog
+        isOpen={isCancelModalOpen}
+        onClose={() => {
+          setIsCancelModalOpen(false);
+          setCancelOrderData(null);
+        }}
+        onConfirm={handleConfirmCancel}
+        orderNumber={cancelOrderData?.numeroCommande}
       />
     </section>
   );

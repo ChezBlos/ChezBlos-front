@@ -283,11 +283,11 @@ export const useOrderActions = () => {
     }
   };
 
-  const cancelOrder = async (id: string) => {
+  const cancelOrder = async (id: string, motif?: string) => {
     try {
       setLoading(true);
       setError(null);
-      await OrderService.cancelOrder(id);
+      await OrderService.cancelOrder(id, motif);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Erreur lors de l'annulation"

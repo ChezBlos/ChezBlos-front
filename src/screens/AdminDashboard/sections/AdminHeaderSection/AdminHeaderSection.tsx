@@ -20,11 +20,12 @@ import {
 } from "../../../../components/ui/dropdown-menu";
 import { ChangeProfilePictureModal } from "../../../../components/modals/ChangeProfilePictureModal";
 import { UserAvatar } from "../../../../components/UserAvatar";
+import { House } from "phosphor-react";
 
 interface AdminHeaderSectionProps {
   onRefresh?: () => void;
   selectedSection?:
-    | "dashboard"
+    | "home"
     | "staff"
     | "menu"
     | "historique"
@@ -34,7 +35,7 @@ interface AdminHeaderSectionProps {
     | "caisse";
   onSectionSelect?: (
     section:
-      | "dashboard"
+      | "home"
       | "staff"
       | "menu"
       | "historique"
@@ -69,7 +70,7 @@ export const AdminHeaderSection: React.FC<AdminHeaderSectionProps> = ({
     logout();
   };
   const menuItems = [
-    { id: "dashboard", label: "Tableau de bord", icon: ChartBar },
+    { id: "home", label: "Accueil", icon: House },
     { id: "staff", label: "Gestion Staff", icon: Users },
     { id: "menu", label: "Gestion Menu", icon: Receipt },
     { id: "historique", label: "Historique des commandes", icon: ForkKnife },

@@ -20,7 +20,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const [selectedSection, setSelectedSection] = useState<
-    | "dashboard"
+    | "home"
     | "staff"
     | "menu"
     | "historique"
@@ -42,7 +42,7 @@ export const AdminDashboard: React.FC = () => {
   };
   const renderSelectedSection = () => {
     switch (selectedSection) {
-      case "dashboard":
+      case "home":
         return <AdminDashboardSection onSectionSelect={handleSectionChange} />;
       case "staff":
         return <AdminStaffSection />;

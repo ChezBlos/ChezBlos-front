@@ -19,6 +19,9 @@ const PersonnelStatsSection = ({
   const [cuisiniersData, setCuisiniersData] = useState<any[]>([]);
   const [loadingCuisiniers, setLoadingCuisiniers] = useState(false);
   const [errorCuisiniers, setErrorCuisiniers] = useState<string | null>(null);
+  const [caissiersData, setCaissiersData] = useState<any[]>([]);
+  const [loadingCaissiers, setLoadingCaissiers] = useState(false);
+  const [errorCaissiers, setErrorCaissiers] = useState<string | null>(null);
 
   // Fonction pour récupérer les données des cuisiniers
   const fetchCuisiniersData = async () => {
@@ -38,24 +41,31 @@ const PersonnelStatsSection = ({
         response.data?.data?.detailsPersonnel
       );
 
-      // La structure est response.data.data.data.detailsPersonnel (double nesting)
-      const cuisiniersArray = response.data?.data?.data?.detailsPersonnel;
+      // La structure correcte est response.data.data.detailsPersonnel (pas triple nesting)
+      const cuisiniersArray = response.data?.data?.detailsPersonnel;
 
       if (
         response.data?.success &&
         cuisiniersArray &&
         Array.isArray(cuisiniersArray)
       ) {
-        setCuisiniersData(cuisiniersArray);
+        // Trier les données par nom et prénom
+        const sortedCuisiniersArray = cuisiniersArray.sort((a, b) => {
+          const nameA = `${a.prenom} ${a.nom}`.toLowerCase();
+          const nameB = `${b.prenom} ${b.nom}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+
+        setCuisiniersData(sortedCuisiniersArray);
         console.log(
-          "✅ Données cuisiniers récupérées:",
-          cuisiniersArray.length,
+          "✅ Données cuisiniers récupérées et triées:",
+          sortedCuisiniersArray.length,
           "cuisiniers"
         );
 
         // Afficher le détail des données pour vérifier leur contenu
         console.log("📋 DÉTAIL DES DONNÉES CUISINIERS:");
-        cuisiniersArray.forEach((cuisinier, index) => {
+        sortedCuisiniersArray.forEach((cuisinier, index) => {
           console.log(`👨‍🍳 Cuisinier ${index + 1}:`, {
             nom: cuisinier.nom,
             prenom: cuisinier.prenom,
@@ -71,13 +81,9 @@ const PersonnelStatsSection = ({
         console.warn("⚠️ Aucune donnée cuisiniers trouvée - structure:", {
           success: response.data?.success,
           hasData: !!response.data?.data,
-          hasNestedData: !!response.data?.data?.data,
-          hasPersonnel: !!response.data?.data?.data?.detailsPersonnel,
+          hasPersonnel: !!response.data?.data?.detailsPersonnel,
           dataKeys: response.data?.data
             ? Object.keys(response.data.data)
-            : "aucune",
-          nestedDataKeys: response.data?.data?.data
-            ? Object.keys(response.data.data.data)
             : "aucune",
         });
         setCuisiniersData([]);
@@ -94,10 +100,82 @@ const PersonnelStatsSection = ({
     }
   };
 
-  // Charger les données des cuisiniers quand l'onglet change
+  // Fonction pour récupérer les données des caissiers
+  const fetchCaissiersData = async () => {
+    try {
+      setLoadingCaissiers(true);
+      setErrorCaissiers(null);
+
+      console.log("🔍 Récupération des données des caissiers...");
+      const response = await api.get("/stats/caissiers?periode=30days");
+
+      console.log("📋 Réponse complète de l'API caissiers:", response);
+      console.log("📊 response.data:", response.data);
+      console.log("🔍 response.data?.success:", response.data?.success);
+      console.log("🔍 response.data?.data:", response.data?.data);
+
+      // La structure correcte est response.data.data.detailsPersonnel (pas triple nesting)
+      const caissiersArray = response.data?.data?.detailsPersonnel;
+
+      if (
+        response.data?.success &&
+        caissiersArray &&
+        Array.isArray(caissiersArray)
+      ) {
+        // Trier les données par nom et prénom
+        const sortedCaissiersArray = caissiersArray.sort((a, b) => {
+          const nameA = `${a.prenom} ${a.nom}`.toLowerCase();
+          const nameB = `${b.prenom} ${b.nom}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+
+        setCaissiersData(sortedCaissiersArray);
+        console.log(
+          "✅ Données caissiers récupérées et triées:",
+          sortedCaissiersArray.length,
+          "caissiers"
+        );
+
+        // Afficher le détail des données pour vérifier leur contenu
+        console.log("📋 DÉTAIL DES DONNÉES CAISSIERS:");
+        sortedCaissiersArray.forEach((caissier, index) => {
+          console.log(`💰 Caissier ${index + 1}:`, {
+            nom: caissier.nom,
+            prenom: caissier.prenom,
+            nombreTransactions: caissier.nombreTransactions,
+            montantTotal: caissier.montantTotal,
+            paiementsEspeces: caissier.paiementsEspeces,
+            paiementsCartes: caissier.paiementsCartes,
+            performanceGlobale: caissier.performanceGlobale,
+            scoreEfficacite: caissier.scoreEfficacite,
+          });
+        });
+      } else {
+        console.warn("⚠️ Aucune donnée caissiers trouvée - structure:", {
+          success: response.data?.success,
+          hasData: !!response.data?.data,
+          hasPersonnel: !!response.data?.data?.detailsPersonnel,
+        });
+        setCaissiersData([]);
+      }
+    } catch (error) {
+      console.error(
+        "❌ Erreur lors de la récupération des données caissiers:",
+        error
+      );
+      setErrorCaissiers("Erreur lors du chargement des données caissiers");
+      setCaissiersData([]);
+    } finally {
+      setLoadingCaissiers(false);
+    }
+  };
+
+  // Charger les données selon l'onglet actif
   useEffect(() => {
     if (activeTab === "CUISINIER") {
       fetchCuisiniersData();
+    } else if (activeTab === "CAISSIER") {
+      fetchCaissiersData();
     }
   }, [activeTab]);
 
@@ -112,29 +190,62 @@ const PersonnelStatsSection = ({
     return new Intl.NumberFormat("fr-FR").format(price || 0);
   };
 
+  // Fonction pour trier les données du personnel
+  const sortPersonnelData = (data: any[]) => {
+    return [...data].sort((a, b) => {
+      // Tri par nom puis prénom
+      const nameA = `${a.prenom} ${a.nom}`.toLowerCase();
+      const nameB = `${b.prenom} ${b.nom}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  };
+
   // Séparer les données par rôle
-  const serveurs = personnelDataToUse.filter(
-    (person: any) => person.role === "SERVEUR"
+  const serveurs = sortPersonnelData(
+    personnelDataToUse.filter((person: any) => person.role === "SERVEUR")
   );
 
   // Utiliser les données spécifiques aux cuisiniers si disponibles
-  const cuisiniers =
+  const cuisiniers = sortPersonnelData(
     activeTab === "CUISINIER" && cuisiniersData.length > 0
       ? cuisiniersData
-      : personnelDataToUse.filter((person: any) => person.role === "CUISINIER");
+      : personnelDataToUse.filter((person: any) => person.role === "CUISINIER")
+  );
+
+  // Utiliser les données spécifiques aux caissiers si disponibles
+  const caissiers = sortPersonnelData(
+    activeTab === "CAISSIER" && caissiersData.length > 0
+      ? caissiersData
+      : personnelDataToUse.filter((person: any) => person.role === "CAISSIER")
+  );
 
   // Données filtrées selon l'onglet actif
-  const filteredData = activeTab === "SERVEUR" ? serveurs : cuisiniers;
+  const filteredData =
+    activeTab === "SERVEUR"
+      ? serveurs
+      : activeTab === "CUISINIER"
+      ? cuisiniers
+      : caissiers;
 
   // États de chargement et d'erreur selon l'onglet actif
   const isLoading =
-    activeTab === "SERVEUR" ? personnelLoading : loadingCuisiniers;
-  const hasError = activeTab === "SERVEUR" ? personnelError : errorCuisiniers;
+    activeTab === "SERVEUR"
+      ? personnelLoading
+      : activeTab === "CUISINIER"
+      ? loadingCuisiniers
+      : loadingCaissiers;
+  const hasError =
+    activeTab === "SERVEUR"
+      ? personnelError
+      : activeTab === "CUISINIER"
+      ? errorCuisiniers
+      : errorCaissiers;
 
   // Stats par rôle
   const roleStats = {
     serveurs: serveurs.length,
     cuisiniers: cuisiniers.length,
+    caissiers: caissiers.length,
   };
 
   // Calculs pour les cards selon le rôle actif
@@ -160,7 +271,7 @@ const PersonnelStatsSection = ({
           0
         ),
       };
-    } else {
+    } else if (activeTab === "CUISINIER") {
       return {
         totalPlats: currentData.reduce(
           (acc: number, p: any) => acc + (p.platsCuisines || p.totalPlats || 0),
@@ -177,6 +288,26 @@ const PersonnelStatsSection = ({
                 0
               ) / currentData.length
             : 0,
+      };
+    } else {
+      // CAISSIER
+      return {
+        totalTransactions: currentData.reduce(
+          (acc: number, p: any) => acc + (p.nombreTransactions || 0),
+          0
+        ),
+        montantTotal: currentData.reduce(
+          (acc: number, p: any) => acc + (p.montantTotal || 0),
+          0
+        ),
+        paiementsEspeces: currentData.reduce(
+          (acc: number, p: any) => acc + (p.paiementsEspeces || 0),
+          0
+        ),
+        paiementsCartes: currentData.reduce(
+          (acc: number, p: any) => acc + (p.paiementsCartes || 0),
+          0
+        ),
       };
     }
   };
@@ -259,7 +390,7 @@ const PersonnelStatsSection = ({
             </CardContent>
           </Card>
         </div>
-      ) : (
+      ) : activeTab === "CUISINIER" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card className="rounded-3xl">
             <CardContent className="p-6">
@@ -310,6 +441,75 @@ const PersonnelStatsSection = ({
             </CardContent>
           </Card>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="rounded-3xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Caissiers</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {roleStats.caissiers}
+                  </p>
+                  <p className="text-sm text-blue-600 mt-2">Total actifs</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Users size={24} className="text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Transactions</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {currentStats.totalTransactions}
+                  </p>
+                  <p className="text-sm text-green-600 mt-2">
+                    Total effectuées
+                  </p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <ChefHat size={24} className="text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Montant Total</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatPrice(currentStats.montantTotal)} XOF
+                  </p>
+                  <p className="text-sm text-purple-600 mt-2">Encaissé</p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <ChefHat size={24} className="text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Espèces</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatPrice(currentStats.paiementsEspeces)} XOF
+                  </p>
+                  <p className="text-sm text-yellow-600 mt-2">Paiements cash</p>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <ChefHat size={24} className="text-yellow-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Onglets de filtre (tabs) harmonisés + Tableau dans une Card comme AdminStaffSection */}
@@ -344,6 +544,14 @@ const PersonnelStatsSection = ({
                     Cuisiniers
                   </span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="CAISSIER"
+                  className="flex items-center justify-start gap-2 px-3 md:px-4 lg:px-6 py-2 md:py-3 lg:py-4 rounded-none data-[state=active]:border-b-4 data-[state=active]:border-orange-500 data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-600 whitespace-nowrap flex-shrink-0"
+                >
+                  <span className="font-semibold text-xs md:text-sm">
+                    Caissiers
+                  </span>
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -364,7 +572,9 @@ const PersonnelStatsSection = ({
                   onClick={
                     activeTab === "SERVEUR"
                       ? refetchPersonnelStats
-                      : fetchCuisiniersData
+                      : activeTab === "CUISINIER"
+                      ? fetchCuisiniersData
+                      : fetchCaissiersData
                   }
                   className="mt-2"
                 >
@@ -380,7 +590,9 @@ const PersonnelStatsSection = ({
                 <p className="text-sm mt-2">
                   {activeTab === "SERVEUR"
                     ? "Aucun serveur trouvé"
-                    : "Aucun cuisinier trouvé"}
+                    : activeTab === "CUISINIER"
+                    ? "Aucun cuisinier trouvé"
+                    : "Aucun caissier trouvé"}
                 </p>
               </div>
             </div>
@@ -390,7 +602,11 @@ const PersonnelStatsSection = ({
                 <thead>
                   <tr className="bg-gray-10 border-b border-slate-200">
                     <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                      {activeTab === "SERVEUR" ? "Serveur" : "Cuisinier"}
+                      {activeTab === "SERVEUR"
+                        ? "Serveur"
+                        : activeTab === "CUISINIER"
+                        ? "Cuisinier"
+                        : "Caissier"}
                     </th>
                     {activeTab === "SERVEUR" ? (
                       <>
@@ -410,7 +626,7 @@ const PersonnelStatsSection = ({
                           Performance
                         </th>
                       </>
-                    ) : (
+                    ) : activeTab === "CUISINIER" ? (
                       <>
                         <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                           Plats Cuisinés
@@ -423,6 +639,24 @@ const PersonnelStatsSection = ({
                         </th>
                         <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                           Recettes Générées
+                        </th>
+                        <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Score d'Efficacité
+                        </th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Transactions
+                        </th>
+                        <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Montant Total
+                        </th>
+                        <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Paiements Espèces
+                        </th>
+                        <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
+                          Paiements Cartes
                         </th>
                         <th className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                           Score d'Efficacité
@@ -516,7 +750,7 @@ const PersonnelStatsSection = ({
                               </div>
                             </td>
                           </>
-                        ) : (
+                        ) : activeTab === "CUISINIER" ? (
                           <>
                             <td className="py-4 px-4 lg:px-6">
                               <span className="font-medium text-gray-900">
@@ -547,6 +781,47 @@ const PersonnelStatsSection = ({
                                 <div className="flex-1 bg-gray-200 rounded-full h-2">
                                   <div
                                     className="bg-blue-600 h-2 rounded-full"
+                                    style={{
+                                      width: `${Math.min(
+                                        person.scoreEfficacite || 0,
+                                        100
+                                      )}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                                <span className="text-xs">
+                                  {Math.round(person.scoreEfficacite || 0)}%
+                                </span>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="py-4 px-4 lg:px-6">
+                              <span className="font-medium text-gray-900">
+                                {person.nombreTransactions || 0}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 lg:px-6">
+                              <span className="font-medium text-gray-900">
+                                {formatPrice(person.montantTotal || 0)} XOF
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 lg:px-6">
+                              <span className="font-medium text-yellow-600">
+                                {formatPrice(person.paiementsEspeces || 0)} XOF
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 lg:px-6">
+                              <span className="font-medium text-blue-600">
+                                {formatPrice(person.paiementsCartes || 0)} XOF
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 lg:px-6">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-green-600 h-2 rounded-full"
                                     style={{
                                       width: `${Math.min(
                                         person.scoreEfficacite || 0,

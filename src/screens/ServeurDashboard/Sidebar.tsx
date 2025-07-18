@@ -1,7 +1,8 @@
 import React from "react";
 import { Button } from "../../components/ui/button";
-import { ListBullets, Users, CreditCard } from "phosphor-react";
+import { CreditCard } from "phosphor-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { CallBellIcon, ClipboardTextIcon } from "@phosphor-icons/react";
 
 interface SidebarProps {
   selected: "commandes" | "historique" | "caisse";
@@ -23,7 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ selected, onSelect }) => {
         }`}
         onClick={() => onSelect("commandes")}
       >
-        <ListBullets size={32} />
+        <CallBellIcon size={32} />
         <span>Commandes</span>
       </Button>
       <Button
@@ -35,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ selected, onSelect }) => {
         }`}
         onClick={() => onSelect("historique")}
       >
-        <Users size={50} />
+        <ClipboardTextIcon size={50} />
         Historique
       </Button>
 

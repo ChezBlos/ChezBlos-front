@@ -725,7 +725,7 @@ export const CaissierOrdersSection: React.FC<{
         <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
           <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
             <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
-              Chiffre d'affaires
+              Revenus du jour
             </h3>
             <div className="flex flex-col items-start gap-1 w-full min-w-0">
               <div className="flex items-start gap-1 w-full min-w-0">

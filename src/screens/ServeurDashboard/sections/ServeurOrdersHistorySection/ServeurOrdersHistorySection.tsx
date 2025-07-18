@@ -240,7 +240,7 @@ export const ServeurOrdersHistorySection: React.FC = () => {
       subtitleColor: "text-red-500",
     },
     {
-      title: "Chiffre d'affaires total",
+      title: "Revenus total",
       value: loading ? "..." : formatPrice(stats.chiffreAffaires),
       currency: loading ? "" : "XOF",
       subtitle: `Recettes validées`,

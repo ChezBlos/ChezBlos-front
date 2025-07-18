@@ -8,10 +8,11 @@ import {
   Receipt,
   Gear,
 } from "@phosphor-icons/react";
+import { House } from "phosphor-react";
 
 interface AdminSidebarProps {
   selected:
-    | "dashboard"
+    | "home"
     | "staff"
     | "menu"
     | "historique"
@@ -20,7 +21,7 @@ interface AdminSidebarProps {
     | "settings";
   onSelect: (
     section:
-      | "dashboard"
+      | "home"
       | "staff"
       | "menu"
       | "historique"
@@ -36,9 +37,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const menuItems = [
     {
-      id: "dashboard" as const,
-      label: "Tableau de bord",
-      icon: ChartBar,
+      id: "home" as const,
+      label: "Accueil",
+      icon: House,
     },
     {
       id: "staff" as const,

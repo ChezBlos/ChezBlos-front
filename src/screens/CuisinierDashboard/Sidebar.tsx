@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "../../components/ui/button";
-import { ListBullets, Package } from "phosphor-react";
+import { Package } from "phosphor-react";
+import { CallBellIcon } from "@phosphor-icons/react";
 
 interface SidebarProps {
   selected: "commandes" | "stock";
@@ -20,7 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ selected, onSelect }) => {
         }`}
         onClick={() => onSelect("commandes")}
       >
-        <ListBullets size={32} />
+        <CallBellIcon size={32} />
         <span>Commandes</span>
       </Button>
       <Button

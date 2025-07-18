@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,9 +9,12 @@ import {
   Package,
   Receipt,
   ArrowClockwise,
+  // Clock,
 } from "@phosphor-icons/react";
 import { Button } from "../../../../components/ui/button";
 import { ExpenseCategoryPieChart } from "../../../../components/charts";
+import { useState } from "react";
+// import { Badge } from "../../../../components/ui/badge";
 import {
   Table,
   TableHeader,
@@ -22,7 +24,6 @@ import {
   TableHead,
 } from "../../../../components/ui/table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { UserAvatar } from "../../../../components/UserAvatar";
 
 // Ce composant affichera la section Statistiques Stocks & Dépenses
 // À compléter avec la logique et le JSX extraits de AdminStatistiquesSection
@@ -34,14 +35,31 @@ const StocksDepensesStatsSection = ({
   expenseStats,
   expenseLoading,
   expenseError,
+  // stockAlerts,
+  // alertsLoading,
   alertsError,
   stockMovements,
+  // movementsLoading,
   movementsError,
+  // stockItems,
+  // itemsLoading,
   itemsError,
+  selectedPeriod = "30days",
   formatPrice,
   refetchMovements: refetchMovementsProp,
-}: // onOpenDateFilter supprimé, gestion locale
-any) => {
+}: any) => {
+  // Générer des titres adaptatifs selon la période
+  const getPeriodLabel = () => {
+    const periodLabels: { [key: string]: string } = {
+      "7days": "7 derniers jours",
+      "30days": "30 derniers jours",
+      "3months": "3 derniers mois",
+      "6months": "6 derniers mois",
+      "1year": "cette année",
+    };
+    return periodLabels[selectedPeriod] || "cette période";
+  };
+
   // Vérifier s'il y a des erreurs critiques
   const hasErrors =
     stockError || expenseError || alertsError || movementsError || itemsError;
@@ -127,7 +145,9 @@ any) => {
             <h2 className="text-xl font-bold text-gray-900">
               Statistiques Stock & Dépenses
             </h2>
-            <p className="text-sm text-gray-600">Inventaire et dépenses</p>
+            <p className="text-sm text-gray-600">
+              Inventaire et dépenses pour {getPeriodLabel()}
+            </p>
           </div>
         </div>
 
@@ -168,6 +188,18 @@ any) => {
   }
   return (
     <div className="space-y-6">
+      {/* Header avec contrôles */}
+      {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">
+            Statistiques Stock & Dépenses
+          </h2>
+          <p className="text-sm text-gray-600">
+            Inventaire et dépenses pour {getPeriodLabel()}
+          </p>
+        </div>
+      </div> */}
+
       {/* KPI Cards Stock & Dépenses */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* <Card className="rounded-3xl">
@@ -222,9 +254,7 @@ any) => {
                     })()
                   )}
                 </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  {/* getPeriodLabel() */}
-                </p>
+                <p className="text-sm text-gray-500 mt-2">{getPeriodLabel()}</p>
               </div>
               <div className="p-3 bg-red-100 rounded-lg">
                 <Receipt size={24} className="text-red-600" />
@@ -332,7 +362,7 @@ any) => {
         <Card className="rounded-3xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Dépenses par Catégorie {/* - {getPeriodLabel()} */}
+              Dépenses par Catégorie - {getPeriodLabel()}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -495,9 +525,6 @@ any) => {
                         mvt.prenom || mvt.utilisateur || "-";
                       const photoUtilisateur = mvt.photoProfil;
                       const roleUtilisateur = mvt.role || "-";
-                      // Protection robuste pour les champs nom/prenom
-                      const nomComplet = String(mvt.nom || "").trim();
-                      const prenomComplet = String(mvt.prenom || "").trim();
                       const quantite = mvt.quantite;
                       const unite = mvt.unite || "";
                       const isEntree =
@@ -543,13 +570,17 @@ any) => {
                           </TableCell>
                           <TableCell className="py-4 px-4 lg:px-6">
                             <div className="flex items-center gap-2">
-                              <UserAvatar
-                                photo={photoUtilisateur}
-                                nom={nomComplet}
-                                prenom={prenomComplet || nomUtilisateur}
-                                size="sm"
-                                className="flex-shrink-0"
-                              />
+                              {photoUtilisateur ? (
+                                <img
+                                  src={photoUtilisateur}
+                                  alt={nomUtilisateur}
+                                  className="w-7 h-7 rounded-full object-cover"
+                                />
+                              ) : (
+                                <span className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
+                                  {nomUtilisateur?.[0] || "?"}
+                                </span>
+                              )}
                               <div className="flex flex-col">
                                 <span className="text-sm font-medium text-gray-900">
                                   {nomUtilisateur}

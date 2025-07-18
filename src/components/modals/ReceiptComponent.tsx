@@ -12,6 +12,11 @@ export const ReceiptComponent = React.forwardRef<
   HTMLDivElement,
   ReceiptComponentProps
 >(({ order, montantRecu, monnaiRendue, nomCaissier }, ref) => {
+  // Vérifions que l'ordre est bien défini
+  if (!order) {
+    return <div ref={ref}>Commande non disponible</div>;
+  }
+
   const formatPrice = (price: number): string => {
     return price.toLocaleString();
   };
@@ -38,8 +43,19 @@ export const ReceiptComponent = React.forwardRef<
   };
 
   const formatDateTime = (
-    dateString: string
+    dateString: string | undefined
   ): { date: string; time: string } => {
+    if (!dateString) {
+      const now = new Date();
+      return {
+        date: now.toLocaleDateString("fr-FR"),
+        time: now.toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+    }
+
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString("fr-FR"),
@@ -60,6 +76,7 @@ export const ReceiptComponent = React.forwardRef<
         fontFamily: "Gilroy, monospace",
         width: "80mm", // Largeur standard ticket de caisse
         minHeight: "auto",
+        pageBreakInside: "avoid", // Éviter la coupure pendant l'impression
       }}
     >
       {/* Header avec logo */}
@@ -85,11 +102,11 @@ export const ReceiptComponent = React.forwardRef<
         </div>
         <div className="flex justify-between">
           <span>Table:</span>
-          <span>N° {order.numeroTable}</span>
+          <span>N° {order.numeroTable || "N/A"}</span>
         </div>
         <div className="flex justify-between">
           <span>Commande:</span>
-          <span>#{order.numeroCommande}</span>
+          <span>#{order.numeroCommande || "N/A"}</span>
         </div>
         {nomCaissier && (
           <div className="flex justify-between">
@@ -111,23 +128,26 @@ export const ReceiptComponent = React.forwardRef<
           <span>MONTANT</span>
         </div>
 
-        {order.items.map((item, index) => {
+        {(order.items || []).map((item, index) => {
           // Gérer le prix selon que menuItem est un objet ou un string
           const prix =
-            typeof item.menuItem === "object"
+            item && typeof item.menuItem === "object"
               ? item.menuItem.prix
               : item.prixUnitaire || 0;
+
+          const quantite = item?.quantite || 1;
+          const nom = item?.nom || "Article";
 
           return (
             <div key={index} className="mb-2">
               <div className="text-xs font-medium text-gray-900 mb-1">
-                {item.nom}
+                {nom}
               </div>
               <div className="flex justify-between text-xs">
                 <span></span>
-                <span>{item.quantite}</span>
+                <span>{quantite}</span>
                 <span>{formatPrice(prix)}</span>
-                <span>{formatPrice(prix * item.quantite)}</span>
+                <span>{formatPrice(prix * quantite)}</span>
               </div>
             </div>
           );
@@ -141,7 +161,7 @@ export const ReceiptComponent = React.forwardRef<
       <div className="mb-4 space-y-1">
         <div className="flex justify-between font-bold text-base">
           <span>TOTAL À PAYER:</span>
-          <span>{formatPrice(order.montantTotal)} XOF</span>
+          <span>{formatPrice(order.montantTotal || 0)} XOF</span>
         </div>
 
         {montantRecu !== undefined && (

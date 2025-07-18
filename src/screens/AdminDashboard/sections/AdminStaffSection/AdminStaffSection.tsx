@@ -42,6 +42,7 @@ import { AccessCodeModal } from "../../../../components/modals/AccessCodeModal";
 import { AddStaffModal } from "../../../../components/modals/AddStaffModal";
 import { EditStaffModal } from "../../../../components/modals/EditStaffModal";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
+import { UserDetailsModal } from "../../../../components/modals/UserDetailsModal";
 import { ExportService } from "../../../../services/exportService";
 import { useAlert } from "../../../../contexts/AlertContext";
 
@@ -74,6 +75,7 @@ export const AdminStaffSection: React.FC = () => {
   const [userToEdit, setUserToEdit] = useState<StaffUser | null>(null);
   const [userToDelete, setUserToDelete] = useState<StaffUser | null>(null);
   const [userToToggle, setUserToToggle] = useState<StaffUser | null>(null);
+  const [userDetailsModalOpen, setUserDetailsModalOpen] = useState(false);
 
   const { data: users, loading, error, refetch } = useUsers();
   const { deleteUser, loading: deleteLoading } = useDeleteUser();
@@ -223,8 +225,8 @@ export const AdminStaffSection: React.FC = () => {
   };
   // Gestionnaire de détails utilisateur
   const handleViewUserDetails = (user: StaffUser) => {
-    console.log("Voir détails utilisateur:", user);
-    // TODO: Implémenter le modal de détails utilisateur
+    setSelectedUser(user);
+    setUserDetailsModalOpen(true);
   };
   // Gestionnaire du modal de code d'accès
   const handleViewAccessCode = (user: StaffUser) => {
@@ -418,25 +420,16 @@ export const AdminStaffSection: React.FC = () => {
       ADMIN: "bg-orange-100 text-orange-700",
       SERVEUR: "bg-blue-100 text-blue-700",
       CUISINIER: "bg-purple-100 text-purple-700",
+      CAISSIER: "bg-yellow-100 text-yellow-700",
     };
 
-    const colorClass =
-      roleColors[role as keyof typeof roleColors] ||
-      "bg-gray-100 text-gray-700";
+    const colorClass = roleColors[role as keyof typeof roleColors];
 
     return (
       <Badge
         className={`${colorClass} rounded-full px-3 py-1 font-medium text-xs border`}
       >
         {formatRole(role)}
-      </Badge>
-    );
-  };
-
-  const getCashierBadge = () => {
-    return (
-      <Badge className="bg-yellow-100 text-yellow-700 rounded-full px-2 py-1 font-medium text-xs border ml-1">
-        Caissier
       </Badge>
     );
   };
@@ -726,7 +719,6 @@ export const AdminStaffSection: React.FC = () => {
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               {getRoleBadge(user.role)}
-                              {user.role === "CAISSIER" && getCashierBadge()}
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-3">
@@ -828,7 +820,6 @@ export const AdminStaffSection: React.FC = () => {
                               <span className="font-bold text-lg text-gray-900 truncate">
                                 {user.prenom} {user.nom}
                               </span>
-                              {user.role === "CAISSIER" && getCashierBadge()}
                             </div>{" "}
                             <div
                               className="text-sm text-gray-600 mb-2 max-w-[250px] truncate"
@@ -999,6 +990,12 @@ export const AdminStaffSection: React.FC = () => {
         cancelText="Annuler"
         variant={userToToggle?.actif ? "warning" : "info"}
         isLoading={toggleLoading}
+      />
+      {/* Modal de détails utilisateur */}
+      <UserDetailsModal
+        isOpen={userDetailsModalOpen}
+        onClose={() => setUserDetailsModalOpen(false)}
+        user={selectedUser}
       />
     </section>
   );

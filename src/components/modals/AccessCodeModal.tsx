@@ -130,6 +130,8 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
         return "Serveur";
       case "CUISINIER":
         return "Cuisinier";
+      case "CAISSIER":
+        return "Caissier";
       default:
         return role;
     }
@@ -140,11 +142,10 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
       ADMIN: "bg-orange-100 text-orange-700",
       SERVEUR: "bg-blue-100 text-blue-700",
       CUISINIER: "bg-purple-100 text-purple-700",
+      CAISSIER: "bg-yellow-100 text-yellow-700",
     };
 
-    const colorClass =
-      roleColors[role as keyof typeof roleColors] ||
-      "bg-gray-100 text-gray-700";
+    const colorClass = roleColors[role as keyof typeof roleColors];
 
     return (
       <Badge
@@ -188,11 +189,6 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 {getRoleBadge(user.role)}
-                {user.role === "CAISSIER" && (
-                  <Badge className="bg-yellow-100 text-yellow-700 rounded-full px-2 py-1 font-medium text-xs border">
-                    Caissier
-                  </Badge>
-                )}
               </div>
             </CardContent>
           </Card>

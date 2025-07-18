@@ -216,6 +216,18 @@ export class OrderService {
     }
   }
 
+  // Mettre à jour le statut d'une commande directement
+  static async updateOrderStatus(id: string, status: string): Promise<Order> {
+    try {
+      const response = await apiClient.patch(`/orders/${id}/update-status`, {
+        statut: status,
+      });
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(`Erreur lors de la mise à jour du statut vers ${status}`);
+    }
+  }
+
   // Traiter un paiement pour une commande (utilise le système de paiements)
   static async processPayment(
     orderId: string,

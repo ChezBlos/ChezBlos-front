@@ -40,9 +40,37 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
   const handlePrint = useReactToPrint({
     contentRef: receiptRef,
     documentTitle: `Reçu-${order?.numeroCommande || "commande"}`,
+    onBeforeGetContent: () => {
+      return new Promise<void>((resolve) => {
+        // Assurez-vous que le contenu est complètement chargé avant l'impression
+        setTimeout(() => {
+          resolve();
+        }, 1000); // Augmentation du délai pour garantir le chargement complet
+      });
+    },
     onAfterPrint: () => {
-      onConfirmPrint(); // Marquer la commande comme terminée
+      // Traitement après impression
+      try {
+        onConfirmPrint(); // Marquer la commande comme terminée
+      } catch (error) {
+        console.error("Erreur lors de la confirmation de l'impression:", error);
+      }
       onClose(); // Fermer le modal
+      resetForm();
+    },
+    removeAfterPrint: true,
+    onPrintError: (error) => {
+      console.error("Erreur d'impression:", error);
+      // On continue le flux même en cas d'erreur d'impression
+      try {
+        onConfirmPrint(); // Marquer la commande comme terminée même si l'impression échoue
+      } catch (confirmError) {
+        console.error(
+          "Erreur lors de la confirmation après échec d'impression:",
+          confirmError
+        );
+      }
+      onClose();
       resetForm();
     },
   });

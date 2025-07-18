@@ -361,47 +361,6 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Option Caissier */}
-                    <div
-                      onClick={() => handleRoleChange("CAISSIER")}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.role === "CAISSIER"
-                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
-                          : "border-gray-200 hover:border-brand-primary-500"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            formData.role === "CAISSIER"
-                              ? "bg-brand-primary-500 text-white"
-                              : "bg-gray-10 text-gray-600"
-                          }`}
-                        >
-                          <UserIcon className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">
-                            Caissier
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Service en salle avec accès complet à la caisse
-                          </p>
-                        </div>
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 ${
-                            formData.role === "CAISSIER"
-                              ? "border-brand-primary-500 bg-brand-primary-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {formData.role === "CAISSIER" && (
-                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Option Cuisinier */}
                     <div
                       onClick={() => handleRoleChange("CUISINIER")}
@@ -438,6 +397,47 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           }`}
                         >
                           {formData.role === "CUISINIER" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Option Caissier */}
+                    <div
+                      onClick={() => handleRoleChange("CAISSIER")}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        formData.role === "CAISSIER"
+                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
+                          : "border-gray-200 hover:border-brand-primary-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "CAISSIER"
+                              ? "bg-brand-primary-500 text-white"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <UserIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            Caissier
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Service en salle avec accès complet à la caisse
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "CAISSIER"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "CAISSIER" && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>

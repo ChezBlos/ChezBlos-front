@@ -35,8 +35,20 @@ export const getOrderStatusBadge = (statut: string): StatusBadgeInfo => {
     case "TERMINE":
     case "terminee":
       return {
-        label: "Prête",
+        label: "Terminé",
         color: "bg-green-100 text-green-600 border-green-200",
+      };
+    case "EN_ATTENTE_PAIEMENT":
+    case "en-attente-paiement":
+      return {
+        label: "Attente paiement",
+        color: "bg-purple-100 text-purple-600 border-purple-200",
+      };
+    case "PRET":
+    case "pret":
+      return {
+        label: "Prêt",
+        color: "bg-emerald-100 text-emerald-600 border-emerald-200",
       };
     case "ANNULE":
     case "annule":

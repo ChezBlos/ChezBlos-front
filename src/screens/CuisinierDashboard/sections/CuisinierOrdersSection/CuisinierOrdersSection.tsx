@@ -347,16 +347,7 @@ export const CuisinierOrdersSection = (): JSX.Element => {
             Marquer comme prête
           </Button>
         );
-      case "PRET":
-        return (
-          <Button
-            onClick={() => handleSendToCashier(order._id)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
-          >
-            <User size={16} />
-            Envoyer à la caisse
-          </Button>
-        );
+
       default:
         return null;
     }
@@ -738,20 +729,6 @@ export const CuisinierOrdersSection = (): JSX.Element => {
                                         >
                                           <CheckCircle size={16} />
                                           Marquer comme prête
-                                        </DropdownMenuItem>
-                                      </>
-                                    )}
-                                    {order.statut === "PRET" && (
-                                      <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                          onClick={() =>
-                                            handleSendToCashier(order._id)
-                                          }
-                                          className="flex items-center gap-2 text-orange-600"
-                                        >
-                                          <User size={16} />
-                                          Envoyer à la caisse
                                         </DropdownMenuItem>
                                       </>
                                     )}

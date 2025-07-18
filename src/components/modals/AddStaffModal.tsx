@@ -360,7 +360,7 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                               : "bg-gray-10 text-gray-600"
                           }`}
                         >
-                          <Shield className="h-5 w-5" />
+                          <UserIcon className="h-5 w-5" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900">

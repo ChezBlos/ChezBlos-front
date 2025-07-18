@@ -1,14 +1,9 @@
-import { LogOutIcon, MenuIcon } from "lucide-react";
-import {
-  User,
-  ListBullets,
-  Camera,
-  CreditCard,
-  ChartBar,
-} from "@phosphor-icons/react";
+import { LogOutIcon, MenuIcon, RefreshCwIcon } from "lucide-react";
+import { User, ListBullets, Camera, CreditCard } from "@phosphor-icons/react";
 import React, { useState } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { Button } from "../../../../components/ui/button";
+import { ButtonSpinner } from "../../../../components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,21 +13,25 @@ import {
 } from "../../../../components/ui/dropdown-menu";
 import { ChangeProfilePictureModal } from "../../../../components/modals/ChangeProfilePictureModal";
 import { ProfileService } from "../../../../services/profileService";
+import { logger } from "../../../../utils/logger";
 
 interface CaissierHeaderSectionProps {
-  selectedSection?: "commandes" | "caisse" | "historique" | "stats";
-  onSectionSelect?: (
-    section: "commandes" | "caisse" | "historique" | "stats"
-  ) => void;
+  selectedSection?: "commandes" | "historique";
+  onSectionSelect?: (section: "commandes" | "historique") => void;
+  onOrdersRefresh?: () => void;
+  onStatsRefresh?: () => void;
 }
 
 export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
   selectedSection,
   onSectionSelect,
+  onOrdersRefresh,
+  onStatsRefresh,
 }) => {
   const { user, logout } = useAuth();
   const [isChangePictureModalOpen, setIsChangePictureModalOpen] =
     useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Données pour l'en-tête
   const currentDate = new Date();
@@ -48,6 +47,19 @@ export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleRefresh = async () => {
+    if (onOrdersRefresh || onStatsRefresh) {
+      setIsRefreshing(true);
+      try {
+        await Promise.all([onOrdersRefresh?.(), onStatsRefresh?.()]);
+      } catch (error) {
+        logger.error("Erreur lors du rafraîchissement:", error);
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
   };
 
   return (
@@ -119,18 +131,6 @@ export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
               <DropdownMenuContent className="w-56" align="end">
                 <DropdownMenuItem
                   className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
-                    selectedSection === "caisse"
-                      ? "bg-orange-50 text-orange-600"
-                      : ""
-                  }`}
-                  onClick={() => onSectionSelect?.("caisse")}
-                >
-                  <CreditCard size={20} />
-                  <span>Caisse</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
                     selectedSection === "commandes"
                       ? "bg-orange-50 text-orange-600"
                       : ""
@@ -150,19 +150,7 @@ export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
                   onClick={() => onSectionSelect?.("historique")}
                 >
                   <ListBullets size={20} />
-                  <span>Historique</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className={`flex items-center gap-3 px-4 py-3 cursor-pointer ${
-                    selectedSection === "stats"
-                      ? "bg-orange-50 text-orange-600"
-                      : ""
-                  }`}
-                  onClick={() => onSectionSelect?.("stats")}
-                >
-                  <ChartBar size={20} />
-                  <span>Statistiques</span>
+                  <span>Historique des paiements</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -195,6 +183,25 @@ export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
 
         {/* Right side: User Avatar */}
         <div className="flex items-center gap-4">
+          {/* Bouton rafraîchir */}
+          <Button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="bg-brand-primary-500 hover:bg-brand-primary-600 disabled:bg-brand-primary-300 text-white px-4 py-5 rounded-lg font-semibold flex items-center gap-2 transition-all duration-200"
+          >
+            {isRefreshing ? (
+              <>
+                <ButtonSpinner />
+                <span>Actualisation...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCwIcon className="w-5 h-5" />
+                <span>Actualiser</span>
+              </>
+            )}
+          </Button>
+
           {/* Avatar utilisateur avec menu déroulant */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -220,7 +227,11 @@ export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
                 <p className="text-sm font-medium">
                   {user?.prenom} {user?.nom}
                 </p>
-                <p className="text-xs text-muted-foreground">Caissier</p>
+                <p className="text-xs text-muted-foreground">
+                  {user?.role === "CAISSIER"
+                    ? "Caissier"
+                    : user?.role || "Utilisateur"}
+                </p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem

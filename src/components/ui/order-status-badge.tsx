@@ -19,7 +19,7 @@ export const OrderStatusBadge: React.FC<OrderStatusBadgeProps> = ({
 
   return (
     <Badge
-      className={`${statusInfo.color} rounded-full px-3 py-1 font-medium text-xs border ${className}`}
+      className={`${statusInfo.color} rounded-full px-3 py-1 font-medium text-xs border shadow-sm flex items-center justify-center whitespace-nowrap ${className}`}
     >
       {statusInfo.label}
     </Badge>

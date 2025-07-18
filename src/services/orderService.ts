@@ -252,4 +252,22 @@ export class OrderService {
       );
     }
   }
+
+  // Mettre à jour le mode de paiement d'une commande
+  static async updatePaymentMethod(
+    orderId: string,
+    newPaymentMethod: string
+  ): Promise<Order> {
+    try {
+      const response = await apiClient.put(`/orders/${orderId}`, {
+        modePaiement: newPaymentMethod,
+      });
+      return response.data.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Erreur lors de la mise à jour du mode de paiement"
+      );
+    }
+  }
 }

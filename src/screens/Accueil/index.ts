@@ -1,1 +1,0 @@
-export { Accueil } from "./Accueil";

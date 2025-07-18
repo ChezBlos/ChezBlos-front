@@ -40,14 +40,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={["ADMIN"]}>
                       <Routes>
-                        <Route path="dashboard" element={<AdminDashboard />} />
+                        <Route path="home" element={<AdminDashboard />} />
                         <Route
                           path="dashboard/:section"
                           element={<AdminDashboard />}
                         />
                         <Route
                           path=""
-                          element={<Navigate to="dashboard" replace />}
+                          element={<Navigate to="home" replace />}
                         />
                       </Routes>
                     </ProtectedRoute>

@@ -1,4 +1,4 @@
-import { SearchIcon, RefreshCw, Printer, Eye } from "lucide-react";
+import { SearchIcon, RefreshCw, Printer, Eye, Edit3 } from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
@@ -30,6 +30,7 @@ import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsMod
 import { PrintReceiptModal } from "../../../../components/modals/PrintReceiptModal";
 import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
 import { PaymentValidationModal } from "../../../../components/modals/PaymentValidationModal";
+import { PaymentMethodConfirmationModal } from "../../../../components/modals/PaymentMethodConfirmationModal";
 import {
   getMenuImageUrl,
   handleImageError,
@@ -125,6 +126,12 @@ export const CaissierOrdersSection: React.FC<{
     id: string;
     numeroCommande: string;
   } | null>(null);
+
+  // États pour la gestion de la confirmation du mode de paiement
+  const [showPaymentConfirmationModal, setShowPaymentConfirmationModal] =
+    useState(false);
+  const [orderForPaymentConfirmation, setOrderForPaymentConfirmation] =
+    useState<CashierOrder | null>(null);
   const [orders, setOrders] = useState<CashierOrder[]>([]);
   const [stats, setStats] = useState<CashierStats>({
     en_attente_paiement: 0,
@@ -566,20 +573,6 @@ export const CaissierOrdersSection: React.FC<{
     }
   };
 
-  // Fonction pour imprimer un ticket
-  const handlePrintTicket = (order: CashierOrder) => {
-    // Vérifier si la commande est en attente de paiement ou terminée
-    if (order.statut === "EN_ATTENTE_PAIEMENT" || order.statut === "TERMINE") {
-      setSelectedOrder(order);
-      setShowPrintReceiptModal(true);
-    } else {
-      showAlert(
-        "warning",
-        "Seules les commandes en attente de paiement ou terminées peuvent être imprimées"
-      );
-    }
-  };
-
   // Fonction pour confirmer l'impression du reçu
   const handleConfirmPrint = async () => {
     try {
@@ -665,9 +658,16 @@ export const CaissierOrdersSection: React.FC<{
           </DropdownMenuItem>
 
           {(isAwaitingPayment || isCompleted) && (
-            <DropdownMenuItem onClick={() => handlePrintTicket(order)}>
+            <DropdownMenuItem onClick={() => handleConfirmPaymentMethod(order)}>
               <Printer className="h-4 w-4 mr-2" />
               <span>{isCompleted ? "Réimprimer reçu" : "Imprimer ticket"}</span>
+            </DropdownMenuItem>
+          )}
+
+          {isAwaitingPayment && (
+            <DropdownMenuItem onClick={() => handleConfirmPaymentMethod(order)}>
+              <Edit3 className="h-4 w-4 mr-2" />
+              <span>Modifier le mode de paiement</span>
             </DropdownMenuItem>
           )}
 
@@ -719,6 +719,44 @@ export const CaissierOrdersSection: React.FC<{
       console.error("Erreur lors de l'annulation:", error);
       showAlert("error", "Erreur lors de l'annulation de la commande");
     }
+  };
+
+  // Fonction pour ouvrir la modal de confirmation du mode de paiement
+  const handleConfirmPaymentMethod = (order: CashierOrder) => {
+    setOrderForPaymentConfirmation(order);
+    setShowPaymentConfirmationModal(true);
+  };
+
+  // Fonction pour mettre à jour le mode de paiement
+  const handleUpdatePaymentMethod = async (
+    orderId: string,
+    newPaymentMethod: string
+  ) => {
+    try {
+      await OrderService.updatePaymentMethod(orderId, newPaymentMethod);
+      await Promise.all([refetch(), refetchStats()]);
+      showAlert("success", "Mode de paiement mis à jour avec succès");
+    } catch (error) {
+      console.error(
+        "Erreur lors de la mise à jour du mode de paiement:",
+        error
+      );
+      throw error;
+    }
+  };
+
+  // Fonction pour confirmer le mode de paiement et passer à l'impression
+  const handlePaymentMethodConfirmed = (
+    order: CashierOrder,
+    confirmedPaymentMethod: string
+  ) => {
+    setShowPaymentConfirmationModal(false);
+    setOrderForPaymentConfirmation(null);
+
+    // Mettre à jour la commande sélectionnée avec le mode de paiement confirmé
+    const updatedOrder = { ...order, modePaiement: confirmedPaymentMethod };
+    setSelectedOrder(updatedOrder);
+    setShowPrintReceiptModal(true);
   };
 
   // Affichage des cartes de résumé
@@ -1078,6 +1116,20 @@ export const CaissierOrdersSection: React.FC<{
           }}
           onConfirm={handleConfirmCancel}
           orderNumber={cancelOrderData.numeroCommande}
+        />
+      )}
+
+      {/* Modal de confirmation du mode de paiement */}
+      {showPaymentConfirmationModal && orderForPaymentConfirmation && (
+        <PaymentMethodConfirmationModal
+          isOpen={showPaymentConfirmationModal}
+          onClose={() => {
+            setShowPaymentConfirmationModal(false);
+            setOrderForPaymentConfirmation(null);
+          }}
+          order={orderForPaymentConfirmation as any}
+          onConfirm={handlePaymentMethodConfirmed}
+          onUpdatePaymentMethod={handleUpdatePaymentMethod}
         />
       )}
     </div>

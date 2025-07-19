@@ -12,7 +12,7 @@ import { House } from "phosphor-react";
 
 interface AdminSidebarProps {
   selected:
-    | "home"
+    | "dashboard"
     | "staff"
     | "menu"
     | "historique"
@@ -21,7 +21,7 @@ interface AdminSidebarProps {
     | "settings";
   onSelect: (
     section:
-      | "home"
+      | "dashboard"
       | "staff"
       | "menu"
       | "historique"
@@ -37,7 +37,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const menuItems = [
     {
-      id: "home" as const,
+      id: "dashboard" as const,
       label: "Accueil",
       icon: House,
     },

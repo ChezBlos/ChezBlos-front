@@ -25,7 +25,7 @@ import { House } from "phosphor-react";
 interface AdminHeaderSectionProps {
   onRefresh?: () => void;
   selectedSection?:
-    | "home"
+    | "dashboard"
     | "staff"
     | "menu"
     | "historique"
@@ -35,7 +35,7 @@ interface AdminHeaderSectionProps {
     | "caisse";
   onSectionSelect?: (
     section:
-      | "home"
+      | "dashboard"
       | "staff"
       | "menu"
       | "historique"

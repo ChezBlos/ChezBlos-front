@@ -49,7 +49,7 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="h-8 w-8 p-0 hover:bg-gray-100"
+              className="h-8 w-8 p-0 hover:bg-gray-10"
             >
               <X size={16} />
             </Button>

@@ -645,7 +645,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
                         <div className="bg-white p-4 rounded-2xl border border-slate-200">
                           {/* Header avec image */}
                           <div className="flex items-start gap-3 mb-4">
-                            <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
+                            <div className="w-16 h-16 bg-gray-10 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}

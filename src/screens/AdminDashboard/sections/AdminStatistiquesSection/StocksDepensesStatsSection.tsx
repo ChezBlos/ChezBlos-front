@@ -78,7 +78,7 @@ const StocksDepensesStatsSection = ({
   //     case "consommation":
   //       return "bg-red-100 text-red-800";
   //     default:
-  //       return "bg-gray-100 text-gray-700";
+  //       return "bg-gray-10 text-gray-700";
   //   }
   // }
   // function formatTypeLabel(type: string) {

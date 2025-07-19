@@ -840,7 +840,7 @@ export const AdminStaffSection: React.FC = () => {
                             {user.codeAcces && (
                               <div className="text-sm text-gray-600 mb-2">
                                 Code:{" "}
-                                <code className="bg-gray-100 px-1 rounded text-xs">
+                                <code className="bg-gray-10 px-1 rounded text-xs">
                                   {user.codeAcces}
                                 </code>
                               </div>

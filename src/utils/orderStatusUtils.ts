@@ -59,7 +59,7 @@ export const getOrderStatusBadge = (statut: string): StatusBadgeInfo => {
     default:
       return {
         label: statut,
-        color: "bg-gray-100 text-gray-600 border-gray-200",
+        color: "bg-gray-10 text-gray-600 border-gray-200",
       };
   }
 };

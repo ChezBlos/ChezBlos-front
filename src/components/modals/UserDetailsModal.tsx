@@ -202,7 +202,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   <Key className="w-5 h-5 text-gray-500" />
                   <div>
                     <div className="text-sm text-gray-500">Code d'accès</div>
-                    <div className="font-mono font-medium bg-gray-100 px-2 py-1 rounded text-sm">
+                    <div className="font-mono font-medium bg-gray-10 px-2 py-1 rounded text-sm">
                       {user.codeAcces}
                     </div>
                   </div>

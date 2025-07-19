@@ -145,7 +145,7 @@ export const BottomSheetAction: React.FC<BottomSheetActionProps> = ({
       disabled={disabled}
       className={`w-full flex items-center gap-3 justify-start px-4 py-4 border rounded-xl text-left h-auto transition-all duration-200 ${
         disabled
-          ? "bg-gray-5 border-gray-100 text-gray-400 cursor-not-allowed"
+          ? "bg-gray-5 border-gray-10 text-gray-400 cursor-not-allowed"
           : getVariantStyles()
       }`}
     >

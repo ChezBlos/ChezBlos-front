@@ -7,7 +7,7 @@ import { Label } from "../ui/label";
 import { ReceiptComponent } from "./ReceiptComponent";
 import { Order } from "../../types/order";
 import { useAuth } from "../../contexts/AuthContext";
-import { Printer, Eye, Calculator } from "lucide-react";
+import { Printer, Eye, Calculator, Edit3 } from "lucide-react";
 
 interface PrintReceiptModalProps {
   isOpen: boolean;
@@ -26,8 +26,25 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
 }) => {
   const [montantRecu, setMontantRecu] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
+  const [allowManualEdit, setAllowManualEdit] = useState<boolean>(false);
   const { user } = useAuth();
   const receiptRef = useRef<HTMLDivElement>(null);
+
+  // Effet pour pré-remplir le montant automatiquement pour les paiements mobiles
+  React.useEffect(() => {
+    if (order && isOpen) {
+      const isMobilePayment =
+        order.modePaiement &&
+        ["WAVE", "MTN_MONEY", "ORANGE_MONEY", "MOOV_MONEY"].includes(
+          order.modePaiement.toUpperCase()
+        );
+
+      // Pré-remplir automatiquement pour les paiements mobiles et commandes terminées
+      if ((isMobilePayment && !allowManualEdit) || order.statut === "TERMINE") {
+        setMontantRecu(order.montantTotal.toString());
+      }
+    }
+  }, [order, isOpen, allowManualEdit]);
 
   // Calculer la monnaie rendue
   const montantRecuNumber = parseFloat(montantRecu) || 0;
@@ -55,6 +72,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
   const resetForm = () => {
     setMontantRecu("");
     setShowPreview(false);
+    setAllowManualEdit(false);
   };
 
   const handleClose = () => {
@@ -69,13 +87,8 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
     if (order.statut === "TERMINE") {
       setMontantRecu(order.montantTotal.toString());
     }
-    // Pour les paiements mobiles, pas besoin de montant reçu
-    else if (
-      order.modePaiement &&
-      ["WAVE", "MTN_MONEY", "ORANGE_MONEY", "MOOV_MONEY"].includes(
-        order.modePaiement.toUpperCase()
-      )
-    ) {
+    // Pour les nouveaux paiements, pré-remplir automatiquement sauf si l'édition manuelle est activée
+    else if (!allowManualEdit) {
       setMontantRecu(order.montantTotal.toString());
     }
 
@@ -170,16 +183,61 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
               </div>
             </div>
 
-            {/* Saisie du montant reçu pour les espèces - seulement si un mode de paiement est défini et c'est "espèces" */}
-            {isPaymentMethodDefined && isEspeces && (
-              <div className="space-y-2">
-                <Label htmlFor="montantRecu">Montant reçu (XOF)</Label>
+            {/* Saisie du montant reçu - pour tous les modes de paiement définis */}
+            {isPaymentMethodDefined && (
+              <div className="space-y-3">
+                {/* Option pour activer l'édition manuelle */}
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="montantRecu">
+                    Montant reçu (XOF)
+                    {!isEspeces && (
+                      <span className="text-sm text-gray-500 ml-2">
+                        - Paiement {formatPaymentMethod(order.modePaiement)}
+                      </span>
+                    )}
+                  </Label>
+                  {!isEspeces && order.statut !== "TERMINE" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setAllowManualEdit(!allowManualEdit);
+                        if (!allowManualEdit) {
+                          // Si on active l'édition manuelle, vider le champ
+                          setMontantRecu("");
+                        } else {
+                          // Si on désactive, pré-remplir avec le total
+                          setMontantRecu(order.montantTotal.toString());
+                        }
+                      }}
+                      className={`text-xs px-2 py-1 h-auto ${
+                        allowManualEdit
+                          ? "text-orange-600 bg-orange-50"
+                          : "text-blue-600 bg-blue-50"
+                      }`}
+                    >
+                      <Edit3 className="h-3 w-3 mr-1" />
+                      {allowManualEdit ? "Montant exact" : "Modifier"}
+                    </Button>
+                  )}
+                </div>
+
                 <Input
                   id="montantRecu"
                   type="number"
-                  placeholder="Saisir le montant reçu..."
+                  placeholder={
+                    allowManualEdit || isEspeces
+                      ? "Saisir le montant reçu..."
+                      : `Montant automatique: ${formatPrice(
+                          order.montantTotal
+                        )} XOF`
+                  }
                   value={montantRecu}
                   onChange={(e) => setMontantRecu(e.target.value)}
+                  disabled={
+                    !allowManualEdit && !isEspeces && order.statut !== "TERMINE"
+                  }
                   min="0"
                   step="1"
                 />
@@ -187,9 +245,22 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
                   <div className="flex items-center gap-2 text-sm">
                     <Calculator className="h-4 w-4" />
                     <span>
-                      Monnaie à rendre:{" "}
-                      <span className="font-bold">
-                        {formatPrice(monnaiRendue)} XOF
+                      {monnaiRendue > 0
+                        ? "Monnaie à rendre"
+                        : monnaiRendue < 0
+                        ? "Montant manquant"
+                        : "Montant exact"}
+                      :{" "}
+                      <span
+                        className={`font-bold ${
+                          monnaiRendue > 0
+                            ? "text-green-600"
+                            : monnaiRendue < 0
+                            ? "text-red-600"
+                            : "text-blue-600"
+                        }`}
+                      >
+                        {formatPrice(Math.abs(monnaiRendue))} XOF
                       </span>
                     </span>
                   </div>
@@ -197,12 +268,42 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
               </div>
             )}
 
-            {/* Info pour mobile money - seulement si un mode de paiement est défini et c'est du mobile money */}
-            {isPaymentMethodDefined && isMobileMoney && (
-              <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
-                <p>Paiement mobile confirmé - Montant exact reçu</p>
+            {/* Info contextuelle selon le mode de paiement */}
+            {/* {isPaymentMethodDefined && (
+              <div
+                className={`p-3 rounded-lg text-sm ${
+                  isMobileMoney
+                    ? "bg-blue-50 text-blue-800"
+                    : isEspeces
+                    ? "bg-yellow-50 text-yellow-800"
+                    : "bg-gray-50 text-gray-800"
+                }`}
+              >
+                {isMobileMoney ? (
+                  allowManualEdit ? (
+                    <p>
+                      ✏️ Mode édition activé : Saisissez le montant exact reçu
+                      via {formatPaymentMethod(order.modePaiement)}
+                    </p>
+                  ) : (
+                    <p>
+                      💡 Montant total pré-rempli. Cliquez sur "Modifier" pour
+                      un paiement partiel
+                    </p>
+                  )
+                ) : isEspeces ? (
+                  <p>
+                    💰 Saisissez le montant en espèces reçu pour calculer la
+                    monnaie
+                  </p>
+                ) : (
+                  <p>
+                    💳 Saisissez le montant reçu via{" "}
+                    {formatPaymentMethod(order.modePaiement)}
+                  </p>
+                )}
               </div>
-            )}
+            )} */}
 
             {/* Info pour commandes terminées */}
             {order.statut === "TERMINE" && (
@@ -219,9 +320,13 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
                 className="flex-1"
                 disabled={
                   isPaymentMethodDefined &&
-                  isEspeces &&
                   order.statut !== "TERMINE" &&
-                  (!montantRecu || montantRecuNumber < order.montantTotal)
+                  // Pour les espèces : montant requis
+                  ((isEspeces && !montantRecu) ||
+                    // Pour mobile money en mode édition manuelle : montant requis
+                    (isMobileMoney && allowManualEdit && !montantRecu) ||
+                    // Pour mobile money en mode automatique : toujours activé (montant pré-rempli)
+                    false)
                 }
               >
                 <Eye className="h-4 w-4 mr-2" />

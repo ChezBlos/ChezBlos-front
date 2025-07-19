@@ -41,7 +41,7 @@ export const OrderDetailsModal = ({
     // Si le mode de paiement est vide ou non défini
     if (!modePaiement) {
       return (
-        <div className="flex w-8 h-8 text-gray-400 items-center justify-center rounded-full flex-shrink-0 bg-gray-100">
+        <div className="flex w-8 h-8 text-gray-400 items-center justify-center rounded-full flex-shrink-0 bg-gray-10">
           <HelpCircle {...iconProps} />
         </div>
       );

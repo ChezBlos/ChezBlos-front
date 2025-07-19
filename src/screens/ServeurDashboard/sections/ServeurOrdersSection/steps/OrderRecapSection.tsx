@@ -163,7 +163,7 @@ export const OrderRecapSection = (): JSX.Element => {
         </div>
 
         {/* {orderItems.length > 0 && (
-          <div className="flex items-center justify-between w-full pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between w-full pt-4 border-t border-gray-10">
             <span className="font-text-md-bold text-gray-80">
               Total ({orderItems.reduce((sum, item) => sum + item.quantity, 0)}{" "}
               articles)

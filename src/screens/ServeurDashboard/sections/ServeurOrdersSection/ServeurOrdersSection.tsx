@@ -56,8 +56,8 @@ import {
   CheckCircle,
   DotsThreeVertical,
 } from "phosphor-react";
-
-const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL || "";
+import { formatPrice } from "../../../../utils/priceUtils";
+import { getOrderItemImage } from "../../../../services/imageService";
 
 export const ServeurOrdersSection = (): JSX.Element => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -337,10 +337,7 @@ export const ServeurOrdersSection = (): JSX.Element => {
   //   }
   // };
 
-  // Fonction pour formater le prix
-  const formatPrice = (price: number): string => {
-    return price.toLocaleString();
-  }; // Fonction pour rendre les images empilées
+  // Fonction pour rendre les images empilées
   const renderStackedImages = (
     items: any[],
     maxImages: number = 3,
@@ -354,12 +351,11 @@ export const ServeurOrdersSection = (): JSX.Element => {
     return (
       <div className={`relative ${size} flex-shrink-0`}>
         {imagesToShow.map((item, index) => {
-          const imageUrl =
-            item.menuItem &&
-            typeof item.menuItem === "object" &&
-            item.menuItem.image
-              ? `${IMAGE_BASE_URL}${item.menuItem.image}`
-              : "/img/plat_petit.png";
+          const imageUrl = getOrderItemImage(
+            item.menuItem && typeof item.menuItem === "object"
+              ? item.menuItem.image
+              : null
+          );
 
           // Classes pour le décalage et la transparence
           const positionClasses = [
@@ -752,25 +748,20 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             </div>
                           ) : (
                             <div className="w-10 h-10 rounded-xl mr-4 bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                              {order.items?.[0]?.menuItem &&
-                              typeof order.items[0].menuItem === "object" &&
-                              order.items[0].menuItem.image ? (
-                                <img
-                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
-                                  alt={order.items[0]?.nom || "Plat"}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "/img/plat_petit.png";
-                                  }}
-                                />
-                              ) : (
-                                <img
-                                  src="/img/plat_petit.png"
-                                  alt="Plat"
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
+                              <img
+                                src={getOrderItemImage(
+                                  order.items?.[0]?.menuItem &&
+                                    typeof order.items[0].menuItem === "object"
+                                    ? order.items[0].menuItem.image
+                                    : null
+                                )}
+                                alt={order.items[0]?.nom || "Plat"}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src =
+                                    "/img/plat_petit.png";
+                                }}
+                              />
                             </div>
                           )}
                           <div className="flex flex-col min-w-0 overflow-hidden">
@@ -1034,25 +1025,20 @@ export const ServeurOrdersSection = (): JSX.Element => {
                             </div>
                           ) : (
                             <div className="w-12 h-12 mr-4 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                              {order.items?.[0]?.menuItem &&
-                              typeof order.items[0].menuItem === "object" &&
-                              order.items[0].menuItem.image ? (
-                                <img
-                                  src={`${IMAGE_BASE_URL}${order.items[0].menuItem.image}`}
-                                  alt={order.items[0]?.nom || "Plat"}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                      "/img/plat_petit.png";
-                                  }}
-                                />
-                              ) : (
-                                <img
-                                  src="/img/plat_petit.png"
-                                  alt="Plat"
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
+                              <img
+                                src={getOrderItemImage(
+                                  order.items?.[0]?.menuItem &&
+                                    typeof order.items[0].menuItem === "object"
+                                    ? order.items[0].menuItem.image
+                                    : null
+                                )}
+                                alt={order.items[0]?.nom || "Plat"}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src =
+                                    "/img/plat_petit.png";
+                                }}
+                              />
                             </div>
                           )}{" "}
                           {/* Product info */}{" "}
@@ -1158,26 +1144,21 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 </div>
               ) : (
                 <div className="w-14 h-14 rounded-xl bg-gray-200 bg-center bg-cover overflow-hidden flex-shrink-0">
-                  {selectedOrderForActions.items[0]?.menuItem &&
-                  typeof selectedOrderForActions.items[0].menuItem ===
-                    "object" &&
-                  selectedOrderForActions.items[0].menuItem.image ? (
-                    <img
-                      src={`${IMAGE_BASE_URL}${selectedOrderForActions.items[0].menuItem.image}`}
-                      alt={selectedOrderForActions.items[0]?.nom || "Plat"}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "/img/plat_petit.png";
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src="/img/plat_petit.png"
-                      alt="Plat"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+                  <img
+                    src={getOrderItemImage(
+                      selectedOrderForActions.items[0]?.menuItem &&
+                        typeof selectedOrderForActions.items[0].menuItem ===
+                          "object"
+                        ? selectedOrderForActions.items[0].menuItem.image
+                        : null
+                    )}
+                    alt={selectedOrderForActions.items[0]?.nom || "Plat"}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "/img/plat_petit.png";
+                    }}
+                  />
                 </div>
               )}{" "}
               <div className="flex-1">

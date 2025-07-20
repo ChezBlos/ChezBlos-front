@@ -1299,7 +1299,12 @@ export const ServeurOrdersSection = (): JSX.Element => {
         isOpen={isNewOrderModalOpen}
         onClose={() => {
           setIsNewOrderModalOpen(false);
-          // Actualiser la liste et les statistiques après fermeture du modal
+        }}
+        onOrderCreated={() => {
+          // Actualiser la liste et les statistiques après création
+          console.log(
+            "🔄 [ServeurOrdersSection] Actualisation après création de commande"
+          );
           refetch();
           refetchStats();
         }}
@@ -1310,7 +1315,12 @@ export const ServeurOrdersSection = (): JSX.Element => {
         onClose={() => {
           setIsEditOrderModalOpen(false);
           setOrderToEdit(null);
-          // Actualiser la liste et les statistiques après fermeture du modal
+        }}
+        onOrderCreated={() => {
+          // Actualiser la liste et les statistiques après modification
+          console.log(
+            "🔄 [ServeurOrdersSection] Actualisation après modification de commande"
+          );
           refetch();
           refetchStats();
         }}

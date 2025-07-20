@@ -12,10 +12,12 @@ import { logger } from "../../../../../utils/logger";
 
 interface OrderConfirmationSectionProps {
   onClose?: () => void;
+  onOrderCreated?: () => void;
 }
 
 export const OrderConfirmationSection = ({
   onClose,
+  onOrderCreated,
 }: OrderConfirmationSectionProps): JSX.Element => {
   const { orderItems, getTotalAmount, createOrder, error, isEditMode } =
     useOrder();
@@ -54,6 +56,12 @@ export const OrderConfirmationSection = ({
           "✅ [OrderConfirmationSection] Commande créée avec succès"
         );
         setCreatedOrder(order);
+
+        // Notifier le parent que la commande a été créée
+        if (onOrderCreated) {
+          logger.debug("📢 [OrderConfirmationSection] Appel de onOrderCreated");
+          onOrderCreated();
+        }
       } else {
         logger.debug(
           "❌ [OrderConfirmationSection] createOrder a retourné null"

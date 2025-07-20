@@ -17,15 +17,20 @@ interface NewOrderModalProps {
   onClose: () => void;
   orderToEdit?: Order | null;
   isEditMode?: boolean;
+  onOrderCreated?: () => void;
 }
 
 interface FrameScreenProps {
   onClose?: () => void;
   orderToEdit?: Order | null;
   isEditMode?: boolean;
+  onOrderCreated?: () => void;
 }
 
-const FrameScreenContent = ({ onClose }: FrameScreenProps): JSX.Element => {
+const FrameScreenContent = ({
+  onClose,
+  onOrderCreated,
+}: FrameScreenProps): JSX.Element => {
   const { currentTab } = useTab();
   const { isEditMode } = useOrder();
 
@@ -41,7 +46,12 @@ const FrameScreenContent = ({ onClose }: FrameScreenProps): JSX.Element => {
       case "recap":
         return <OrderRecapSection />;
       case "confirmation":
-        return <OrderConfirmationSection onClose={onClose} />;
+        return (
+          <OrderConfirmationSection
+            onClose={onClose}
+            onOrderCreated={onOrderCreated}
+          />
+        );
       default:
         return (
           <>
@@ -116,12 +126,16 @@ export const FrameScreen = ({
   onClose,
   orderToEdit,
   isEditMode,
+  onOrderCreated,
 }: FrameScreenProps): JSX.Element => {
   return (
     <OrderProvider orderToEdit={orderToEdit} isEditMode={isEditMode}>
       <MenuProvider>
         <TabProvider>
-          <FrameScreenContent onClose={onClose} />
+          <FrameScreenContent
+            onClose={onClose}
+            onOrderCreated={onOrderCreated}
+          />
         </TabProvider>
       </MenuProvider>
     </OrderProvider>
@@ -134,6 +148,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
   onClose,
   orderToEdit,
   isEditMode,
+  onOrderCreated,
 }) => {
   // Gestion du scroll de la page principale
   useEffect(() => {
@@ -169,6 +184,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
           onClose={onClose}
           orderToEdit={orderToEdit}
           isEditMode={isEditMode}
+          onOrderCreated={onOrderCreated}
         />
       </div>
     </div>

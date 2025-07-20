@@ -40,6 +40,12 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
   const [isChangePictureModalOpen, setIsChangePictureModalOpen] =
     useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [profilePictureKey, setProfilePictureKey] = useState(Date.now()); // Pour forcer le rechargement de l'image
+
+  // Fonction pour rafraîchir l'image de profil
+  const handleProfileUpdated = () => {
+    setProfilePictureKey(Date.now()); // Change la clé pour forcer le rechargement
+  };
 
   // Données pour l'en-tête
   const currentDate = new Date();
@@ -73,9 +79,9 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors overflow-hidden">
                     {user?.photoProfil ? (
                       <img
-                        src={ProfileService.getProfilePictureUrl(
+                        src={`${ProfileService.getProfilePictureUrl(
                           user.photoProfil
-                        )}
+                        )}?t=${profilePictureKey}`}
                         alt="Photo de profil"
                         className="w-full h-full object-cover"
                       />
@@ -229,9 +235,9 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
                 <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors overflow-hidden">
                   {user?.photoProfil ? (
                     <img
-                      src={ProfileService.getProfilePictureUrl(
+                      src={`${ProfileService.getProfilePictureUrl(
                         user.photoProfil
-                      )}
+                      )}?t=${profilePictureKey}`}
                       alt="Photo de profil"
                       className="w-full h-full object-cover"
                     />
@@ -290,6 +296,7 @@ export const ServeurHeaderSection: React.FC<ServeurHeaderSectionProps> = ({
       <ChangeProfilePictureModal
         isOpen={isChangePictureModalOpen}
         onClose={() => setIsChangePictureModalOpen(false)}
+        onProfileUpdated={handleProfileUpdated}
       />
     </header>
   );

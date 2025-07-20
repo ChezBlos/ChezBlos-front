@@ -32,6 +32,12 @@ export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
   const [isChangePictureModalOpen, setIsChangePictureModalOpen] =
     useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [profilePictureKey, setProfilePictureKey] = useState(Date.now()); // Pour forcer le rechargement de l'image
+
+  // Fonction pour rafraîchir l'image de profil
+  const handleProfileUpdated = () => {
+    setProfilePictureKey(Date.now()); // Change la clé pour forcer le rechargement
+  };
 
   // Données pour l'en-tête
   const currentDate = new Date();
@@ -255,6 +261,7 @@ export const CaissierHeaderSection: React.FC<CaissierHeaderSectionProps> = ({
       <ChangeProfilePictureModal
         isOpen={isChangePictureModalOpen}
         onClose={() => setIsChangePictureModalOpen(false)}
+        onProfileUpdated={handleProfileUpdated}
       />
     </header>
   );

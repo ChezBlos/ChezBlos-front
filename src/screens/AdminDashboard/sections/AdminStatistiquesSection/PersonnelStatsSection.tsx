@@ -683,6 +683,25 @@ const PersonnelStatsSection = ({
                       });
                     }
 
+                    // Debug pour voir les données de chaque caissier
+                    if (activeTab === "CAISSIER") {
+                      console.log(`🔍 Données caissier ${index}:`, {
+                        nom: person.nom,
+                        prenom: person.prenom,
+                        nombreTransactions: person.nombreTransactions,
+                        montantTotal: person.montantTotal,
+                        paiementsEspeces: person.paiementsEspeces,
+                        paiementsCartes: person.paiementsCartes,
+                        paiementsWave: person.paiementsWave,
+                        paiementsMobile: person.paiementsMobile,
+                        performanceGlobale: person.performanceGlobale,
+                        scoreEfficacite: person.scoreEfficacite,
+                        role: person.role,
+                        _id: person._id,
+                        toutesLesCles: Object.keys(person),
+                      });
+                    }
+
                     return (
                       <tr
                         key={person._id || index}

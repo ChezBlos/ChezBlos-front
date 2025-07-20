@@ -53,6 +53,18 @@ export interface Order {
     prenom: string;
     photoProfil?: string;
   };
+  cuisinier?: {
+    _id: string;
+    nom: string;
+    prenom: string;
+    photoProfil?: string;
+  };
+  caissier?: {
+    _id: string;
+    nom: string;
+    prenom: string;
+    photoProfil?: string;
+  };
   dateCreation: string;
   dateModification?: string;
   createdAt: string;

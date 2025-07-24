@@ -29,7 +29,7 @@ export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
   const { user, logout } = useAuth();
   const [isChangePictureModalOpen, setIsChangePictureModalOpen] =
     useState(false);
-  const [profilePictureKey, setProfilePictureKey] = useState(Date.now()); // Pour forcer le rechargement de l'image
+  const [, setProfilePictureKey] = useState(Date.now()); // Pour forcer le rechargement de l'image
 
   // Fonction pour rafraîchir l'image de profil
   const handleProfileUpdated = () => {

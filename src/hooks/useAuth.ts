@@ -21,6 +21,9 @@ export const useAuthRedirect = () => {
         case "CUISINIER":
           navigate("/cuisine/dashboard", { replace: true });
           break;
+        case "BARMAN":
+          navigate("/cuisine/dashboard", { replace: true }); // Même dashboard que le cuisinier
+          break;
         default:
           navigate("/login", { replace: true });
       }

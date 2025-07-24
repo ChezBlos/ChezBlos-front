@@ -43,6 +43,7 @@ import { ProfileService } from "../../../../services/profileService";
 import NewOrderModal from "../../../../components/modals/NewOrderModal";
 import { OrderDetailsModal } from "../../../../components/modals/OrderDetailsModal";
 import { SendToCashierModal } from "../../../../components/modals/SendToCashierModal";
+import { ModifyPaymentMethodModal } from "../../../../components/modals/ModifyPaymentMethodModal";
 import { CancelOrderDialog } from "../../../../components/CancelOrderDialog";
 import { useAuth } from "../../../../contexts/AuthContext";
 import {
@@ -89,6 +90,12 @@ export const ServeurOrdersSection = (): JSX.Element => {
     useState<Order | null>(null);
   const [selectedCashierPaymentMethod, setSelectedCashierPaymentMethod] =
     useState<string>("");
+
+  // États pour la modification du mode de paiement
+  const [isModifyPaymentModalOpen, setIsModifyPaymentModalOpen] =
+    useState(false);
+  const [orderToModifyPayment, setOrderToModifyPayment] =
+    useState<Order | null>(null);
 
   // Récupération de l'utilisateur connecté
   const { user } = useAuth();
@@ -517,6 +524,29 @@ export const ServeurOrdersSection = (): JSX.Element => {
     setSelectedPaymentMethod(order.modePaiement || ""); // Initialiser avec le mode actuel
     setIsPaymentModalOpen(true);
     setActiveDropdown(null); // Fermer le dropdown
+  };
+
+  // Fonction pour ouvrir le modal de modification du mode de paiement
+  const handleModifyPaymentMethod = (order: Order) => {
+    setOrderToModifyPayment(order);
+    setIsModifyPaymentModalOpen(true);
+    setActiveDropdown(null); // Fermer le dropdown
+  };
+
+  // Fonction pour confirmer la modification du mode de paiement
+  const handleConfirmModifyPaymentMethod = async (
+    orderId: string,
+    newPaymentMethod: string
+  ) => {
+    try {
+      await OrderService.updatePaymentMethod(orderId, newPaymentMethod);
+      setIsModifyPaymentModalOpen(false);
+      setOrderToModifyPayment(null);
+      refetch(); // Actualiser la liste
+      refetchStats(); // Actualiser les statistiques
+    } catch (error: any) {
+      throw error; // Le modal gérera l'erreur
+    }
   }; // Fonction pour traiter le paiement
   const handleProcessPayment = async () => {
     if (!orderToPay || !selectedPaymentMethod) return;
@@ -913,8 +943,24 @@ export const ServeurOrdersSection = (): JSX.Element => {
                                 <span className="text-gray-700">
                                   Voir détails
                                 </span>
-                              </DropdownMenuItem>{" "}
-                              {/* Option Paiement pour toutes les commandes sauf annulées */}
+                              </DropdownMenuItem>
+                              {/* Option Modifier mode de paiement - disponible pour toutes les commandes sauf annulées */}
+                              {order.statut !== "ANNULE" && (
+                                <>
+                                  <DropdownMenuSeparator className="h-px bg-gray-200" />
+                                  <DropdownMenuItem
+                                    className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer font-medium text-sm"
+                                    onClick={() =>
+                                      handleModifyPaymentMethod(order)
+                                    }
+                                  >
+                                    <CreditCard size={20} />
+                                    <span className="text-gray-700">
+                                      Modifier mode de paiement
+                                    </span>
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                               {/* Option Envoyer à la caisse pour les commandes prêtes */}
                               {order.statut === "PRET" && (
                                 <>
@@ -1188,6 +1234,19 @@ export const ServeurOrdersSection = (): JSX.Element => {
                 description="Consulter les informations complètes"
                 variant="default"
               />
+              {/* Modifier mode de paiement - disponible pour toutes les commandes sauf annulées */}
+              {selectedOrderForActions.statut !== "ANNULE" && (
+                <BottomSheetAction
+                  onClick={() => {
+                    handleModifyPaymentMethod(selectedOrderForActions);
+                    handleCloseBottomSheet();
+                  }}
+                  icon={<CreditCard size={24} />}
+                  title="Modifier mode de paiement"
+                  description="Changer le mode de paiement de la commande"
+                  variant="default"
+                />
+              )}
               {/* Actions conditionnelles selon le statut */}
               {selectedOrderForActions.statut === "EN_ATTENTE" && (
                 <>
@@ -1608,6 +1667,16 @@ export const ServeurOrdersSection = (): JSX.Element => {
         }}
         onConfirm={handleConfirmCancel}
         orderNumber={cancelOrderData?.numeroCommande}
+      />
+      {/* Modal de modification du mode de paiement */}
+      <ModifyPaymentMethodModal
+        isOpen={isModifyPaymentModalOpen}
+        onClose={() => {
+          setIsModifyPaymentModalOpen(false);
+          setOrderToModifyPayment(null);
+        }}
+        order={orderToModifyPayment}
+        onConfirm={handleConfirmModifyPaymentMethod}
       />
     </section>
   );

@@ -98,7 +98,9 @@ export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
                   <p className="text-sm font-medium">
                     {user?.prenom} {user?.nom}
                   </p>
-                  <p className="text-xs text-muted-foreground">Cuisinier</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user?.role === "BARMAN" ? "Barman" : "Cuisinier"}
+                  </p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -195,7 +197,9 @@ export const CuisinierHeaderSection: React.FC<CuisinierHeaderSectionProps> = ({
                 <p className="text-base font-medium">
                   {user?.prenom} {user?.nom}
                 </p>
-                <p className="text-sm text-muted-foreground">Cuisinier</p>
+                <p className="text-sm text-muted-foreground">
+                  {user?.role === "BARMAN" ? "Barman" : "Cuisinier"}
+                </p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem

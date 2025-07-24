@@ -54,7 +54,7 @@ export interface ExportableUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER" | "BARMAN";
   actif: boolean;
   dateCreation: string;
 }
@@ -525,6 +525,10 @@ export class ExportService {
         return "Serveur";
       case "CUISINIER":
         return "Cuisinier";
+      case "CAISSIER":
+        return "Caissier";
+      case "BARMAN":
+        return "Barman";
       default:
         return role;
     }

@@ -20,10 +20,12 @@ import {
   ChefHatIcon,
   ShieldIcon,
   UserIcon,
+  CashRegisterIcon,
 } from "@phosphor-icons/react";
 import { useCreateUser } from "../../hooks/useUserAPI";
 import type { CreateUserRequest } from "../../services/userService";
 import { logger } from "../../utils/logger";
+import { Brandy } from "phosphor-react";
 
 interface AddStaffModalProps {
   isOpen: boolean;
@@ -343,6 +345,45 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                       </div>
                     </div>
 
+                    {/* Option Barman */}
+                    <div
+                      onClick={() => handleInputChange("role", "BARMAN")}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        formData.role === "BARMAN"
+                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
+                          : "border-gray-200 hover:border-brand-primary-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "BARMAN"
+                              ? "bg-brand-primary-500 text-brand-primary-50"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <Brandy className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">Barman</h4>
+                          <p className="text-sm text-gray-500">
+                            Préparation des boissons et des plats, accès cuisine
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "BARMAN"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "BARMAN" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Option Caissier */}
                     <div
                       onClick={() => handleInputChange("role", "CAISSIER")}
@@ -360,7 +401,7 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
                               : "bg-gray-10 text-gray-600"
                           }`}
                         >
-                          <UserIcon className="h-5 w-5" />
+                          <CashRegisterIcon className="h-5 w-5" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900">

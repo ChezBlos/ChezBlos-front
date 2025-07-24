@@ -30,7 +30,7 @@ interface StaffUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER" | "BARMAN";
   actif: boolean;
   photoProfil?: string;
   dateCreation: string;

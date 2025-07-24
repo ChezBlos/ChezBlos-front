@@ -19,11 +19,12 @@ import {
   CallBellIcon,
   ChefHatIcon,
   ShieldIcon,
-  UserIcon,
   PencilSimple,
+  CashRegisterIcon,
 } from "@phosphor-icons/react";
 import { useUpdateUser } from "../../hooks/useUserAPI";
 import { logger } from "../../utils/logger";
+import { Brandy } from "phosphor-react";
 
 // Type pour le formulaire local
 interface EditUserFormData {
@@ -31,7 +32,7 @@ interface EditUserFormData {
   prenom: string;
   email: string;
   telephone: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER" | "BARMAN";
   actif: boolean;
 }
 
@@ -41,7 +42,7 @@ interface StaffUser {
   prenom: string;
   email?: string;
   telephone?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER" | "BARMAN";
   actif: boolean;
   photoProfil?: string;
   dateCreation: string;
@@ -75,7 +76,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const { updateUser, loading, error } = useUpdateUser();
 
   // Fonction pour gérer le changement de rôle
-  const handleRoleChange = (role: "SERVEUR" | "CUISINIER" | "CAISSIER") => {
+  const handleRoleChange = (
+    role: "SERVEUR" | "CUISINIER" | "CAISSIER" | "BARMAN"
+  ) => {
     setFormData((prev) => ({
       ...prev,
       role: role,
@@ -403,6 +406,45 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       </div>
                     </div>
 
+                    {/* Option Barman */}
+                    <div
+                      onClick={() => handleRoleChange("BARMAN")}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        formData.role === "BARMAN"
+                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
+                          : "border-gray-200 hover:border-brand-primary-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "BARMAN"
+                              ? "bg-brand-primary-500 text-brand-primary-50"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <Brandy className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">Barman</h4>
+                          <p className="text-sm text-gray-500">
+                            Préparation des boissons et des plats, accès cuisine
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "BARMAN"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "BARMAN" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Option Caissier */}
                     <div
                       onClick={() => handleRoleChange("CAISSIER")}
@@ -420,7 +462,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                               : "bg-gray-10 text-gray-600"
                           }`}
                         >
-                          <UserIcon className="h-5 w-5" />
+                          <CashRegisterIcon className="h-5 w-5" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-900">

@@ -28,7 +28,7 @@ interface StaffUser {
   nom: string;
   prenom: string;
   email?: string;
-  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER";
+  role: "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER" | "BARMAN";
   actif: boolean;
   photoProfil?: string;
 }
@@ -132,6 +132,8 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
         return "Cuisinier";
       case "CAISSIER":
         return "Caissier";
+      case "BARMAN":
+        return "Barman";
       default:
         return role;
     }
@@ -143,6 +145,7 @@ export const AccessCodeModal: React.FC<AccessCodeModalProps> = ({
       SERVEUR: "bg-blue-100 text-blue-700",
       CUISINIER: "bg-purple-100 text-purple-700",
       CAISSIER: "bg-yellow-100 text-yellow-700",
+      BARMAN: "bg-red-100 text-red-700",
     };
 
     const colorClass = roleColors[role as keyof typeof roleColors];

@@ -5,7 +5,9 @@ import { SpinnerMedium } from "./ui/spinner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: Array<"ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER">;
+  allowedRoles?: Array<
+    "ADMIN" | "SERVEUR" | "CUISINIER" | "CAISSIER" | "BARMAN"
+  >;
   requiredRoles?: string[];
 }
 

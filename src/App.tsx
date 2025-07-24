@@ -97,7 +97,7 @@ const App: React.FC = () => {
                 <Route
                   path="/cuisine/*"
                   element={
-                    <ProtectedRoute requiredRoles={["CUISINIER"]}>
+                    <ProtectedRoute requiredRoles={["CUISINIER", "BARMAN"]}>
                       <Routes>
                         <Route
                           path="dashboard"

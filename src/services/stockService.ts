@@ -28,12 +28,64 @@ export interface StockStats {
   articlesCritiques: number;
 }
 
+export interface PaginatedStockResponse {
+  stockItems: StockItem[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+}
+
+export interface StockSearchParams {
+  page?: number;
+  limit?: number;
+  unite?: string;
+  alerte?: boolean;
+  perime?: boolean;
+}
+
 export class StockService {
   // Récupérer tous les articles de stock
   static async getStockItems(): Promise<StockItem[]> {
     try {
       const response = await api.get("/stock");
       return response.data.data.stockItems; // Correction ici
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Erreur lors de la récupération des articles de stock"
+      );
+    }
+  }
+
+  // Récupérer les articles de stock avec pagination
+  static async getStockItemsPaginated(
+    params: StockSearchParams = {}
+  ): Promise<PaginatedStockResponse> {
+    try {
+      const searchParams = new URLSearchParams();
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          searchParams.append(key, value.toString());
+        }
+      });
+
+      const response = await api.get(`/stock?${searchParams.toString()}`);
+      const data = response.data.data;
+
+      // Adapter la réponse du backend au format attendu
+      return {
+        stockItems: data.stockItems,
+        pagination: {
+          currentPage: data.currentPage,
+          totalPages: data.totalPages,
+          totalItems: data.total,
+          itemsPerPage: params.limit || 20,
+        },
+      };
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||

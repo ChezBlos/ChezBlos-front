@@ -22,12 +22,14 @@ export interface MenuByCategoryResponse {
 
 export interface PaginatedMenuResponse {
   data: MenuItemResponse[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
 }
 
 export enum MenuCategory {

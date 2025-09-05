@@ -30,8 +30,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../../../components/ui/dropdown-menu";
-import { useMenu } from "../../../../hooks/useMenu";
+import { MenuPagination } from "../../../../components/ui/MenuPagination";
+import { useMenuWithPagination } from "../../../../hooks/useMenuWithPagination";
 import { MenuItemResponse } from "../../../../types/menu";
+import { MenuService } from "../../../../services/menuService";
 import { useAlert } from "../../../../contexts/AlertContext";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
 import { AddMenuItemModal } from "../../../../components/modals/AddMenuItemModal";
@@ -68,16 +70,37 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  // État pour conserver le total global d'éléments (sans filtre)
+  const [totalItemsGlobal, setTotalItemsGlobal] = useState(0);
+  // États pour les statistiques globales (indépendantes du filtrage)
+  const [globalStats, setGlobalStats] = useState({
+    availableItems: 0,
+    unavailableItems: 0,
+    categories: {
+      PLAT_PRINCIPAL: 0,
+      ENTREE: 0,
+      DESSERT: 0,
+      BOISSON: 0,
+      ACCOMPAGNEMENT: 0,
+    },
+  });
+
   const {
     menuItems,
     loading,
     error,
+    pagination,
     refreshMenu,
+    setPage,
+    setSearch,
+    setCategorie,
+    setDisponible,
     createMenuItem,
     updateMenuItem,
     deleteMenuItem,
     toggleItemAvailability,
-  } = useMenu();
+  } = useMenuWithPagination({ limit: 20 });
+
   const { showAlert } = useAlert();
 
   // Fonction pour formater les catégories
@@ -92,20 +115,32 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
     return categoryMap[category] || category;
   };
 
-  // Log des changements dans menuItems
+  // Gestion de la recherche avec debounce
   React.useEffect(() => {
-    console.log("🔄 [ADMIN MENU] MenuItems changés:", {
-      count: menuItems?.length || 0,
-      items:
-        menuItems?.slice(0, 3).map((item) => ({
-          id: item._id,
-          nom: item.nom,
-          prix: item.prix,
-          categorie: item.categorie,
-          disponible: item.disponible,
-        })) || [],
-    });
-  }, [menuItems]);
+    const timeoutId = setTimeout(() => {
+      setSearch(searchTerm);
+    }, 500); // Debounce de 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, setSearch]);
+
+  // Gestion du filtrage par tab
+  React.useEffect(() => {
+    if (activeTab === "all") {
+      setCategorie("");
+      setDisponible(undefined);
+    } else if (activeTab === "available") {
+      setCategorie("");
+      setDisponible(true);
+    } else if (activeTab === "unavailable") {
+      setCategorie("");
+      setDisponible(false);
+    } else {
+      // C'est une catégorie spécifique
+      setCategorie(activeTab);
+      setDisponible(undefined);
+    }
+  }, [activeTab, setCategorie, setDisponible]);
 
   // Log des changements d'état
   React.useEffect(() => {
@@ -113,87 +148,114 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
       loading,
       error,
       menuItemsCount: menuItems?.length || 0,
+      pagination,
     });
-  }, [loading, error, menuItems]);
+  }, [loading, error, menuItems, pagination]);
 
-  // Filtrer les articles du menu
-  const filteredItems = useMemo(() => {
-    if (!menuItems) return [];
-
-    let filtered = menuItems.filter((item) => {
-      const matchesSearch =
-        item.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.description &&
-          item.description.toLowerCase().includes(searchTerm.toLowerCase()));
-      return matchesSearch;
-    });
-
-    // Filtrage par tab
-    if (activeTab === "available")
-      filtered = filtered.filter((item) => item.disponible);
-    if (activeTab === "unavailable")
-      filtered = filtered.filter((item) => !item.disponible);
-    if (
-      activeTab !== "all" &&
-      activeTab !== "available" &&
-      activeTab !== "unavailable"
-    ) {
-      filtered = filtered.filter((item) => item.categorie === activeTab);
+  // Sauvegarder le total global quand on est sur l'onglet "all" (sans filtres)
+  React.useEffect(() => {
+    if (activeTab === "all" && !loading && pagination.totalItems > 0) {
+      setTotalItemsGlobal(pagination.totalItems);
+      console.log(
+        "💾 [ADMIN MENU] Total global sauvegardé:",
+        pagination.totalItems
+      );
     }
+  }, [activeTab, loading, pagination.totalItems]);
 
-    return filtered;
-  }, [menuItems, searchTerm, activeTab]);
+  // Fonction pour récupérer les statistiques globales
+  const fetchGlobalStats = React.useCallback(async () => {
+    try {
+      console.log("📈 [ADMIN MENU] Récupération des statistiques globales...");
 
-  // Obtenir les catégories uniques
-  const categories = useMemo(() => {
-    if (!menuItems) return [];
-    return Array.from(new Set(menuItems.map((item) => item.categorie)));
-  }, [menuItems]);
-  // Calculs de statistiques
-  const stats = useMemo(() => {
-    console.log("📊 [ADMIN MENU] Calcul des stats avec:", menuItems);
-
-    if (!menuItems || !Array.isArray(menuItems)) {
-      console.log("⚠️ [ADMIN MENU] MenuItems invalide:", {
-        menuItems,
-        isArray: Array.isArray(menuItems),
+      // Récupérer tous les articles sans filtres pour les statistiques
+      const allItemsResponse = await MenuService.getMenuItems({
+        limit: 1000, // Grande limite pour récupérer tous les éléments
       });
-      return {
-        totalItems: 0,
-        availableItems: 0,
-        unavailableItems: 0,
-        totalRevenue: 0,
+
+      const allItems = allItemsResponse.data;
+
+      // Calculer les statistiques globales
+      const stats = {
+        availableItems: allItems.filter((item) => item.disponible).length,
+        unavailableItems: allItems.filter((item) => !item.disponible).length,
+        categories: {
+          PLAT_PRINCIPAL: allItems.filter(
+            (item) => item.categorie === "PLAT_PRINCIPAL"
+          ).length,
+          ENTREE: allItems.filter((item) => item.categorie === "ENTREE").length,
+          DESSERT: allItems.filter((item) => item.categorie === "DESSERT")
+            .length,
+          BOISSON: allItems.filter((item) => item.categorie === "BOISSON")
+            .length,
+          ACCOMPAGNEMENT: allItems.filter(
+            (item) => item.categorie === "ACCOMPAGNEMENT"
+          ).length,
+        },
       };
+
+      setGlobalStats(stats);
+      setTotalItemsGlobal(allItems.length);
+
+      console.log("✅ [ADMIN MENU] Statistiques globales récupérées:", stats);
+    } catch (error) {
+      console.error(
+        "❌ [ADMIN MENU] Erreur lors de la récupération des statistiques:",
+        error
+      );
     }
+  }, []);
 
-    const totalItems = menuItems.length;
-    const availableItems = menuItems.filter((item) => item.disponible).length;
-    const unavailableItems = menuItems.filter(
-      (item) => !item.disponible
-    ).length;
-    const totalRevenue = menuItems.reduce(
-      (sum, item) => sum + (item.prix || 0),
-      0
-    );
+  // Récupérer les statistiques globales au chargement initial
+  React.useEffect(() => {
+    fetchGlobalStats();
+  }, [fetchGlobalStats]);
 
-    const calculatedStats = {
-      totalItems,
-      availableItems,
-      unavailableItems,
-      totalRevenue,
+  // Obtenir les catégories uniques depuis le backend
+  const categories = useMemo(() => {
+    // Pour l'instant, utilisons les catégories prédéfinies
+    // Plus tard, on pourrait récupérer les catégories dynamiquement depuis l'API
+    return ["PLAT_PRINCIPAL", "ENTREE", "DESSERT", "BOISSON", "ACCOMPAGNEMENT"];
+  }, []);
+
+  // Calculs de statistiques à partir des données paginées
+  const stats = useMemo(() => {
+    console.log("📊 [ADMIN MENU] Calcul des stats avec pagination:", {
+      totalItems: pagination.totalItems,
+      currentPageItems: menuItems?.length || 0,
+    });
+
+    // Les stats sont maintenant basées sur le total global, pas seulement la page actuelle
+    return {
+      totalItems: totalItemsGlobal || pagination.totalItems || 0,
+      availableItems: menuItems?.filter((item) => item.disponible).length || 0,
+      unavailableItems:
+        menuItems?.filter((item) => !item.disponible).length || 0,
+      totalRevenue:
+        menuItems?.reduce((sum, item) => sum + (item.prix || 0), 0) || 0,
     };
-
-    console.log("📊 [ADMIN MENU] Stats calculées:", calculatedStats);
-
-    return calculatedStats;
-  }, [menuItems]);
+  }, [menuItems, pagination.totalItems, totalItemsGlobal]);
   const tabs = [
-    { id: "all", label: `Tous` },
-    { id: "available", label: `Disponibles` },
-    { id: "unavailable", label: `Indisponibles` },
+    {
+      id: "all",
+      label: "Tous",
+      count: totalItemsGlobal || 0,
+    },
+    {
+      id: "available",
+      label: "Disponibles",
+      count: globalStats.availableItems || 0,
+    },
+    {
+      id: "unavailable",
+      label: "Indisponibles",
+      count: globalStats.unavailableItems || 0,
+    },
     ...categories.map((cat) => ({
       id: cat,
-      label: `${formatCategory(cat)}`,
+      label: formatCategory(cat),
+      count:
+        globalStats.categories[cat as keyof typeof globalStats.categories] || 0,
     })),
   ];
 
@@ -207,6 +269,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
 
       setIsCreateModalOpen(false);
       await refreshMenu();
+      await fetchGlobalStats(); // Rafraîchir les statistiques globales
       showAlert("success", `Article "${newItem.nom}" créé avec succès !`);
     } catch (error) {
       const errorMessage =
@@ -232,6 +295,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
       setIsEditModalOpen(false);
       setSelectedItem(null);
       await refreshMenu();
+      await fetchGlobalStats(); // Rafraîchir les statistiques globales
       showAlert(
         "success",
         `Article "${updatedItem.nom}" modifié avec succès !`
@@ -259,6 +323,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
     try {
       await deleteMenuItem(itemToDelete.id);
       await refreshMenu();
+      await fetchGlobalStats(); // Rafraîchir les statistiques globales
       showAlert(
         "success",
         `Article "${itemToDelete.name}" supprimé avec succès !`
@@ -284,6 +349,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
       const updatedItem = await toggleItemAvailability(id);
       // Rafraîchir la liste pour avoir les dernières données du serveur
       await refreshMenu();
+      await fetchGlobalStats(); // Rafraîchir les statistiques globales
       const statusText = updatedItem.disponible ? "disponible" : "indisponible";
       showAlert(
         "success",
@@ -317,17 +383,21 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
     {
       title: "Total articles",
       mobileTitle: "Total",
-      value: loading ? "..." : stats.totalItems.toString(),
+      value: loading
+        ? "..."
+        : (totalItemsGlobal || pagination.totalItems || 0).toString(),
       subtitle: "Articles au menu",
       subtitleColor: "text-blue-500",
     },
     {
       title: "Disponibles",
       mobileTitle: "Dispo",
-      value: loading ? "..." : stats.availableItems.toString(),
+      value: loading ? "..." : (globalStats.availableItems || 0).toString(),
       subtitle: `${
-        stats.totalItems
-          ? Math.round((stats.availableItems / stats.totalItems) * 100)
+        totalItemsGlobal && totalItemsGlobal > 0
+          ? Math.round(
+              ((globalStats.availableItems || 0) / totalItemsGlobal) * 100
+            )
           : 0
       }% du total`,
       subtitleColor: "text-green-500",
@@ -335,10 +405,12 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
     {
       title: "Indisponibles",
       mobileTitle: "Indispo",
-      value: loading ? "..." : stats.unavailableItems.toString(),
+      value: loading ? "..." : (globalStats.unavailableItems || 0).toString(),
       subtitle: `${
-        stats.totalItems
-          ? Math.round((stats.unavailableItems / stats.totalItems) * 100)
+        totalItemsGlobal && totalItemsGlobal > 0
+          ? Math.round(
+              ((globalStats.unavailableItems || 0) / totalItemsGlobal) * 100
+            )
           : 0
       }% du total`,
       subtitleColor: "text-red-500",
@@ -348,7 +420,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
       mobileTitle: "Valeur",
       value: loading
         ? "..."
-        : new Intl.NumberFormat("fr-FR").format(stats.totalRevenue),
+        : new Intl.NumberFormat("fr-FR").format(stats.totalRevenue || 0),
       currency: loading ? "" : "XOF",
       subtitle: `Prix cumulé`,
       subtitleColor: "text-orange-500",
@@ -464,10 +536,12 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
                     value={tab.id}
                     className="flex items-center justify-start gap-2 px-3 md:px-4 lg:px-6 py-3 md:py-4 lg:py-5 rounded-none data-[state=active]:border-b-4 data-[state=active]:border-orange-500 data-[state=active]:text-gray-900 data-[state=inactive]:text-gray-600 whitespace-nowrap flex-shrink-0"
                   >
-                    {" "}
                     <span className="font-semibold text-xs md:text-sm truncate">
                       {tab.label}
                     </span>
+                    <Badge className="bg-brand-primary-500 text-white text-xs ml-1 px-2 py-1 rounded-full">
+                      {tab.count}
+                    </Badge>
                   </TabsTrigger>
                 ))}
               </TabsList>{" "}
@@ -479,7 +553,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
               <div className="flex items-center justify-center h-40">
                 <Spinner className="h-8 w-8" />
               </div>
-            ) : filteredItems.length === 0 ? (
+            ) : menuItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-gray-500">
                 <ForkKnife size={48} className="mb-4 text-gray-300" />
                 <p className="text-lg font-medium">Aucun article trouvé</p>
@@ -515,7 +589,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredItems.map((item) => (
+                      {menuItems.map((item: MenuItemResponse) => (
                         <TableRow
                           key={item._id}
                           className="border-b bg-white border-slate-100 hover:bg-gray-10 transition-colors"
@@ -635,7 +709,7 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
                 </div>{" "}
                 {/* Mobile Cards */}
                 <div className="md:hidden">
-                  {filteredItems.map((item) => (
+                  {menuItems.map((item: MenuItemResponse) => (
                     <Card
                       key={item._id}
                       className="mb-4 overflow-hidden border-none"
@@ -763,6 +837,17 @@ export const AdminMenuSection: React.FC<AdminMenuSectionProps> = ({}) => {
                   ))}
                 </div>
               </>
+            )}
+
+            {/* Pagination */}
+            {!loading && menuItems.length > 0 && (
+              <MenuPagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                itemsPerPage={pagination.itemsPerPage}
+                onPageChange={setPage}
+              />
             )}
           </div>
         </Card>{" "}

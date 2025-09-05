@@ -18,10 +18,10 @@ import {
   Trash,
   ArrowClockwise,
   DotsThreeVerticalIcon,
-  DownloadIcon,
 } from "@phosphor-icons/react";
 import { Spinner } from "../../../../components/ui/spinner";
-import { useStockItems } from "../../../../hooks/useStockAPI";
+import { useStockWithPagination } from "../../../../hooks/useStockWithPagination";
+import MenuPagination from "../../../../components/ui/MenuPagination";
 import AddStockModal from "../../../../components/modals/AddStockModal";
 import EditStockModal from "../../../../components/modals/EditStockModal";
 import { StockItem, StockService } from "../../../../services/stockService";
@@ -34,11 +34,6 @@ import {
 } from "../../../../components/ui/dropdown-menu";
 import AdjustStockModal from "./AdjustStockModal";
 import { ConfirmationModal } from "../../../../components/modals/ConfirmationModal";
-import { FileSpreadsheet, FileText } from "lucide-react";
-import {
-  ExportService,
-  ExportableStockItem,
-} from "../../../../services/exportService";
 
 export const AdminStockSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,20 +44,12 @@ export const AdminStockSection: React.FC = () => {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<StockItem | null>(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const { data: stockItems, loading, error, refetch } = useStockItems();
 
-  // Filtrage basé sur les vraies données
-  const filteredItems = useMemo(() => {
-    if (!stockItems || !Array.isArray(stockItems)) return [];
-    let filtered = stockItems.filter(
-      (item) =>
-        item.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.categorie?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.fournisseur?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    return filtered;
-  }, [stockItems, searchTerm]);
+  const { stockItems, loading, error, pagination, refreshStock, setPage } =
+    useStockWithPagination({ limit: 20 });
+
+  // Données à afficher (maintenant paginées côté serveur)
+  const displayItems = stockItems || [];
 
   // Calculs de statistiques
   const stats = useMemo(() => {
@@ -100,64 +87,19 @@ export const AdminStockSection: React.FC = () => {
   const getStatusBadge = (quantiteStock: number, seuilAlerte: number) => {
     if (quantiteStock === 0) {
       return {
-        color: "bg-red-100 text-red-800",
+        color: "bg-red-100 border border-red-200 text-red-800",
         label: "Rupture",
       };
     } else if (quantiteStock <= seuilAlerte) {
       return {
-        color: "bg-orange-100 text-orange-800",
+        color: "bg-orange-100 border border-orange-200 text-orange-800",
         label: "Stock faible",
       };
     } else {
       return {
-        color: "bg-green-100 text-green-800",
+        color: "bg-green-100 border border-green-200 text-green-800",
         label: "En stock",
       };
-    }
-  };
-
-  const handleExportToExcel = async () => {
-    if (!filteredItems || filteredItems.length === 0) return;
-    setIsExporting(true);
-    try {
-      await ExportService.exportStockToExcel(
-        filteredItems as ExportableStockItem[]
-      );
-      // Optionnel: afficher une alerte de succès
-    } catch (error) {
-      alert("Erreur lors de l'export Excel du stock. Veuillez réessayer.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  const handleExportToPDF = async () => {
-    if (!filteredItems || filteredItems.length === 0) return;
-    setIsExporting(true);
-    try {
-      await ExportService.exportStockToPDF(
-        filteredItems as ExportableStockItem[]
-      );
-      // Optionnel: afficher une alerte de succès
-    } catch (error) {
-      alert("Erreur lors de l'export PDF du stock. Veuillez réessayer.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  const handleExportStats = async () => {
-    if (!filteredItems || filteredItems.length === 0) return;
-    setIsExporting(true);
-    try {
-      await ExportService.exportStockStats(
-        filteredItems as ExportableStockItem[]
-      );
-      // Optionnel: afficher une alerte de succès
-    } catch (error) {
-      alert(
-        "Erreur lors de l'export des statistiques du stock. Veuillez réessayer."
-      );
-    } finally {
-      setIsExporting(false);
     }
   };
 
@@ -267,56 +209,11 @@ export const AdminStockSection: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={refetch}
+                  onClick={refreshStock}
                   className="flex items-center rounded-full gap-2 h-10 md:h-12 px-3 md:px-4"
                 >
                   <ArrowClockwise className="h-4 w-4" />
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="sm"
-                      className="bg-orange-500 hover:bg-orange-600 flex rounded-full items-center gap-2 h-10 md:h-12 px-3 md:px-4"
-                      disabled={
-                        isExporting ||
-                        !filteredItems ||
-                        filteredItems.length === 0
-                      }
-                    >
-                      {isExporting ? (
-                        <Spinner className="h-4 w-4" />
-                      ) : (
-                        <>
-                          <DownloadIcon className="h-4 w-4" />
-                          <span className="hidden sm:inline">Exporter</span>
-                        </>
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={handleExportToExcel}
-                      disabled={isExporting}
-                    >
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Exporter en Excel
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleExportToPDF}
-                      disabled={isExporting}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Exporter en PDF
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleExportStats}
-                      disabled={isExporting}
-                    >
-                      <DownloadIcon className="h-4 w-4 mr-2" />
-                      Statistiques Excel
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
                 <Button
                   className="bg-orange-500 hover:bg-orange-600 flex rounded-full items-center gap-2 h-10 md:h-12 px-3 md:px-4"
                   onClick={() => setIsAddModalOpen(true)}
@@ -329,7 +226,7 @@ export const AdminStockSection: React.FC = () => {
           </div>
           {/* Table Content */}
           <div className="w-full">
-            {filteredItems.length === 0 ? (
+            {displayItems.length === 0 && !loading ? (
               <div className="flex flex-col items-center justify-center h-40 text-gray-500">
                 <Package size={48} className="mb-4 text-gray-300" />
                 <p className="text-lg font-medium">Aucun article trouvé</p>
@@ -370,7 +267,7 @@ export const AdminStockSection: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredItems.map((item) => {
+                      {displayItems.map((item) => {
                         const statusBadge = getStatusBadge(
                           item.quantiteStock,
                           item.seuilAlerte
@@ -408,7 +305,7 @@ export const AdminStockSection: React.FC = () => {
                             </TableCell>
                             <TableCell className="py-4 px-4 lg:px-6">
                               <Badge
-                                className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}
+                                className={`flex items-center justify-center max-w-28 px-2 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}
                               >
                                 {statusBadge.label}
                               </Badge>
@@ -461,7 +358,7 @@ export const AdminStockSection: React.FC = () => {
                 </div>
                 {/* Mobile Cards */}
                 <div className="md:hidden">
-                  {filteredItems.map((item) => {
+                  {displayItems.map((item) => {
                     const statusBadge = getStatusBadge(
                       item.quantiteStock,
                       item.seuilAlerte
@@ -537,6 +434,17 @@ export const AdminStockSection: React.FC = () => {
                 </div>
               </>
             )}
+
+            {/* Pagination */}
+            {!loading && displayItems.length > 0 && (
+              <MenuPagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                itemsPerPage={pagination.itemsPerPage}
+                onPageChange={setPage}
+              />
+            )}
           </div>
         </Card>
       </div>
@@ -548,7 +456,7 @@ export const AdminStockSection: React.FC = () => {
           try {
             await StockService.createStockItem(formData);
             setIsAddModalOpen(false);
-            refetch();
+            refreshStock();
           } catch (err: any) {
             alert(err.message || "Erreur lors de l'ajout de l'article");
           }
@@ -562,7 +470,7 @@ export const AdminStockSection: React.FC = () => {
           try {
             await StockService.updateStockItem(id, formData);
             setIsEditModalOpen(false);
-            refetch();
+            refreshStock();
           } catch (err: any) {
             alert(err.message || "Erreur lors de la modification de l'article");
           }
@@ -578,7 +486,7 @@ export const AdminStockSection: React.FC = () => {
         }}
         stockItem={selectedItem}
         onSuccess={() => {
-          refetch();
+          refreshStock();
           setIsAdjustModalOpen(false);
           setSelectedItem(null);
         }}
@@ -597,7 +505,7 @@ export const AdminStockSection: React.FC = () => {
             setIsDeleteLoading(false);
             setIsDeleteModalOpen(false);
             setItemToDelete(null);
-            refetch();
+            refreshStock();
           } catch (err: any) {
             setIsDeleteLoading(false);
             alert(err.message || "Erreur lors de la suppression de l'article");
@@ -617,3 +525,5 @@ export const AdminStockSection: React.FC = () => {
     </section>
   );
 };
+
+export default AdminStockSection;

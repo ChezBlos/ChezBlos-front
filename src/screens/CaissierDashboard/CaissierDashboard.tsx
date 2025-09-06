@@ -8,6 +8,21 @@ import { useOrders, useOrderStats } from "../../hooks/useOrderAPI";
 import { useToast } from "../../hooks/useToast";
 import ToastContainer from "../../components/ui/toast-container";
 
+// Configuration des logs
+const LOG_LEVEL = import.meta.env.VITE_LOG_LEVEL || "debug";
+const ENABLE_LOGS =
+  LOG_LEVEL !== "error" &&
+  (import.meta.env.DEV || import.meta.env.VITE_DEBUG_DASHBOARD === "true");
+
+/**
+ * Fonction de logging conditionnel pour le dashboard
+ */
+function logDashboard(message: string, ...args: any[]) {
+  if (ENABLE_LOGS) {
+    console.log(`🏠 [CAISSIER-DASHBOARD] ${message}`, ...args);
+  }
+}
+
 export const CaissierDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,12 +30,12 @@ export const CaissierDashboard: React.FC = () => {
   // Récupération de la section depuis l'URL
   const getSectionFromUrl = (): "commandes" | "historique" => {
     const path = location.pathname;
-    console.log("🌐 [CaissierDashboard] Current path:", path);
+    logDashboard("Current path:", path);
     if (path.includes("/historique")) {
-      console.log("📜 [CaissierDashboard] Detected historique section");
+      logDashboard("Detected historique section");
       return "historique";
     }
-    console.log("📝 [CaissierDashboard] Detected commandes section (default)");
+    logDashboard("Detected commandes section (default)");
     return "commandes";
   };
 
@@ -53,24 +68,17 @@ export const CaissierDashboard: React.FC = () => {
   };
 
   const renderContent = () => {
-    console.log(
-      "🔍 [CaissierDashboard] renderContent called, selectedSection:",
-      selectedSection
-    );
+    logDashboard("renderContent called, selectedSection:", selectedSection);
 
     switch (selectedSection) {
       case "commandes":
-        console.log("📝 [CaissierDashboard] Rendering CaissierOrderSection");
+        logDashboard("Rendering CaissierOrderSection");
         return <CaissierOrderSection onRefresh={handleRefresh} />;
       case "historique":
-        console.log(
-          "📜 [CaissierDashboard] Rendering CaissierHistoriqueSection"
-        );
+        logDashboard("Rendering CaissierHistoriqueSection");
         return <CaissierHistoriqueSection onRefresh={handleRefresh} />;
       default:
-        console.log(
-          "🔄 [CaissierDashboard] Default case, rendering CaissierOrderSection"
-        );
+        logDashboard("Default case, rendering CaissierOrderSection");
         return <CaissierOrderSection onRefresh={handleRefresh} />;
     }
   };

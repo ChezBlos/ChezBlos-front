@@ -6,6 +6,21 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "http://localhost:3000/api";
 
+// Configuration des logs
+const LOG_LEVEL = import.meta.env.VITE_LOG_LEVEL || "debug";
+const ENABLE_LOGS =
+  LOG_LEVEL !== "error" &&
+  (import.meta.env.DEV || import.meta.env.VITE_DEBUG_ORDERS === "true");
+
+/**
+ * Fonction de logging conditionnel pour le service de commandes
+ */
+function logOrder(message: string, ...args: any[]) {
+  if (ENABLE_LOGS) {
+    console.log(`📋 [ORDER-SERVICE] ${message}`, ...args);
+  }
+}
+
 // Configuration axios avec intercepteurs
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -26,20 +41,20 @@ apiClient.interceptors.request.use((config) => {
 export class OrderService {
   // Créer une nouvelle commande
   static async createOrder(data: CreateOrderRequest): Promise<Order> {
-    console.log("🌐 [OrderService] Début de createOrder");
-    console.log("📤 [OrderService] URL:", `/orders`);
-    console.log("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
+    logOrder("Début de createOrder");
+    logOrder("URL:", `/orders`);
+    logOrder("Données:", JSON.stringify(data, null, 2));
 
     try {
       const response = await apiClient.post("/orders", data);
 
-      console.log("📡 [OrderService] Statut de la réponse:", response.status);
-      console.log("✅ [OrderService] Résultat du backend:", response.data);
-      console.log("🏁 [OrderService] Fin de createOrder");
+      logOrder("Statut de la réponse:", response.status);
+      logOrder("Résultat du backend:", response.data);
+      logOrder("Fin de createOrder");
 
       return response.data.data;
     } catch (error: any) {
-      console.log("❌ [OrderService] Erreur du backend:", error.response?.data);
+      logOrder("Erreur du backend:", error.response?.data);
       throw new Error(
         error.response?.data?.message ||
           "Erreur lors de la création de la commande"
@@ -49,26 +64,26 @@ export class OrderService {
   static async getOrders(): Promise<Order[]> {
     try {
       const response = await apiClient.get("/orders");
-      console.log("📦 [OrderService] API response complet:", response.data);
+      logOrder("API response complet:", response.data);
 
       // S'assurer qu'on retourne toujours un tableau
       const data = response.data.data;
-      console.log("📦 [OrderService] Data extrait:", data);
+      logOrder("Data extrait:", data);
 
       // Vérifier la structure de la réponse
       if (data && typeof data === "object") {
         // Si la structure est { orders: [], totalPages: ..., etc }
         if (Array.isArray(data.orders)) {
-          console.log(
-            "✅ [OrderService] Structure avec data.orders trouvée, nombre de commandes:",
+          logOrder(
+            "Structure avec data.orders trouvée, nombre de commandes:",
             data.orders.length
           );
           return data.orders;
         }
         // Si c'est directement un tableau
         else if (Array.isArray(data)) {
-          console.log(
-            "✅ [OrderService] Structure tableau direct trouvée, nombre de commandes:",
+          logOrder(
+            "Structure tableau direct trouvée, nombre de commandes:",
             data.length
           );
           return data;
@@ -185,20 +200,20 @@ export class OrderService {
     id: string,
     data: CreateOrderRequest
   ): Promise<Order> {
-    console.log("🌐 [OrderService] Début de updateOrderComplete");
-    console.log("📤 [OrderService] URL:", `/orders/${id}/complete`);
-    console.log("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
+    logOrder("🌐 [OrderService] Début de updateOrderComplete");
+    logOrder("📤 [OrderService] URL:", `/orders/${id}/complete`);
+    logOrder("📦 [OrderService] Données:", JSON.stringify(data, null, 2));
 
     try {
       const response = await apiClient.put(`/orders/${id}/complete`, data);
 
-      console.log("📡 [OrderService] Statut de la réponse:", response.status);
-      console.log("✅ [OrderService] Résultat du backend:", response.data);
-      console.log("🏁 [OrderService] Fin de updateOrderComplete");
+      logOrder("📡 [OrderService] Statut de la réponse:", response.status);
+      logOrder("✅ [OrderService] Résultat du backend:", response.data);
+      logOrder("🏁 [OrderService] Fin de updateOrderComplete");
 
       return response.data.data;
     } catch (error: any) {
-      console.log("❌ [OrderService] Erreur du backend:", error.response?.data);
+      logOrder("❌ [OrderService] Erreur du backend:", error.response?.data);
       throw new Error(
         error.response?.data?.error ||
           error.response?.data?.message ||

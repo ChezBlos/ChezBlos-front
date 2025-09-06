@@ -43,7 +43,7 @@ export const CaissierHistoriqueSection: React.FC<{
 
   // Récupération des hooks
   const { data: allOrders, loading, error } = useOrders();
-  const { data: apiStats } = useOrderStats();
+  useOrderStats();
 
   const {
     isPrintModalOpen,

@@ -17,8 +17,10 @@ const CLOUDINARY_CONFIG = {
 };
 
 // Configuration des logs
+const LOG_LEVEL = import.meta.env.VITE_LOG_LEVEL || "debug";
 const ENABLE_LOGS =
-  import.meta.env.DEV || import.meta.env.VITE_DEBUG_IMAGES === "true";
+  LOG_LEVEL !== "error" &&
+  (import.meta.env.DEV || import.meta.env.VITE_DEBUG_IMAGES === "true");
 
 /**
  * Fonction de logging conditionnel pour les images

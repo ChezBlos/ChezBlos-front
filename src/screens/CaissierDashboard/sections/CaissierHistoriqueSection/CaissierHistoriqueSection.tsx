@@ -45,12 +45,6 @@ export const CaissierHistoriqueSection: React.FC<{
   const { data: allOrders, loading, error } = useOrders();
   const { data: apiStats } = useOrderStats();
 
-  // Debug logs
-  console.log("🔍 [CaissierHistoriqueSection] Debug:");
-  console.log("- allOrders:", allOrders);
-  console.log("- loading:", loading);
-  console.log("- error:", error);
-
   const {
     isPrintModalOpen,
     selectedOrderToPrint,
@@ -136,24 +130,35 @@ export const CaissierHistoriqueSection: React.FC<{
         totalCommandes: 0,
         montantTotal: 0,
         commandesAujourdhui: 0,
+        chiffreAffairesJour: 0,
       };
 
     const totalCommandes = completedOrders.length;
 
-    // Utiliser le chiffre d'affaires total depuis l'API
-    const montantTotal = apiStats?.chiffreAffairesJour || 0;
+    // Calculer le montant total de TOUTES les commandes terminées
+    const montantTotal = completedOrders.reduce((total, order) => {
+      return total + (order.montantTotal || 0);
+    }, 0);
 
     // Calculer les commandes d'aujourd'hui
     const commandesAujourdhui = completedOrders.filter((order) =>
       isToday(order.dateCreation)
     ).length;
 
+    // Calculer le chiffre d'affaires du jour uniquement
+    const chiffreAffairesJour = completedOrders
+      .filter((order) => isToday(order.dateCreation))
+      .reduce((total, order) => {
+        return total + (order.montantTotal || 0);
+      }, 0);
+
     return {
       totalCommandes,
       montantTotal,
       commandesAujourdhui,
+      chiffreAffairesJour,
     };
-  }, [completedOrders, isToday, apiStats?.chiffreAffairesJour]);
+  }, [completedOrders, isToday]);
 
   // Formatters
   const formatPrice = (price: number): string =>
@@ -356,6 +361,29 @@ export const CaissierHistoriqueSection: React.FC<{
               <div className="flex items-start gap-1 w-full min-w-0">
                 <span className="font-medium text-xs md:text-sm text-green-500 truncate w-full">
                   Toutes périodes confondues
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
+          <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
+            <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
+              CA aujourd'hui
+            </h3>
+            <div className="flex flex-col items-start gap-1 w-full min-w-0">
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
+                  {formatPrice(stats.chiffreAffairesJour)}
+                </span>
+                <span className="font-bold text-xl md:text-3xl truncate text-gray-500">
+                  XOF
+                </span>
+              </div>
+              <div className="flex items-start gap-1 w-full min-w-0">
+                <span className="font-medium text-xs md:text-sm text-blue-500 truncate w-full">
+                  Revenus du jour
                 </span>
               </div>
             </div>

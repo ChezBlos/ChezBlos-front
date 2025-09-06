@@ -15,7 +15,12 @@ export const CaissierDashboard: React.FC = () => {
   // Récupération de la section depuis l'URL
   const getSectionFromUrl = (): "commandes" | "historique" => {
     const path = location.pathname;
-    if (path.includes("/historique")) return "historique";
+    console.log("🌐 [CaissierDashboard] Current path:", path);
+    if (path.includes("/historique")) {
+      console.log("📜 [CaissierDashboard] Detected historique section");
+      return "historique";
+    }
+    console.log("📝 [CaissierDashboard] Detected commandes section (default)");
     return "commandes";
   };
 
@@ -48,12 +53,24 @@ export const CaissierDashboard: React.FC = () => {
   };
 
   const renderContent = () => {
+    console.log(
+      "🔍 [CaissierDashboard] renderContent called, selectedSection:",
+      selectedSection
+    );
+
     switch (selectedSection) {
       case "commandes":
+        console.log("📝 [CaissierDashboard] Rendering CaissierOrderSection");
         return <CaissierOrderSection onRefresh={handleRefresh} />;
       case "historique":
+        console.log(
+          "📜 [CaissierDashboard] Rendering CaissierHistoriqueSection"
+        );
         return <CaissierHistoriqueSection onRefresh={handleRefresh} />;
       default:
+        console.log(
+          "🔄 [CaissierDashboard] Default case, rendering CaissierOrderSection"
+        );
         return <CaissierOrderSection onRefresh={handleRefresh} />;
     }
   };

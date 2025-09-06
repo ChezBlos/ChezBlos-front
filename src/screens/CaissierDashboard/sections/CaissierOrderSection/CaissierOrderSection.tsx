@@ -257,9 +257,9 @@ export const CaissierOrderSection: React.FC<CaissierOrderSectionProps> = ({
 
   return (
     <div className="px-3 md:px-6 lg:px-12 xl:px-20 py-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Section Menu - 2/3 de l'écran */}
-        <div className="lg:col-span-2">
+      <div className="flex flex-col lg:flex-row gap-6 min-h-screen">
+        {/* Section Menu - Flexible width */}
+        <div className="flex-1 lg:flex-[2]">
           <Card className="rounded-3xl">
             <CardContent className="p-6 rounded-3xl">
               <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -344,251 +344,257 @@ export const CaissierOrderSection: React.FC<CaissierOrderSectionProps> = ({
           </Card>
         </div>
 
-        {/* Section Panier - 1/3 de l'écran */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-6 rounded-3xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Panier</h2>
-                {cart.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearCart}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg px-3 py-1.5"
-                  >
-                    Vider
-                  </Button>
-                )}
-              </div>
-
-              {cart.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Panier vide</p>
-                  <p className="text-sm">Cliquez sur un plat pour l'ajouter</p>
-                </div>
-              ) : (
-                <>
-                  {/* Articles du panier */}
-                  <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                    {cart.map((item) => (
-                      <div
-                        key={item.menuItem._id}
-                        className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm"
-                      >
-                        <div className="w-14 h-14 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
-                          <img
-                            src={getMenuImageUrl(item.menuItem.image)}
-                            alt={item.menuItem.nom}
-                            className="w-full h-full object-cover"
-                            onError={handleImageError}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate text-gray-900">
-                            {item.menuItem.nom}
-                          </p>
-                          <p className="text-sm font-medium text-orange-600">
-                            {item.menuItem.prix} FCFA
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4 p-2 rounded-[1000px] border border-solid border-slate-200">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
-                            onClick={() =>
-                              updateQuantity(
-                                item.menuItem._id,
-                                item.quantite - 1
-                              )
-                            }
-                          >
-                            <Minus className="h-4 w-4 text-white" />
-                          </Button>
-                          <span className="font-semibold text-base text-gray-900 min-w-[2ch] text-center">
-                            {item.quantite.toString().padStart(2, "0")}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
-                            onClick={() =>
-                              updateQuantity(
-                                item.menuItem._id,
-                                item.quantite + 1
-                              )
-                            }
-                          >
-                            <Plus className="h-4 w-4 text-white" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Total */}
-                  <div className="border-t border-gray-200 pt-4 mb-6">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold text-gray-700">
-                        Total:
-                      </span>
-                      <span className="text-2xl font-bold text-orange-600">
-                        {totalPanier} FCFA
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Formulaire de paiement */}
-                  {!showPaymentForm ? (
+        {/* Section Panier - Fixed width and sticky */}
+        <div className="w-full lg:w-80 lg:flex-shrink-0">
+          <div className="sticky top-4 h-fit">
+            <Card className="rounded-3xl shadow-lg border border-gray-200">
+              <CardContent className="p-6 flex flex-col max-h-[calc(100vh-4rem)]">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">Panier</h2>
+                  {cart.length > 0 && (
                     <Button
-                      onClick={() => setShowPaymentForm(true)}
-                      className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-2xl transition-colors"
-                      size="lg"
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearCart}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg px-3 py-1.5"
                     >
-                      <Calculator className="w-5 h-5 mr-2" />
-                      Procéder au paiement
+                      Vider
                     </Button>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Mode de paiement */}
-                      <div>
-                        <label className="block text-sm font-medium mb-3 text-gray-900">
-                          Mode de paiement
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {paymentMethods.map((method) => (
-                            <div
-                              key={method.id}
-                              onClick={() => setModePaiement(method.id as any)}
-                              className={`relative p-3 rounded-2xl border-2 cursor-pointer transition-all ${
-                                modePaiement === method.id
-                                  ? "border-orange-500 bg-orange-50"
-                                  : "border-gray-200 bg-white hover:border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                                  {method.isImage ? (
-                                    <img
-                                      src={method.imageSrc}
-                                      alt={method.label}
-                                      className="w-10 h-10 object-cover"
-                                    />
-                                  ) : (
-                                    method.icon
-                                  )}
-                                </div>
-                                <span className="font-medium text-gray-900 text-sm">
-                                  {method.label}
-                                </span>
-                              </div>
-                              {modePaiement === method.id && (
-                                <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                                  <svg
-                                    className="w-3 h-3 text-white"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                  )}
+                </div>
 
-                      {/* Montant payé */}
-                      {modePaiement && (
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <label className="block text-sm font-medium text-gray-900">
-                              {modePaiement === "ESPECES"
-                                ? "Montant reçu"
-                                : "Montant payé"}
-                            </label>
+                {cart.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Panier vide</p>
+                    <p className="text-sm">
+                      Cliquez sur un plat pour l'ajouter
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Articles du panier */}
+                    <div className="flex-1 space-y-3 mb-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      {cart.map((item) => (
+                        <div
+                          key={item.menuItem._id}
+                          className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm"
+                        >
+                          <div className="w-14 h-14 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
+                            <img
+                              src={getMenuImageUrl(item.menuItem.image)}
+                              alt={item.menuItem.nom}
+                              className="w-full h-full object-cover"
+                              onError={handleImageError}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate text-gray-900">
+                              {item.menuItem.nom}
+                            </p>
+                            <p className="text-sm font-medium text-orange-600">
+                              {item.menuItem.prix} FCFA
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4 p-2 rounded-[1000px] border border-solid border-slate-200">
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
+                              className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
                               onClick={() =>
-                                setMontantRecu(totalPanier.toString())
+                                updateQuantity(
+                                  item.menuItem._id,
+                                  item.quantite - 1
+                                )
                               }
-                              className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2 py-1"
                             >
-                              Montant exact
+                              <Minus className="h-4 w-4 text-white" />
+                            </Button>
+                            <span className="font-semibold text-base text-gray-900 min-w-[2ch] text-center">
+                              {item.quantite.toString().padStart(2, "0")}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
+                              onClick={() =>
+                                updateQuantity(
+                                  item.menuItem._id,
+                                  item.quantite + 1
+                                )
+                              }
+                            >
+                              <Plus className="h-4 w-4 text-white" />
                             </Button>
                           </div>
-                          <Input
-                            type="number"
-                            placeholder="Montant reçu en FCFA"
-                            value={montantRecu}
-                            onChange={(e) => setMontantRecu(e.target.value)}
-                            className="rounded-xl border-gray-300 "
-                          />
-                          {modePaiement === "ESPECES" &&
-                            montantRecuNumber > 0 &&
-                            monnaie >= 0 && (
-                              <p className="text-sm text-green-600 mt-2">
-                                Monnaie à rendre: {monnaie} FCFA
-                              </p>
-                            )}
-                          {modePaiement === "ESPECES" &&
-                            montantRecuNumber > 0 &&
-                            monnaie < 0 && (
-                              <p className="text-sm text-red-600 mt-2">
-                                Montant insuffisant: {Math.abs(monnaie)} FCFA
-                                manquants
-                              </p>
-                            )}
-                          {modePaiement !== "ESPECES" &&
-                            montantRecuNumber > 0 &&
-                            montantRecuNumber !== totalPanier && (
-                              <p className="text-sm text-blue-600 mt-2">
-                                Différence:{" "}
-                                {montantRecuNumber > totalPanier ? "+" : ""}
-                                {montantRecuNumber - totalPanier} FCFA
-                              </p>
-                            )}
-                          {montantRecuNumber === 0 && (
-                            <p className="text-sm text-gray-500 mt-2">
-                              Montant dû: {totalPanier} FCFA
-                            </p>
-                          )}
                         </div>
-                      )}
+                      ))}
+                    </div>
 
-                      {/* Boutons d'action */}
-                      <div className="flex gap-3 mt-6">
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowPaymentForm(false)}
-                          className="flex-1 py-2.5 rounded-xl border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                          Retour
-                        </Button>
-                        <Button
-                          onClick={handleProcessOrder}
-                          className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl"
-                          disabled={
-                            !modePaiement ||
-                            (modePaiement === "ESPECES" &&
-                              montantRecuNumber < totalPanier)
-                          }
-                        >
-                          Valider
-                        </Button>
+                    {/* Total */}
+                    <div className="border-t border-gray-200 pt-4 mb-6">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-700">
+                          Total:
+                        </span>
+                        <span className="text-2xl font-bold text-orange-600">
+                          {totalPanier} FCFA
+                        </span>
                       </div>
                     </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
+
+                    {/* Formulaire de paiement */}
+                    {!showPaymentForm ? (
+                      <Button
+                        onClick={() => setShowPaymentForm(true)}
+                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-2xl transition-colors"
+                        size="lg"
+                      >
+                        <Calculator className="w-5 h-5 mr-2" />
+                        Procéder au paiement
+                      </Button>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Mode de paiement */}
+                        <div>
+                          <label className="block text-sm font-medium mb-3 text-gray-900">
+                            Mode de paiement
+                          </label>
+                          <div className="grid grid-cols-2 gap-3">
+                            {paymentMethods.map((method) => (
+                              <div
+                                key={method.id}
+                                onClick={() =>
+                                  setModePaiement(method.id as any)
+                                }
+                                className={`relative p-3 rounded-2xl border-2 cursor-pointer transition-all ${
+                                  modePaiement === method.id
+                                    ? "border-orange-500 bg-orange-50"
+                                    : "border-gray-200 bg-white hover:border-gray-300"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                                    {method.isImage ? (
+                                      <img
+                                        src={method.imageSrc}
+                                        alt={method.label}
+                                        className="w-10 h-10 object-cover"
+                                      />
+                                    ) : (
+                                      method.icon
+                                    )}
+                                  </div>
+                                  <span className="font-medium text-gray-900 text-sm">
+                                    {method.label}
+                                  </span>
+                                </div>
+                                {modePaiement === method.id && (
+                                  <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                                    <svg
+                                      className="w-3 h-3 text-white"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Montant payé */}
+                        {modePaiement && (
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-sm font-medium text-gray-900">
+                                {modePaiement === "ESPECES"
+                                  ? "Montant reçu"
+                                  : "Montant payé"}
+                              </label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  setMontantRecu(totalPanier.toString())
+                                }
+                                className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2 py-1"
+                              >
+                                Montant exact
+                              </Button>
+                            </div>
+                            <Input
+                              type="number"
+                              placeholder="Montant reçu en FCFA"
+                              value={montantRecu}
+                              onChange={(e) => setMontantRecu(e.target.value)}
+                              className="rounded-xl border-gray-300 "
+                            />
+                            {modePaiement === "ESPECES" &&
+                              montantRecuNumber > 0 &&
+                              monnaie >= 0 && (
+                                <p className="text-sm text-green-600 mt-2">
+                                  Monnaie à rendre: {monnaie} FCFA
+                                </p>
+                              )}
+                            {modePaiement === "ESPECES" &&
+                              montantRecuNumber > 0 &&
+                              monnaie < 0 && (
+                                <p className="text-sm text-red-600 mt-2">
+                                  Montant insuffisant: {Math.abs(monnaie)} FCFA
+                                  manquants
+                                </p>
+                              )}
+                            {modePaiement !== "ESPECES" &&
+                              montantRecuNumber > 0 &&
+                              montantRecuNumber !== totalPanier && (
+                                <p className="text-sm text-blue-600 mt-2">
+                                  Différence:{" "}
+                                  {montantRecuNumber > totalPanier ? "+" : ""}
+                                  {montantRecuNumber - totalPanier} FCFA
+                                </p>
+                              )}
+                            {montantRecuNumber === 0 && (
+                              <p className="text-sm text-gray-500 mt-2">
+                                Montant dû: {totalPanier} FCFA
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Boutons d'action */}
+                        <div className="flex gap-3 mt-6">
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowPaymentForm(false)}
+                            className="flex-1 py-2.5 rounded-xl border-gray-300 text-gray-700 hover:bg-gray-50"
+                          >
+                            Retour
+                          </Button>
+                          <Button
+                            onClick={handleProcessOrder}
+                            className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl"
+                            disabled={
+                              !modePaiement ||
+                              (modePaiement === "ESPECES" &&
+                                montantRecuNumber < totalPanier)
+                            }
+                          >
+                            Valider
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 

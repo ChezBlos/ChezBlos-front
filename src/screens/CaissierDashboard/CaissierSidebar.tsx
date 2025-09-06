@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "../../components/ui/button";
 import { ClipboardText } from "phosphor-react";
-import { CallBellIcon } from "@phosphor-icons/react";
+import { ShoppingCart } from "lucide-react";
 
 interface CaissierSidebarProps {
   selected: "commandes" | "historique";
@@ -25,8 +25,8 @@ export const CaissierSidebar: React.FC<CaissierSidebarProps> = ({
         }`}
         onClick={() => onSelect("commandes")}
       >
-        <CallBellIcon size={40} />
-        <span>Commandes</span>
+        <ShoppingCart size={40} />
+        <span>Nouvelle Commande</span>
       </Button>
 
       <Button

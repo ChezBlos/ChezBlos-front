@@ -1,12 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { OrderService } from "../services/orderService";
 import api from "../services/api";
-import {
-  Order,
-  CreateOrderRequest,
-  OrderStats,
-  KitchenOrder,
-} from "../types/order";
+import { Order, CreateOrderRequest, OrderStats } from "../types/order";
 import { logger } from "../utils/logger";
 
 // Hook pour récupérer les commandes
@@ -122,7 +117,7 @@ export const useOrderStats = () => {
 
 // Hook pour les commandes de cuisine
 export const useKitchenOrders = () => {
-  const [data, setData] = useState<KitchenOrder[]>([]);
+  const [data, setData] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,7 +126,8 @@ export const useKitchenOrders = () => {
       setLoading(true);
       setError(null);
       const result = await OrderService.getKitchenOrders();
-      setData(result);
+      // Assurer que result est un tableau
+      setData(Array.isArray(result) ? result : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
     } finally {

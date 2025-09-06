@@ -19,15 +19,15 @@ export interface OrderItem {
 
 export interface CreateOrderRequest {
   items: OrderItem[];
-  numeroTable?: number;
   notes?: string;
-  modePaiement?:
+  modePaiement:
     | "ESPECES"
     | "CARTE_BANCAIRE"
     | "WAVE"
     | "MTN_MONEY"
     | "ORANGE_MONEY"
     | "MOOV_MONEY";
+  montantPaye?: number; // Pour les paiements en espèces
 }
 
 export interface Order {
@@ -35,38 +35,19 @@ export interface Order {
   _id: string;
   numeroCommande: string;
   items: OrderItem[];
-  montantTotal: number; // Changé de "total" à "montantTotal" pour correspondre au backend
-  statut:
-    | "EN_ATTENTE"
-    | "EN_PREPARATION"
-    | "EN_COURS"
-    | "PRET"
-    | "EN_ATTENTE_PAIEMENT"
-    | "TERMINE"
-    | "ANNULE";
-  numeroTable?: number; // Changé de "table" à "numeroTable"
+  montantTotal: number;
+  statut: "TERMINE" | "ANNULE";
   notes?: string;
-  modePaiement?: string;
-  serveur: {
-    _id: string;
-    nom: string;
-    prenom: string;
-    photoProfil?: string;
-  };
-  cuisinier?: {
-    _id: string;
-    nom: string;
-    prenom: string;
-    photoProfil?: string;
-  };
-  caissier?: {
+  modePaiement: string;
+  montantPaye?: number; // Montant donné par le client (pour espèces)
+  monnaie?: number; // Monnaie à rendre (pour espèces)
+  caissier: {
     _id: string;
     nom: string;
     prenom: string;
     photoProfil?: string;
   };
   dateCreation: string;
-  dateModification?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,15 +56,9 @@ export interface OrderStats {
   total: number;
   aujourdhui: number;
   hier: number;
-  enAttente: number;
-  enPreparation: number;
-  enCours: number;
-  pret: number;
-  enAttentePaiement: number;
   termine: number;
   annule: number;
   chiffreAffairesJour: number;
-  chiffreAffairesMois: number;
 }
 
 export interface PaginatedOrdersResponse {

@@ -122,7 +122,6 @@ export const SendToCashierModal: React.FC<SendToCashierModalProps> = ({
                     Commande #{order.numeroCommande}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Table {order.numeroTable} •{" "}
                     {formatPrice(order.montantTotal)} XOF
                   </p>
                 </div>

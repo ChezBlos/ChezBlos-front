@@ -325,167 +325,6 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   </Label>
 
                   <div className="grid grid-cols-1 gap-3">
-                    {/* Option Serveur */}
-                    <div
-                      onClick={() => handleRoleChange("SERVEUR")}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.role === "SERVEUR"
-                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
-                          : "border-gray-200 hover:border-brand-primary-500"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            formData.role === "SERVEUR"
-                              ? "bg-brand-primary-500 text-brand-primary-50"
-                              : "bg-gray-10 text-gray-600"
-                          }`}
-                        >
-                          <CallBellIcon className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">Serveur</h4>
-                          <p className="text-sm text-gray-500">
-                            Service en salle, prise de commandes
-                          </p>
-                        </div>
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 ${
-                            formData.role === "SERVEUR"
-                              ? "border-brand-primary-500 bg-brand-primary-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {formData.role === "SERVEUR" && (
-                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Option Cuisinier */}
-                    <div
-                      onClick={() => handleRoleChange("CUISINIER")}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.role === "CUISINIER"
-                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
-                          : "border-gray-200 hover:border-brand-primary-500"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            formData.role === "CUISINIER"
-                              ? "bg-brand-primary-500 text-brand-primary-50"
-                              : "bg-gray-10 text-gray-600"
-                          }`}
-                        >
-                          <ChefHatIcon className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">
-                            Cuisinier
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Préparation des commandes en cuisine, pas d'accès
-                            caisse
-                          </p>
-                        </div>
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 ${
-                            formData.role === "CUISINIER"
-                              ? "border-brand-primary-500 bg-brand-primary-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {formData.role === "CUISINIER" && (
-                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Option Barman */}
-                    <div
-                      onClick={() => handleRoleChange("BARMAN")}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.role === "BARMAN"
-                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
-                          : "border-gray-200 hover:border-brand-primary-500"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            formData.role === "BARMAN"
-                              ? "bg-brand-primary-500 text-brand-primary-50"
-                              : "bg-gray-10 text-gray-600"
-                          }`}
-                        >
-                          <Brandy className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">Barman</h4>
-                          <p className="text-sm text-gray-500">
-                            Préparation des boissons et des plats, accès cuisine
-                          </p>
-                        </div>
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 ${
-                            formData.role === "BARMAN"
-                              ? "border-brand-primary-500 bg-brand-primary-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {formData.role === "BARMAN" && (
-                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Option Caissier */}
-                    <div
-                      onClick={() => handleRoleChange("CAISSIER")}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.role === "CAISSIER"
-                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
-                          : "border-gray-200 hover:border-brand-primary-500"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-full ${
-                            formData.role === "CAISSIER"
-                              ? "bg-brand-primary-500 text-white"
-                              : "bg-gray-10 text-gray-600"
-                          }`}
-                        >
-                          <CashRegisterIcon className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">
-                            Caissier
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Service en salle avec accès complet à la caisse
-                          </p>
-                        </div>
-                        <div
-                          className={`w-4 h-4 rounded-full border-2 ${
-                            formData.role === "CAISSIER"
-                              ? "border-brand-primary-500 bg-brand-primary-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {formData.role === "CAISSIER" && (
-                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Option Administrateur */}
                     <div
                       onClick={() =>
@@ -542,6 +381,146 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                           }`}
                         >
                           {formData.role === "ADMIN" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Option Caissier */}
+                    <div
+                      onClick={() => handleRoleChange("CAISSIER")}
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        formData.role === "CAISSIER"
+                          ? "border-brand-primary-500 bg-brand-primary-50 shadow-sm"
+                          : "border-gray-200 hover:border-brand-primary-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "CAISSIER"
+                              ? "bg-brand-primary-500 text-white"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <CashRegisterIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            Caissier
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Service en salle avec accès complet à la caisse
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "CAISSIER"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "CAISSIER" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Option Serveur */}
+                    <div className="border-2 border-gray-200 rounded-lg p-4 opacity-50 cursor-not-allowed">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "SERVEUR"
+                              ? "bg-brand-primary-500 text-brand-primary-50"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <CallBellIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">Serveur</h4>
+                          <p className="text-sm text-gray-500">
+                            Service en salle, prise de commandes
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "SERVEUR"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "SERVEUR" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Option Cuisinier */}
+                    <div className="border-2 border-gray-200 rounded-lg p-4 opacity-50 cursor-not-allowed">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "CUISINIER"
+                              ? "bg-brand-primary-500 text-brand-primary-50"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <ChefHatIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">
+                            Cuisinier
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Préparation des commandes en cuisine, pas d'accès
+                            caisse
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "CUISINIER"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "CUISINIER" && (
+                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Option Barman */}
+                    <div className="border-2 border-gray-200 rounded-lg p-4 opacity-50 cursor-not-allowed">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`p-2 rounded-full ${
+                            formData.role === "BARMAN"
+                              ? "bg-brand-primary-500 text-brand-primary-50"
+                              : "bg-gray-10 text-gray-600"
+                          }`}
+                        >
+                          <Brandy className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900">Barman</h4>
+                          <p className="text-sm text-gray-500">
+                            Préparation des boissons et des plats, accès cuisine
+                          </p>
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            formData.role === "BARMAN"
+                              ? "border-brand-primary-500 bg-brand-primary-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {formData.role === "BARMAN" && (
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>

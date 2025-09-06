@@ -61,10 +61,9 @@ export const AdminHistoriqueSection: React.FC = () => {
         order.numeroCommande
           ?.toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        `${order.serveur?.nom} ${order.serveur?.prenom}`
+        `${order.caissier?.nom} ${order.caissier?.prenom}`
           .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        order.numeroTable?.toString().includes(searchTerm)
+          .includes(searchTerm.toLowerCase())
     );
 
     // Filtrage par statut
@@ -633,10 +632,7 @@ export const AdminHistoriqueSection: React.FC = () => {
                           N° Commande
                         </TableHead>
                         <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                          Serveur
-                        </TableHead>
-                        <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
-                          N° Table
+                          Caissier
                         </TableHead>
                         <TableHead className="text-left py-4 px-4 lg:px-6 font-semibold text-gray-700">
                           Articles
@@ -671,14 +667,14 @@ export const AdminHistoriqueSection: React.FC = () => {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                              {/* Photo de profil du serveur */}
+                              {/* Photo de profil du caissier */}
                               <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                {order.serveur?.photoProfil ? (
+                                {order.caissier?.photoProfil ? (
                                   <img
                                     src={ProfileService.getProfilePictureUrl(
-                                      order.serveur.photoProfil
+                                      order.caissier.photoProfil
                                     )}
-                                    alt={order.serveur?.prenom || "Serveur"}
+                                    alt={order.caissier?.prenom || "Caissier"}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       const target =
@@ -700,20 +696,15 @@ export const AdminHistoriqueSection: React.FC = () => {
                               </div>
                               <div className="flex flex-col min-w-0">
                                 <div className="font-semibold text-base text-gray-900">
-                                  {order.serveur
-                                    ? order.serveur.prenom
+                                  {order.caissier
+                                    ? order.caissier.prenom
                                     : "Non défini"}
                                 </div>
                                 <div className="font-medium text-sm text-gray-500">
-                                  Serveur
+                                  Caissier
                                 </div>
                               </div>
                             </div>
-                          </TableCell>
-                          <TableCell className="py-4 px-4 lg:px-6">
-                            <span className="font-semibold text-lg text-gray-900">
-                              {order.numeroTable || "Non définie"}
-                            </span>
                           </TableCell>
                           <TableCell className="py-4 px-4 lg:px-6">
                             <div className="text-sm">
@@ -805,23 +796,19 @@ export const AdminHistoriqueSection: React.FC = () => {
                                 <span className="font-bold text-lg text-gray-900 truncate">
                                   #{order.numeroCommande}
                                 </span>
-                                <span className="text-gray-400">•</span>
-                                <span className="font-medium text-sm text-gray-600">
-                                  Table {order.numeroTable || "N/A"}
-                                </span>
                               </div>
                               <div className="flex items-center gap-2 mb-3">
                                 <span className="font-medium text-sm text-gray-600">
                                   Par:{" "}
                                 </span>
-                                {/* Photo de profil du serveur */}
+                                {/* Photo de profil du caissier */}
                                 <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                  {order.serveur?.photoProfil ? (
+                                  {order.caissier?.photoProfil ? (
                                     <img
                                       src={ProfileService.getProfilePictureUrl(
-                                        order.serveur.photoProfil
+                                        order.caissier.photoProfil
                                       )}
-                                      alt={order.serveur?.prenom || "Serveur"}
+                                      alt={order.caissier?.prenom || "Caissier"}
                                       className="w-full h-full object-cover"
                                       onError={(e) => {
                                         const target =
@@ -842,8 +829,8 @@ export const AdminHistoriqueSection: React.FC = () => {
                                   )}
                                 </div>
                                 <span className="font-medium text-sm text-orange-600">
-                                  {order.serveur
-                                    ? order.serveur.prenom
+                                  {order.caissier
+                                    ? order.caissier.prenom
                                     : "Non défini"}
                                 </span>
                               </div>

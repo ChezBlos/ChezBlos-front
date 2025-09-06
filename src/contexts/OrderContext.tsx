@@ -84,7 +84,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       });
       setOrderItems(convertedItems);
       setOrderNotes(orderToEdit.notes || "");
-      setTableNumber(orderToEdit.numeroTable?.toString() || "");
     }
   }, [isEditMode, orderToEdit]);
 
@@ -176,9 +175,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
           quantite: item.quantity,
           notes: item.notes || "",
         })),
-        numeroTable: tableNumber ? parseInt(tableNumber) : undefined,
         notes: orderNotes || undefined,
-        // Mode de paiement sera défini lors de l'envoi à la caisse
+        modePaiement: "ESPECES", // Mode de paiement par défaut pour le nouveau workflow
       };
       let result: Order;
 

@@ -42,8 +42,14 @@ export const CaissierHistoriqueSection: React.FC<{
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   // Récupération des hooks
-  const { data: allOrders, loading } = useOrders();
+  const { data: allOrders, loading, error } = useOrders();
   const { data: apiStats } = useOrderStats();
+
+  // Debug logs
+  console.log("🔍 [CaissierHistoriqueSection] Debug:");
+  console.log("- allOrders:", allOrders);
+  console.log("- loading:", loading);
+  console.log("- error:", error);
 
   const {
     isPrintModalOpen,
@@ -73,8 +79,8 @@ export const CaissierHistoriqueSection: React.FC<{
       .filter((order) => order.statut === "TERMINE")
       .sort(
         (a, b) =>
-          new Date(b.dateModification || b.dateCreation).getTime() -
-          new Date(a.dateModification || a.dateCreation).getTime()
+          new Date(b.updatedAt || b.createdAt).getTime() -
+          new Date(a.updatedAt || a.createdAt).getTime()
       );
   }, [allOrders]);
 
@@ -88,7 +94,6 @@ export const CaissierHistoriqueSection: React.FC<{
           order.numeroCommande
             ?.toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          order.numeroTable?.toString().includes(searchTerm) ||
           order.items.some((item) => {
             const menuItem =
               typeof item.menuItem === "object" && item.menuItem !== null
@@ -136,7 +141,7 @@ export const CaissierHistoriqueSection: React.FC<{
     const totalCommandes = completedOrders.length;
 
     // Utiliser le chiffre d'affaires total depuis l'API
-    const montantTotal = apiStats?.chiffreAffairesMois || 0;
+    const montantTotal = apiStats?.chiffreAffairesJour || 0;
 
     // Calculer les commandes d'aujourd'hui
     const commandesAujourdhui = completedOrders.filter((order) =>
@@ -148,7 +153,7 @@ export const CaissierHistoriqueSection: React.FC<{
       montantTotal,
       commandesAujourdhui,
     };
-  }, [completedOrders, isToday, apiStats?.chiffreAffairesMois]);
+  }, [completedOrders, isToday, apiStats?.chiffreAffairesJour]);
 
   // Formatters
   const formatPrice = (price: number): string =>
@@ -273,6 +278,19 @@ export const CaissierHistoriqueSection: React.FC<{
       <section className="flex flex-col w-full mb-10 px-3 md:px-6 lg:px-12 gap-4 md:gap-6">
         <div className="flex items-center justify-center p-8">
           <SpinnerMedium />
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="flex flex-col w-full mb-10 px-3 md:px-6 lg:px-12 gap-4 md:gap-6">
+        <div className="flex items-center justify-center p-8">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-red-600 mb-2">Erreur</h3>
+            <p className="text-gray-600">{error}</p>
+          </div>
         </div>
       </section>
     );
@@ -423,11 +441,6 @@ export const CaissierHistoriqueSection: React.FC<{
                       >
                         <TableCell className="px-4 py-3 font-medium">
                           {order.numeroCommande || order._id}
-                          {order.numeroTable && (
-                            <div className="text-sm text-gray-500">
-                              Table {order.numeroTable}
-                            </div>
-                          )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <div className="font-medium">

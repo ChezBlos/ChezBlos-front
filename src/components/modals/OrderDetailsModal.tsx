@@ -160,23 +160,11 @@ export const OrderDetailsModal = ({
             </p>
           </div>{" "}
           {/* Additional Information */}
-          {(order.numeroTable ||
-            order.notes ||
-            order.modePaiement ||
-            order.motifAnnulation) && (
+          {(order.notes || order.modePaiement || order.motifAnnulation) && (
             <div className="mb-6 space-y-3">
               <h4 className="font-title-t5-semibold text-gray-900">
                 Informations complémentaires
               </h4>
-
-              {order.numeroTable && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Table:</span>
-                  <span className="font-medium text-gray-900">
-                    {order.numeroTable}
-                  </span>
-                </div>
-              )}
 
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-600">Paiement:</span>

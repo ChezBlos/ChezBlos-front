@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CaissierHeaderSection } from "./sections/CaissierHeaderSection/CaissierHeaderSection";
-import { CaissierOrdersSection } from "./sections/CaissierOrdersSection/CaissierOrdersSection";
+import { CaissierOrderSection } from "./sections/CaissierOrderSection/CaissierOrderSection";
 import { CaissierHistoriqueSection } from "./sections/CaissierHistoriqueSection/CaissierHistoriqueSection";
 import { CaissierSidebar } from "./CaissierSidebar";
 import { useOrders, useOrderStats } from "../../hooks/useOrderAPI";
@@ -50,11 +50,11 @@ export const CaissierDashboard: React.FC = () => {
   const renderContent = () => {
     switch (selectedSection) {
       case "commandes":
-        return <CaissierOrdersSection onRefresh={handleRefresh} />;
+        return <CaissierOrderSection onRefresh={handleRefresh} />;
       case "historique":
         return <CaissierHistoriqueSection onRefresh={handleRefresh} />;
       default:
-        return <CaissierOrdersSection onRefresh={handleRefresh} />;
+        return <CaissierOrderSection onRefresh={handleRefresh} />;
     }
   };
 
@@ -81,8 +81,10 @@ export const CaissierDashboard: React.FC = () => {
         <div className="w-full min-w-0 pb-20 lg:pb-0">
           <div className="px-3 md:px-6 lg:px-12 xl:px-20 pt-6">
             <h1 className="text-3xl font-bold text-gray-900">
-              Dashboard Caissier -{" "}
-              {selectedSection === "commandes" ? "Commandes" : "Historique"}
+              Prise de Commande -{" "}
+              {selectedSection === "commandes"
+                ? "Nouvelle Commande"
+                : "Historique"}
             </h1>
           </div>
           {renderContent()}

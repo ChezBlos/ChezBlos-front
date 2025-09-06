@@ -1,4 +1,4 @@
-import { SearchIcon, RefreshCw, Printer, Eye, Edit3 } from "lucide-react";
+import { SearchIcon, RefreshCw, Printer, Eye } from "lucide-react";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Badge } from "../../../../components/ui/badge";
 import { OrderStatusBadge } from "../../../../components/ui/order-status-badge";
@@ -52,18 +52,17 @@ interface CashierOrderItem {
 }
 
 // Type pour les commandes du caissier
-interface CashierOrder extends Omit<Order, "items" | "numeroTable"> {
+interface CashierOrder extends Omit<Order, "items"> {
   numero: string;
   items: CashierOrderItem[];
-  serveur: any;
-  modePaiement?: string;
-  numeroTable?: string; // Redéfini comme string pour éviter le conflit avec number
+  caissier: any; // Changé de serveur à caissier pour le nouveau workflow
+  modePaiement: string; // Obligatoire dans le nouveau workflow
 }
 
 // Type pour les statistiques du caissier
 interface CashierStats {
-  en_attente_paiement: number;
   termine: number;
+  annule: number;
   total: number;
 }
 
@@ -95,7 +94,7 @@ export const CaissierOrdersSection: React.FC<{
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string | null>(
-    "EN_ATTENTE_PAIEMENT"
+    "TERMINE"
   );
 
   // Effect pour le debounce
@@ -134,8 +133,8 @@ export const CaissierOrdersSection: React.FC<{
     useState<CashierOrder | null>(null);
   const [orders, setOrders] = useState<CashierOrder[]>([]);
   const [stats, setStats] = useState<CashierStats>({
-    en_attente_paiement: 0,
     termine: 0,
+    annule: 0,
     total: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -169,8 +168,8 @@ export const CaissierOrdersSection: React.FC<{
   useEffect(() => {
     if (apiStats) {
       const cashierStats: CashierStats = {
-        en_attente_paiement: apiStats.enAttentePaiement || 0,
         termine: apiStats.termine || 0,
+        annule: apiStats.annule || 0,
         total: apiStats.total,
       };
       setStats(cashierStats);
@@ -182,19 +181,19 @@ export const CaissierOrdersSection: React.FC<{
   const statusTabs = useMemo(() => {
     // Calculer les commandes de chaque type pour aujourd'hui
     let allTodayOrders: CashierOrder[] = [];
-    let pendingOrders: CashierOrder[] = [];
     let completedOrders: CashierOrder[] = [];
+    let cancelledOrders: CashierOrder[] = [];
 
     if (allOrders) {
       // Filtrer pour obtenir toutes les commandes du jour, indépendamment du statut sélectionné
       allTodayOrders = allOrders
         .filter((order: Order) => isToday(order.dateCreation))
         .map((order: Order) => order as unknown as CashierOrder);
-      pendingOrders = allTodayOrders.filter(
-        (order) => order.statut === "EN_ATTENTE_PAIEMENT"
-      );
       completedOrders = allTodayOrders.filter(
         (order) => order.statut === "TERMINE"
+      );
+      cancelledOrders = allTodayOrders.filter(
+        (order) => order.statut === "ANNULE"
       );
     }
 
@@ -206,16 +205,16 @@ export const CaissierOrdersSection: React.FC<{
         active: selectedStatus === null,
       },
       {
-        id: "EN_ATTENTE_PAIEMENT",
-        label: "En attente",
-        count: pendingOrders.length,
-        active: selectedStatus === "EN_ATTENTE_PAIEMENT",
-      },
-      {
         id: "TERMINE",
         label: "Terminées",
         count: completedOrders.length,
         active: selectedStatus === "TERMINE",
+      },
+      {
+        id: "ANNULE",
+        label: "Annulées",
+        count: cancelledOrders.length,
+        active: selectedStatus === "ANNULE",
       },
     ];
   }, [allOrders, selectedStatus]);
@@ -236,9 +235,7 @@ export const CaissierOrdersSection: React.FC<{
             ({
               ...order,
               numero: order.numeroCommande || order._id,
-              numeroTable: order.numeroTable
-                ? String(order.numeroTable)
-                : undefined,
+              caissier: order.caissier, // Utiliser caissier au lieu de serveur
               items: order.items.map((item: OrderItem, index: number) => ({
                 _id: `${order._id}-item-${index}`,
                 menuItem:
@@ -273,15 +270,13 @@ export const CaissierOrdersSection: React.FC<{
                     order.items.some((item) =>
                       item.nom?.toLowerCase().includes(searchLower)
                     )) ||
-                  (order.serveur &&
-                    typeof order.serveur === "object" &&
-                    order.serveur.nom &&
-                    order.serveur.prenom &&
-                    (order.serveur.nom + " " + order.serveur.prenom)
+                  (order.caissier &&
+                    typeof order.caissier === "object" &&
+                    order.caissier.nom &&
+                    order.caissier.prenom &&
+                    (order.caissier.nom + " " + order.caissier.prenom)
                       .toLowerCase()
-                      .includes(searchLower)) ||
-                  (order.numeroTable &&
-                    order.numeroTable.toString().includes(debouncedSearchTerm))
+                      .includes(searchLower))
                 ) {
                   todayOrders.push(order);
                 }
@@ -461,9 +456,7 @@ export const CaissierOrdersSection: React.FC<{
             ({
               ...order,
               numero: order.numeroCommande || order._id,
-              numeroTable: order.numeroTable
-                ? String(order.numeroTable)
-                : undefined,
+              caissier: order.caissier, // Utiliser caissier au lieu de serveur
               items: order.items.map((item: OrderItem, index: number) => ({
                 _id: `${order._id}-item-${index}`,
                 menuItem:
@@ -504,15 +497,13 @@ export const CaissierOrdersSection: React.FC<{
                     order.items.some((item) =>
                       item.nom?.toLowerCase().includes(searchLower)
                     )) ||
-                  (order.serveur &&
-                    typeof order.serveur === "object" &&
-                    order.serveur.nom &&
-                    order.serveur.prenom &&
-                    (order.serveur.nom + " " + order.serveur.prenom)
+                  (order.caissier &&
+                    typeof order.caissier === "object" &&
+                    order.caissier.nom &&
+                    order.caissier.prenom &&
+                    (order.caissier.nom + " " + order.caissier.prenom)
                       .toLowerCase()
-                      .includes(searchLower)) ||
-                  (order.numeroTable &&
-                    order.numeroTable.toString().includes(debouncedSearchTerm))
+                      .includes(searchLower))
                 ) {
                   todayOrders.push(order);
                 }
@@ -632,12 +623,9 @@ export const CaissierOrdersSection: React.FC<{
 
   // Fonction pour afficher les actions sur une commande
   const renderOrderActions = (order: CashierOrder) => {
-    const isAwaitingPayment = order.statut === "EN_ATTENTE_PAIEMENT";
     const isCompleted = order.statut === "TERMINE";
-    const canCancel =
-      order.statut === "EN_ATTENTE" ||
-      order.statut === "EN_PREPARATION" ||
-      order.statut === "EN_COURS";
+    // Dans le nouveau workflow simplifié, les commandes sont directement créées comme terminées
+    const canCancel = order.statut === "TERMINE"; // Permettre l'annulation des commandes terminées
 
     return (
       <DropdownMenu>
@@ -657,19 +645,14 @@ export const CaissierOrdersSection: React.FC<{
             <span>Voir détails</span>
           </DropdownMenuItem>
 
-          {(isAwaitingPayment || isCompleted) && (
+          {isCompleted && (
             <DropdownMenuItem onClick={() => handleConfirmPaymentMethod(order)}>
               <Printer className="h-4 w-4 mr-2" />
-              <span>{isCompleted ? "Réimprimer reçu" : "Imprimer ticket"}</span>
+              <span>Réimprimer reçu</span>
             </DropdownMenuItem>
           )}
 
-          {isAwaitingPayment && (
-            <DropdownMenuItem onClick={() => handleConfirmPaymentMethod(order)}>
-              <Edit3 className="h-4 w-4 mr-2" />
-              <span>Modifier le mode de paiement</span>
-            </DropdownMenuItem>
-          )}
+          {/* Option de modification supprimée car commandes directement terminées */}
 
           {canCancel && (
             <DropdownMenuItem
@@ -767,12 +750,12 @@ export const CaissierOrdersSection: React.FC<{
         <Card className="flex-1 bg-white rounded-2xl md:rounded-3xl overflow-hidden min-w-0">
           <CardContent className="flex flex-col items-start gap-2 md:gap-3 p-4 md:p-6">
             <h3 className="font-semibold text-sm md:text-lg text-gray-900 truncate w-full">
-              En attente de paiement
+              Commandes terminées
             </h3>
             <div className="flex flex-col items-start gap-1 w-full min-w-0">
               <div className="flex items-start gap-1 w-full min-w-0">
                 <span className="font-bold text-xl md:text-3xl text-gray-900 truncate">
-                  {statsLoading ? "..." : stats.en_attente_paiement || 0}
+                  {statsLoading ? "..." : stats.termine || 0}
                 </span>
               </div>
               <div className="flex items-start gap-1 w-full min-w-0">
@@ -974,21 +957,16 @@ export const CaissierOrdersSection: React.FC<{
                                 .slice(0, 2)
                                 .map((item) => item.nom)
                                 .join(", ")}
-                              {order.items.length > 2 && "..."} • {}
-                              {order.numeroTable && (
-                                <span className="text-sm font-semibold text-gray-500">
-                                  Table {order.numeroTable}
-                                </span>
-                              )}
+                              {order.items.length > 2 && "..."}
                             </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        {order.serveur ? (
+                        {order.caissier ? (
                           <div>
                             <div className="font-medium">
-                              {order.serveur.prenom} {order.serveur.nom}
+                              {order.caissier.prenom} {order.caissier.nom}
                             </div>
                           </div>
                         ) : (

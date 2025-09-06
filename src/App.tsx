@@ -12,8 +12,6 @@ import { AlertContainer } from "./components/AlertContainer";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./screens/Login";
 import { AdminDashboard } from "./screens/AdminDashboard";
-import { ServeurDashboard } from "./screens/ServeurDashboard";
-import { CuisinierDashboard } from "./screens/CuisinierDashboard";
 import { CaissierDashboard } from "./screens/CaissierDashboard";
 import { NotFound, Unauthorized } from "./screens/ErrorPages";
 
@@ -53,25 +51,8 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
-                {/* Routes protégées pour serveur */}
-                <Route
-                  path="/serveur/*"
-                  element={
-                    <ProtectedRoute requiredRoles={["SERVEUR"]}>
-                      <Routes>
-                        <Route
-                          path="dashboard"
-                          element={<ServeurDashboard />}
-                        />
-                        <Route
-                          path=""
-                          element={<Navigate to="dashboard" replace />}
-                        />
-                      </Routes>
-                    </ProtectedRoute>
-                  }
-                />{" "}
-                {/* Routes protégées pour caissier */}
+                {/* Routes protégées pour serveur - SUPPRIMÉ : Workflow simplifié */}
+                {/* Routes protégées pour caissier - Interface principale */}
                 <Route
                   path="/caissier/*"
                   element={
@@ -80,28 +61,6 @@ const App: React.FC = () => {
                         <Route
                           path="dashboard"
                           element={<CaissierDashboard />}
-                        />
-                        <Route
-                          path="historique"
-                          element={<CaissierDashboard />}
-                        />
-                        <Route
-                          path=""
-                          element={<Navigate to="dashboard" replace />}
-                        />
-                      </Routes>
-                    </ProtectedRoute>
-                  }
-                />{" "}
-                {/* Routes protégées pour cuisine */}
-                <Route
-                  path="/cuisine/*"
-                  element={
-                    <ProtectedRoute requiredRoles={["CUISINIER", "BARMAN"]}>
-                      <Routes>
-                        <Route
-                          path="dashboard"
-                          element={<CuisinierDashboard />}
                         />
                         <Route
                           path=""

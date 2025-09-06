@@ -101,10 +101,6 @@ export const ReceiptComponent = React.forwardRef<
           <span>{time}</span>
         </div>
         <div className="flex justify-between">
-          <span>Table:</span>
-          <span>N° {order.numeroTable || "N/A"}</span>
-        </div>
-        <div className="flex justify-between">
           <span>Commande:</span>
           <span>#{order.numeroCommande || "N/A"}</span>
         </div>
@@ -171,7 +167,7 @@ export const ReceiptComponent = React.forwardRef<
           </div>
         )}
 
-        {monnaiRendue !== undefined && monnaiRendue > 0 && (
+        {monnaiRendue !== undefined && (
           <div className="flex justify-between">
             <span>Monnaie rendue:</span>
             <span>{formatPrice(monnaiRendue)} XOF</span>

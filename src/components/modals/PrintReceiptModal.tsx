@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
@@ -76,6 +76,17 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
       resetForm();
     }
   };
+
+  // Impression automatique à l'ouverture si une commande est fournie
+  useEffect(() => {
+    if (isOpen && order) {
+      // Laisser React monter le contenu avant impression
+      const timer = setTimeout(() => {
+        handleConfirmAndPrint();
+      }, 150); // petit délai pour garantir le rendu
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, order]);
 
   // Vérification des modes de paiement, en tenant compte des valeurs undefined/null
   const formatPrice = (price: number): string => {

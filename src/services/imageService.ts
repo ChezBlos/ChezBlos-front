@@ -36,7 +36,7 @@ const DEFAULT_IMAGES = {
   // Avatar par défaut - on génère les initiales
   avatar: null, // Sera géré par generateInitialsAvatar
   // Image de plat par défaut
-  menuItem: "/img/plat_petit.png",
+  menuItem: "/img/plat_grand.png",
   // Logo de l'app
   logo: "/img/logo.png",
   // Placeholder générique

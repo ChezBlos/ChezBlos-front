@@ -106,10 +106,7 @@ export const CaissierDashboard: React.FC = () => {
         <div className="w-full min-w-0 pb-20 lg:pb-0">
           <div className="px-3 md:px-6 lg:px-12 xl:px-20 pt-6">
             <h1 className="text-3xl font-bold text-gray-900">
-              Prise de Commande -{" "}
-              {selectedSection === "commandes"
-                ? "Nouvelle Commande"
-                : "Historique"}
+              {selectedSection === "commandes" ? "Commandes" : "Historique"}
             </h1>
           </div>
           {renderContent()}

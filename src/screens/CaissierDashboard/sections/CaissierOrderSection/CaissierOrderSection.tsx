@@ -22,6 +22,7 @@ import {
 } from "../../../../services/imageService";
 import { PrintReceiptModal } from "../../../../components/modals/PrintReceiptModal";
 import { logger } from "../../../../utils/logger";
+import { TrashSimple } from "phosphor-react";
 
 interface CartItem {
   menuItem: MenuItemResponse;
@@ -35,13 +36,33 @@ interface CaissierOrderSectionProps {
 export const CaissierOrderSection: React.FC<CaissierOrderSectionProps> = ({
   onRefresh,
 }) => {
+  // Mapping lisible des catégories si nécessaire
+  const formatCategory = (raw: string) => {
+    if (!raw) return "";
+    // Normaliser
+    const upper = raw.toUpperCase();
+    const map: Record<string, string> = {
+      PLAT_PRINCIPAL: "Plat principal",
+      DESSERT: "Dessert",
+      BOISSON: "Boisson",
+      ENTREE: "Entrée",
+      ACCOMPAGNEMENT: "Accompagnement",
+      SAUCE: "Sauce",
+    };
+    if (map[upper]) return map[upper];
+    // Fallback: transformer ABC_DEF -> Abc def
+    return upper
+      .split("_")
+      .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
+      .join(" ");
+  };
   // État pour le panier
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // État pour le paiement
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  // Panneau actif: panier ou paiement
+  const [activePanel, setActivePanel] = useState<"cart" | "payment">("cart");
   const [modePaiement, setModePaiement] = useState<
     | "ESPECES"
     | "CARTE_BANCAIRE"
@@ -159,7 +180,7 @@ export const CaissierOrderSection: React.FC<CaissierOrderSectionProps> = ({
   // Vider le panier
   const clearCart = () => {
     setCart([]);
-    setShowPaymentForm(false);
+    setActivePanel("cart");
     setMontantRecu("");
     setModePaiement("");
   };
@@ -256,12 +277,12 @@ export const CaissierOrderSection: React.FC<CaissierOrderSectionProps> = ({
   };
 
   return (
-    <div className="px-3 md:px-6 lg:px-12 xl:px-20 py-6">
-      <div className="flex flex-col lg:flex-row gap-6 min-h-screen">
-        {/* Section Menu - Flexible width */}
-        <div className="flex-1 lg:flex-[2]">
-          <Card className="rounded-3xl">
-            <CardContent className="p-6 rounded-3xl">
+    <div className="px-3 w-full md:px-6 lg:px-10 xl:px-16 py-6 lg:h-screen">
+      <div className="flex flex-col lg:flex-row items-start gap-6 h-full">
+        {/* Section Menu produits scrollable à gauche */}
+        <div className="w-full lg:flex-1 min-w-0 order-2 lg:order-1 h-full">
+          <Card className="rounded-3xl h-full flex flex-col">
+            <CardContent className="p-6 rounded-3xl flex flex-col h-full">
               <div className="flex flex-col md:flex-row gap-4 mb-6">
                 {/* Barre de recherche */}
                 <div className="relative flex-1">
@@ -276,11 +297,11 @@ export const CaissierOrderSection: React.FC<CaissierOrderSectionProps> = ({
               </div>
 
               {/* Filtres par catégorie */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="flex items-center gap-3 mb-4 p-1 bg-gray-10 rounded-full w-fit max-w-full overflow-x-auto overflow-hidden">
                   <button
                     onClick={() => setSelectedCategory("all")}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-xs transition-all duration-200 whitespace-nowrap ${
                       selectedCategory === "all"
                         ? "bg-white text-orange-600 shadow-sm"
                         : "text-gray-600 hover:text-gray-900"
@@ -292,309 +313,319 @@ export const CaissierOrderSection: React.FC<CaissierOrderSectionProps> = ({
                     <button
                       key={category}
                       onClick={() => setSelectedCategory(category)}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 whitespace-nowrap ${
+                      className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-xs transition-all duration-200 whitespace-nowrap ${
                         selectedCategory === category
                           ? "bg-white text-orange-600 shadow-sm"
                           : "text-gray-600 hover:text-gray-900"
                       }`}
                     >
-                      {category.charAt(0).toUpperCase() +
-                        category.slice(1).toLowerCase().replace(/_/g, " ")}
+                      {formatCategory(category)}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Grille des plats */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredMenuItems.map((item: MenuItemResponse) => (
-                  <Card
-                    key={item._id}
-                    className="cursor-pointer hover:shadow-md transition-shadow rounded-3xl"
-                  >
-                    <CardContent
-                      className="p-4"
-                      onClick={() => addToCart(item)}
+              {/* Grille des plats scrollable */}
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredMenuItems.map((item: MenuItemResponse) => (
+                    <Card
+                      key={item._id}
+                      className="cursor-pointer hover:shadow-md transition-shadow rounded-3xl"
                     >
-                      <div className="aspect-square mb-3 bg-gray-100 rounded-lg overflow-hidden">
-                        <img
-                          src={getMenuImageUrl(item.image)}
-                          alt={item.nom}
-                          className="w-full h-full object-cover"
-                          onError={handleImageError}
-                        />
-                      </div>
-                      <h3 className="font-semibold text-sm mb-1 line-clamp-2">
-                        {item.nom}
-                      </h3>
-                      <p className="text-lg font-bold text-orange-600">
-                        {item.prix} FCFA
-                      </p>
-                      <Badge
-                        variant="secondary"
-                        className="mt-2 text-xs px-4 py-2 rounded-full "
+                      <CardContent
+                        className="p-4"
+                        onClick={() => addToCart(item)}
                       >
-                        {item.categorie}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <div className="aspect-square mb-3 bg-gray-10 rounded-lg overflow-hidden">
+                          <img
+                            src={getMenuImageUrl(item.image)}
+                            alt={item.nom}
+                            className="w-full h-full object-cover"
+                            onError={handleImageError}
+                          />
+                        </div>
+                        <h3 className="font-semibold text-sm mb-1 line-clamp-2">
+                          {item.nom}
+                        </h3>
+                        <p className="text-lg font-bold text-orange-600">
+                          {item.prix} FCFA
+                        </p>
+                        <Badge
+                          variant="secondary"
+                          className="mt-2 text-xs px-4 py-2 rounded-full "
+                        >
+                          {formatCategory(item.categorie)}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Section Panier - Fixed width and sticky */}
-        <div className="w-full lg:w-80 lg:flex-shrink-0">
-          <div className="sticky top-4 h-fit">
-            <Card className="rounded-3xl shadow-lg border border-gray-200">
-              <CardContent className="p-6 flex flex-col max-h-[calc(100vh-4rem)]">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">Panier</h2>
-                  {cart.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearCart}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg px-3 py-1.5"
-                    >
-                      Vider
-                    </Button>
-                  )}
-                </div>
-
-                {cart.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Panier vide</p>
-                    <p className="text-sm">
-                      Cliquez sur un plat pour l'ajouter
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Articles du panier */}
-                    <div className="flex-1 space-y-3 mb-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                      {cart.map((item) => (
-                        <div
-                          key={item.menuItem._id}
-                          className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm"
-                        >
-                          <div className="w-14 h-14 bg-gray-200 rounded-xl overflow-hidden flex-shrink-0">
-                            <img
-                              src={getMenuImageUrl(item.menuItem.image)}
-                              alt={item.menuItem.nom}
-                              className="w-full h-full object-cover"
-                              onError={handleImageError}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm truncate text-gray-900">
-                              {item.menuItem.nom}
-                            </p>
-                            <p className="text-sm font-medium text-orange-600">
-                              {item.menuItem.prix} FCFA
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4 p-2 rounded-[1000px] border border-solid border-slate-200">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
-                              onClick={() =>
-                                updateQuantity(
-                                  item.menuItem._id,
-                                  item.quantite - 1
-                                )
-                              }
-                            >
-                              <Minus className="h-4 w-4 text-white" />
-                            </Button>
-                            <span className="font-semibold text-base text-gray-900 min-w-[2ch] text-center">
-                              {item.quantite.toString().padStart(2, "0")}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
-                              onClick={() =>
-                                updateQuantity(
-                                  item.menuItem._id,
-                                  item.quantite + 1
-                                )
-                              }
-                            >
-                              <Plus className="h-4 w-4 text-white" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Total */}
-                    <div className="border-t border-gray-200 pt-4 mb-6">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold text-gray-700">
-                          Total:
-                        </span>
-                        <span className="text-2xl font-bold text-orange-600">
-                          {totalPanier} FCFA
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Formulaire de paiement */}
-                    {!showPaymentForm ? (
+        {/* Panier / Paiement animés */}
+        <div className="w-full h-full lg:w-[340px] xl:w-[360px] order-1 lg:order-2 shrink-0 relative">
+          <Card className="sticky top-6 rounded-3xl h-full overflow-hidden">
+            <CardContent className="p-0 h-full relative">
+              <div
+                className="absolute inset-0 flex w-[200%] transition-transform duration-300 ease-in-out"
+                style={{
+                  transform:
+                    activePanel === "cart"
+                      ? "translateX(0%)"
+                      : "translateX(-50%)",
+                }}
+              >
+                {/* Panel Panier */}
+                <div className="w-1/2 p-6 flex flex-col">
+                  <div className="relative flex items-center justify-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-900">Panier</h2>
+                    {cart.length > 0 && activePanel === "cart" && (
                       <Button
-                        onClick={() => setShowPaymentForm(true)}
-                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-2xl transition-colors"
-                        size="lg"
+                        variant="ghost"
+                        onClick={clearCart}
+                        className="absolute right-0 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full p-2"
                       >
-                        <Calculator className="w-5 h-5 mr-2" />
-                        Procéder au paiement
+                        <TrashSimple size={20} />
                       </Button>
-                    ) : (
-                      <div className="space-y-4">
-                        {/* Mode de paiement */}
-                        <div>
-                          <label className="block text-sm font-medium mb-3 text-gray-900">
-                            Mode de paiement
-                          </label>
-                          <div className="grid grid-cols-2 gap-3">
-                            {paymentMethods.map((method) => (
-                              <div
-                                key={method.id}
-                                onClick={() =>
-                                  setModePaiement(method.id as any)
-                                }
-                                className={`relative p-3 rounded-2xl border-2 cursor-pointer transition-all ${
-                                  modePaiement === method.id
-                                    ? "border-orange-500 bg-orange-50"
-                                    : "border-gray-200 bg-white hover:border-gray-300"
-                                }`}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                                    {method.isImage ? (
-                                      <img
-                                        src={method.imageSrc}
-                                        alt={method.label}
-                                        className="w-10 h-10 object-cover"
-                                      />
-                                    ) : (
-                                      method.icon
-                                    )}
-                                  </div>
-                                  <span className="font-medium text-gray-900 text-sm">
-                                    {method.label}
-                                  </span>
-                                </div>
-                                {modePaiement === method.id && (
-                                  <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
-                                    <svg
-                                      className="w-3 h-3 text-white"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Montant payé */}
-                        {modePaiement && (
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <label className="block text-sm font-medium text-gray-900">
-                                {modePaiement === "ESPECES"
-                                  ? "Montant reçu"
-                                  : "Montant payé"}
-                              </label>
+                    )}
+                  </div>
+                  {cart.length === 0 ? (
+                    <div className="flex flex-col justify-center text-center py-8 text-gray-500 flex-1">
+                      <p className="pb-3">PANIER VIDE</p>
+                      <p className="text-sm">
+                        Cliquez sur un plat pour l'ajouter
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-3 mb-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        {cart.map((item) => (
+                          <div
+                            key={item.menuItem._id}
+                            className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm"
+                          >
+                            <div className="w-14 h-14 bg-white rounded-xl overflow-hidden flex-shrink-0">
+                              <img
+                                src={getMenuImageUrl(item.menuItem.image)}
+                                alt={item.menuItem.nom}
+                                className="w-full h-full object-cover"
+                                onError={handleImageError}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm truncate text-gray-900">
+                                {item.menuItem.nom}
+                              </p>
+                              <p className="text-sm font-medium text-orange-600">
+                                {item.menuItem.prix} FCFA
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-4 p-2 rounded-[1000px] border border-solid border-slate-200">
                               <Button
                                 variant="ghost"
-                                size="sm"
+                                size="icon"
+                                className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
                                 onClick={() =>
-                                  setMontantRecu(totalPanier.toString())
+                                  updateQuantity(
+                                    item.menuItem._id,
+                                    item.quantite - 1
+                                  )
                                 }
-                                className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2 py-1"
                               >
-                                Montant exact
+                                <Minus className="h-4 w-4 text-white" />
+                              </Button>
+                              <span className="font-semibold text-base text-gray-900 min-w-[2ch] text-center">
+                                {item.quantite.toString().padStart(2, "0")}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="p-1 bg-orange-400 hover:bg-orange-500 rounded-full h-6 w-6"
+                                onClick={() =>
+                                  updateQuantity(
+                                    item.menuItem._id,
+                                    item.quantite + 1
+                                  )
+                                }
+                              >
+                                <Plus className="h-4 w-4 text-white" />
                               </Button>
                             </div>
-                            <Input
-                              type="number"
-                              placeholder="Montant reçu en FCFA"
-                              value={montantRecu}
-                              onChange={(e) => setMontantRecu(e.target.value)}
-                              className="rounded-xl border-gray-300 "
-                            />
-                            {modePaiement === "ESPECES" &&
-                              montantRecuNumber > 0 &&
-                              monnaie >= 0 && (
-                                <p className="text-sm text-green-600 mt-2">
-                                  Monnaie à rendre: {monnaie} FCFA
-                                </p>
-                              )}
-                            {modePaiement === "ESPECES" &&
-                              montantRecuNumber > 0 &&
-                              monnaie < 0 && (
-                                <p className="text-sm text-red-600 mt-2">
-                                  Montant insuffisant: {Math.abs(monnaie)} FCFA
-                                  manquants
-                                </p>
-                              )}
-                            {modePaiement !== "ESPECES" &&
-                              montantRecuNumber > 0 &&
-                              montantRecuNumber !== totalPanier && (
-                                <p className="text-sm text-blue-600 mt-2">
-                                  Différence:{" "}
-                                  {montantRecuNumber > totalPanier ? "+" : ""}
-                                  {montantRecuNumber - totalPanier} FCFA
-                                </p>
-                              )}
-                            {montantRecuNumber === 0 && (
-                              <p className="text-sm text-gray-500 mt-2">
-                                Montant dû: {totalPanier} FCFA
-                              </p>
-                            )}
                           </div>
-                        )}
-
-                        {/* Boutons d'action */}
-                        <div className="flex gap-3 mt-6">
-                          <Button
-                            variant="outline"
-                            onClick={() => setShowPaymentForm(false)}
-                            className="flex-1 py-2.5 rounded-xl border-gray-300 text-gray-700 hover:bg-gray-50"
-                          >
-                            Retour
-                          </Button>
-                          <Button
-                            onClick={handleProcessOrder}
-                            className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl"
-                            disabled={
-                              !modePaiement ||
-                              (modePaiement === "ESPECES" &&
-                                montantRecuNumber < totalPanier)
-                            }
-                          >
-                            Valider
-                          </Button>
+                        ))}
+                      </div>
+                      <div className="border-t border-gray-200 pt-4 mb-6">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold text-gray-700">
+                            Total:
+                          </span>
+                          <span className="text-2xl font-bold text-orange-600">
+                            {totalPanier} FCFA
+                          </span>
                         </div>
                       </div>
+                      <Button
+                        onClick={() => setActivePanel("payment")}
+                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 rounded-xl transition-colors"
+                        size="lg"
+                        disabled={cart.length === 0}
+                      >
+                        <Calculator className="w-5 h-5 mr-2" /> Procéder au
+                        paiement
+                      </Button>
+                    </>
+                  )}
+                </div>
+                {/* Panel Paiement */}
+                <div className="w-1/2 p-6 flex flex-col border-l border-gray-10">
+                  <div className="flex items-center justify-between mb-6">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setActivePanel("cart")}
+                      className="rounded-full px-4"
+                    >
+                      Retour
+                    </Button>
+                    <h2 className="text-lg font-semibold">Paiement</h2>
+                    <div className="w-16" />
+                  </div>
+                  <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <div>
+                      <label className="block text-sm font-medium mb-3 text-gray-900">
+                        Mode de paiement
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {paymentMethods.map((method) => (
+                          <div
+                            key={method.id}
+                            onClick={() => setModePaiement(method.id as any)}
+                            className={`relative p-3 rounded-2xl border-2 cursor-pointer transition-all ${
+                              modePaiement === method.id
+                                ? "border-orange-500 bg-orange-50"
+                                : "border-gray-200 bg-white hover:border-gray-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                                {method.isImage ? (
+                                  <img
+                                    src={method.imageSrc}
+                                    alt={method.label}
+                                    className="w-10 h-10 object-cover"
+                                  />
+                                ) : (
+                                  method.icon
+                                )}
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm">
+                                {method.label}
+                              </span>
+                            </div>
+                            {modePaiement === method.id && (
+                              <div className="absolute top-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+                                <svg
+                                  className="w-3 h-3 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {modePaiement && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-900">
+                            {modePaiement === "ESPECES"
+                              ? "Montant reçu"
+                              : "Montant payé"}
+                          </label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              setMontantRecu(totalPanier.toString())
+                            }
+                            className="text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2 py-1"
+                          >
+                            Montant exact
+                          </Button>
+                        </div>
+                        <Input
+                          type="number"
+                          placeholder="Montant en FCFA"
+                          value={montantRecu}
+                          onChange={(e) => setMontantRecu(e.target.value)}
+                          className="rounded-xl border-gray-300 "
+                        />
+                        {modePaiement === "ESPECES" &&
+                          montantRecuNumber > 0 &&
+                          monnaie >= 0 && (
+                            <p className="text-sm text-green-600 mt-2">
+                              Monnaie à rendre: {monnaie} FCFA
+                            </p>
+                          )}
+                        {modePaiement === "ESPECES" &&
+                          montantRecuNumber > 0 &&
+                          monnaie < 0 && (
+                            <p className="text-sm text-red-600 mt-2">
+                              Montant insuffisant: {Math.abs(monnaie)} FCFA
+                              manquants
+                            </p>
+                          )}
+                        {modePaiement !== "ESPECES" &&
+                          montantRecuNumber > 0 &&
+                          montantRecuNumber !== totalPanier && (
+                            <p className="text-sm text-blue-600 mt-2">
+                              Différence:{" "}
+                              {montantRecuNumber > totalPanier ? "+" : ""}
+                              {montantRecuNumber - totalPanier} FCFA
+                            </p>
+                          )}
+                        {montantRecuNumber === 0 && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            Montant dû: {totalPanier} FCFA
+                          </p>
+                        )}
+                      </div>
                     )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  </div>
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <Button
+                      variant="outline"
+                      onClick={() => setActivePanel("cart")}
+                      className="flex-1 py-2.5 rounded-xl border-gray-300 text-gray-700 hover:bg-gray-5"
+                    >
+                      Retour
+                    </Button>
+                    <Button
+                      onClick={handleProcessOrder}
+                      className="flex-1 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-xl"
+                      disabled={
+                        !modePaiement ||
+                        (modePaiement === "ESPECES" &&
+                          montantRecuNumber < totalPanier)
+                      }
+                    >
+                      Valider
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

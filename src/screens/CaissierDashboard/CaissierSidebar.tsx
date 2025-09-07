@@ -25,8 +25,8 @@ export const CaissierSidebar: React.FC<CaissierSidebarProps> = ({
         }`}
         onClick={() => onSelect("commandes")}
       >
-        <ShoppingCart size={40} />
-        <span>Nouvelle Commande</span>
+        <ShoppingCart size={20} />
+        <span>Commandes</span>
       </Button>
 
       <Button
@@ -38,7 +38,7 @@ export const CaissierSidebar: React.FC<CaissierSidebarProps> = ({
         }`}
         onClick={() => onSelect("historique")}
       >
-        <ClipboardText size={40} />
+        <ClipboardText size={20} />
         <span>Historique</span>
       </Button>
     </aside>

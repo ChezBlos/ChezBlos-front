@@ -5,7 +5,13 @@ import {
   // CardHeader,
   // CardTitle,
 } from "../../../../components/ui/card";
-import { Users, ForkKnife, ChartBar } from "@phosphor-icons/react";
+import {
+  Users,
+  ForkKnife,
+  ChartBar,
+  ArrowClockwise,
+} from "@phosphor-icons/react";
+import { Button } from "../../../../components/ui/button";
 import { useDashboardStats } from "../../../../hooks/useDashboardStats";
 import { SpinnerMedium } from "../../../../components/ui/spinner";
 import { Doughnut } from "react-chartjs-2";
@@ -26,7 +32,8 @@ interface AdminDashboardSectionProps {
 export const AdminDashboardSection: React.FC<
   AdminDashboardSectionProps
 > = ({}) => {
-  const { dashboardStats, userStats, loading, error } = useDashboardStats();
+  const { dashboardStats, userStats, loading, error, refetch } =
+    useDashboardStats();
 
   // Fonction pour formater les prix en XOF
   const formatPrice = (price: number): string => {
@@ -48,11 +55,26 @@ export const AdminDashboardSection: React.FC<
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Aperçu rapide</h3>
-          {error && (
-            <div className="text-sm text-red-600">
-              Erreur de chargement des données
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {error && (
+              <div className="text-sm text-red-600">
+                Erreur de chargement des données
+              </div>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={loading}
+              className="flex items-center gap-2"
+            >
+              <ArrowClockwise
+                size={16}
+                className={loading ? "animate-spin" : ""}
+              />
+              Actualiser
+            </Button>
+          </div>
         </div>
 
         {loading ? (

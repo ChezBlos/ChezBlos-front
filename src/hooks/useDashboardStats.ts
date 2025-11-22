@@ -45,6 +45,17 @@ export const useDashboardStats = (): UseDashboardStatsReturn => {
 
   useEffect(() => {
     fetchStats();
+
+    // Écouter l'événement de rafraîchissement global
+    const handleRefresh = () => {
+      fetchStats();
+    };
+
+    window.addEventListener("refreshStats", handleRefresh);
+
+    return () => {
+      window.removeEventListener("refreshStats", handleRefresh);
+    };
   }, []);
 
   const refetch = async () => {
